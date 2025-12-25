@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { useDrag } from '@/contexts/DragContext'
+import { useDrag } from '@/pages/resume/editor/components/sidebar/context/DragContext'
 
 export function useDraggableItem(id: string, index: number, disabled = false) {
   const elementRef = useRef<HTMLDivElement>(null)

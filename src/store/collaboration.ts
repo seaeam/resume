@@ -1,4 +1,4 @@
-import type { CollaborationCallbacks } from '@/lib/automerge/supabase-network-adapter'
+import type { CollaborationCallbacks } from '@/lib/automerge'
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { clearStoredSession, rememberSessionRole } from '@/lib/collaboration/session-storage'
