@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { IconDoorExit } from '@tabler/icons-react'
 import { Laptop, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
@@ -40,12 +40,34 @@ function ProjectExperienceForm({ className }: { className?: string }) {
     name: 'items',
   })
 
+  // 追踪本地编辑状态
+  const isLocalEditingRef = useRef(false)
+  const localEditTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 监听表单变化，更新 store
   useEffect(() => {
     const subscription = form.watch((value) => {
+      isLocalEditingRef.current = true
+      if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
+      localEditTimeoutRef.current = setTimeout(() => { isLocalEditingRef.current = false }, 150)
       updateForm('projectExperience', value as ShallowPartial<ProjectExperienceFormType>)
     })
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
+    }
   }, [form, updateForm])
+
+  // 监听 store 变化（来自协作者），同步到表单
+  useEffect(() => {
+    if (isLocalEditingRef.current) return
+    const currentValues = form.getValues()
+    const newValues = { items: projectExperience.items || DEFAULT_PROJECT_EXPERIENCE.items }
+    if (JSON.stringify(currentValues) !== JSON.stringify(newValues)) {
+      form.reset(newValues, { keepDirtyValues: false })
+      setIsUptoNow(projectExperience.items?.some(item => item.projectDuration?.[1] === '至今') || false)
+    }
+  }, [projectExperience, form])
 
   function onAddItem() {
     append(DEFAULT_PROJECT_EXPERIENCE.items![0])

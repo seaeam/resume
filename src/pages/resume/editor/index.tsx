@@ -1,14 +1,15 @@
+import type { UIEventPayload } from '@/lib/automerge'
 import { Edit } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { RealtimeCursors } from '@/components/realtime-cursors'
 import { useTheme } from '@/components/theme-provider'
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import { RainbowButton } from '@/components/ui/rainbow-button'
 import { Spinner } from '@/components/ui/spinner'
-import { DragProvider } from '@/pages/resume/editor/components/sidebar/context/DragContext'
 import { useCurrentUserName } from '@/hooks/use-current-user-name'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { DragProvider } from '@/pages/resume/editor/components/sidebar/context/DragContext'
 import useCollaborationStore from '@/store/collaboration'
 import useResumeExportStore from '@/store/resume/export'
 import useResumeStore from '@/store/resume/form'
@@ -24,6 +25,9 @@ function Editor() {
   const [open, setOpen] = useState(false)
   const { theme } = useTheme()
   const { loading, currentUser, activeResumeId } = useResumeLoader()
+
+  // 防止循环广播的标志
+  const isRemoteUpdateRef = useRef(false)
 
   const resumeRef = useRef<HTMLDivElement | null>(null)
 
@@ -54,10 +58,110 @@ function Editor() {
   } = useResumeStore()
 
   const roomName = useCollaborationStore(state => state.roomName)
+  const isSharing = useCollaborationStore(state => state.isSharing)
+  const broadcastUIEvent = useCollaborationStore(state => state.broadcastUIEvent)
+  const subscribeUIEvent = useCollaborationStore(state => state.subscribeUIEvent)
 
   const fill = theme === 'dark' ? '#0c0a09' : '#fafaf9'
   const stroke = theme === 'dark' ? '#3d3b3b' : '#e7e5e4'
   const userDisplayName = useCurrentUserName()
+
+  // 处理 Drawer 开关并广播给协作者
+  const handleDrawerOpenChange = useCallback((newOpen: boolean) => {
+    setOpen(newOpen)
+
+    // 只有在本地操作时才广播，避免循环
+    if (!isRemoteUpdateRef.current && isSharing) {
+      broadcastUIEvent(newOpen ? 'drawer-open' : 'drawer-close', {})
+    }
+    isRemoteUpdateRef.current = false
+  }, [isSharing, broadcastUIEvent])
+
+  // 处理 Tab 切换并广播给协作者
+  const handleUpdateActiveTabId = useCallback((tabId: string) => {
+    updateActiveTabId(tabId as any)
+
+    // 只有在本地操作时才广播，避免循环
+    if (!isRemoteUpdateRef.current && isSharing) {
+      broadcastUIEvent('tab-change', { tabId })
+    }
+    isRemoteUpdateRef.current = false
+  }, [updateActiveTabId, isSharing, broadcastUIEvent])
+
+  // 处理模块可见性切换并广播给协作者
+  const handleToggleVisibility = useCallback((id: any) => {
+    toggleVisibility(id)
+
+    // 只有在本地操作时才广播
+    if (!isRemoteUpdateRef.current && isSharing) {
+      broadcastUIEvent('visibility-toggle', { id })
+    }
+    isRemoteUpdateRef.current = false
+  }, [toggleVisibility, isSharing, broadcastUIEvent])
+
+  // 处理排序变更并广播给协作者
+  const handleUpdateOrder = useCallback((newOrder: any[]) => {
+    updateOrder(newOrder)
+
+    // 只有在本地操作时才广播
+    if (!isRemoteUpdateRef.current && isSharing) {
+      broadcastUIEvent('order-change', { order: newOrder })
+    }
+    isRemoteUpdateRef.current = false
+  }, [updateOrder, isSharing, broadcastUIEvent])
+
+  // 监听来自协作者的 UI 事件
+  useEffect(() => {
+    if (!isSharing) {
+      return
+    }
+
+    let resetTimer: ReturnType<typeof setTimeout> | null = null
+
+    const handleUIEvent = (payload: UIEventPayload) => {
+      isRemoteUpdateRef.current = true
+
+      switch (payload.type) {
+        case 'drawer-open':
+          setOpen(true)
+          break
+        case 'drawer-close':
+          setOpen(false)
+          break
+        case 'tab-change':
+          if (payload.data?.tabId) {
+            updateActiveTabId(payload.data.tabId)
+          }
+          break
+        case 'visibility-toggle':
+          if (payload.data?.id) {
+            toggleVisibility(payload.data.id)
+          }
+          break
+        case 'order-change':
+          if (payload.data?.order) {
+            updateOrder(payload.data.order)
+          }
+          break
+      }
+
+      // 重置标志
+      if (resetTimer) {
+        clearTimeout(resetTimer)
+      }
+      resetTimer = setTimeout(() => {
+        isRemoteUpdateRef.current = false
+      }, 0)
+    }
+
+    const unsubscribe = subscribeUIEvent(handleUIEvent)
+    return () => {
+      unsubscribe()
+      if (resetTimer) {
+        clearTimeout(resetTimer)
+      }
+    }
+  }, [isSharing, subscribeUIEvent, updateActiveTabId, toggleVisibility, updateOrder])
 
   if (loading) {
     return (
@@ -82,7 +186,7 @@ function Editor() {
       )}
 
       <DragProvider>
-        <Drawer open={open} onOpenChange={setOpen} handleOnly>
+        <Drawer open={open} onOpenChange={handleDrawerOpenChange} handleOnly>
           <DrawerTrigger asChild>
             <RainbowButton
               variant="outline"
@@ -103,9 +207,9 @@ function Editor() {
                 fill={fill}
                 stroke={stroke}
                 isMobile={isMobile}
-                onUpdateActiveTabId={updateActiveTabId}
-                onUpdateOrder={updateOrder}
-                onToggleVisibility={toggleVisibility}
+                onUpdateActiveTabId={handleUpdateActiveTabId}
+                onUpdateOrder={handleUpdateOrder}
+                onToggleVisibility={handleToggleVisibility}
               />
             </div>
           </DrawerContent>

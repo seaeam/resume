@@ -12,6 +12,31 @@ import supabase from '@/lib/supabase/client'
 import { base64ToUint8Array, uint8ArrayToBase64 } from '../utils'
 
 /**
+ * UI 同步事件类型
+ */
+export type UIEventType =
+  | 'drawer-open'
+  | 'drawer-close'
+  | 'tab-change'
+  | 'visibility-toggle'
+  | 'order-change'
+  | 'config-spacing-update'
+  | 'config-font-update'
+  | 'config-theme-update'
+  | 'dropdown-open'
+  | 'dropdown-close'
+
+/**
+ * UI 同步事件数据
+ */
+export interface UIEventPayload {
+  type: UIEventType
+  data: Record<string, any>
+  senderId?: string
+  timestamp?: number
+}
+
+/**
  * 协作事件回调
  */
 export interface CollaborationCallbacks {
@@ -23,6 +48,8 @@ export interface CollaborationCallbacks {
   onChannelReady?: (channelName: string) => void
   /** 当收到自定义控制消息时触发 */
   onControlMessage?: (payload: { type: string, data?: Record<string, any> }) => void
+  /** 当收到 UI 同步事件时触发 */
+  onUIEvent?: (payload: UIEventPayload) => void
   /** 当前用户的初始在线元数据 */
   presenceMetadata?: Record<string, any>
 }
@@ -235,6 +262,22 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
       }
     })
 
+    // 监听 UI 同步事件
+    this.channel.on('broadcast', { event: 'automerge-ui-sync' }, (payload: any) => {
+      const { type, data, senderId, timestamp } = payload.payload || {}
+
+      // 忽略自己发出的事件
+      if (senderId === String(this.peerId)) {
+        return
+      }
+
+      logger.automerge.collab('收到 UI 同步事件', { type, data, senderId })
+
+      if (type) {
+        this.callbacks.onUIEvent?.({ type, data, senderId, timestamp })
+      }
+    })
+
     // 监听 presence 离开
     this.channel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
       leftPresences.forEach((presence: any) => {
@@ -342,6 +385,32 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
         data,
         senderId: this.peerId,
         sessionId: this.sessionId,
+      },
+    })
+  }
+
+  /**
+   * 广播 UI 同步事件
+   * @param {UIEventType} type - UI 事件类型
+   * @param {Record<string, any>} data - 事件数据
+   */
+  broadcastUIEvent(type: UIEventType, data: Record<string, any> = {}) {
+    if (!this.channel || !this.ready) {
+      logger.warn('网络适配器未就绪，无法发送 UI 事件')
+      return
+    }
+
+    logger.automerge.collab('广播 UI 同步事件', { type, data })
+
+    this.channel.send({
+      type: 'broadcast',
+      event: 'automerge-ui-sync',
+      payload: {
+        type,
+        data,
+        senderId: String(this.peerId),
+        sessionId: this.sessionId,
+        timestamp: Date.now(),
       },
     })
   }

@@ -1,4 +1,7 @@
+import type { FontConfigType, SpacingConfigType, ThemeConfigType } from '@/lib/schema'
+import type { UIEventPayload } from '@/lib/automerge'
 import { FileDown, Palette, Space, Type } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,18 +16,165 @@ import { Slider } from '@/components/ui/slider'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { fontFamilyOptions, fontSizeOptions, themeOptions } from '@/lib/schema'
 import { cn } from '@/lib/utils'
+import useCollaborationStore from '@/store/collaboration'
 import useResumeConfigStore from '@/store/resume/config'
 import ExportDialog from '../export/ExportDialog'
+
+/**
+ * 创建节流广播函数，确保快速更新时不会丢失最后一次更新
+ */
+function useThrottledBroadcast(
+  broadcastUIEvent: (type: string, data: Record<string, any>) => void,
+  isSharing: boolean,
+  delay: number = 50,
+) {
+  const lastBroadcastRef = useRef<Record<string, number>>({})
+  const pendingBroadcastRef = useRef<Record<string, { type: string, data: Record<string, any> }>>({})
+  const timeoutRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+
+  const throttledBroadcast = useCallback((type: string, data: Record<string, any>) => {
+    if (!isSharing) return
+
+    const now = Date.now()
+    const lastTime = lastBroadcastRef.current[type] || 0
+
+    // 清除之前的待发送
+    if (timeoutRef.current[type]) {
+      clearTimeout(timeoutRef.current[type])
+    }
+
+    if (now - lastTime >= delay) {
+      // 距离上次广播已超过间隔，立即发送
+      broadcastUIEvent(type as any, data)
+      lastBroadcastRef.current[type] = now
+      delete pendingBroadcastRef.current[type]
+    }
+    else {
+      // 保存待发送数据，稍后发送
+      pendingBroadcastRef.current[type] = { type, data }
+      timeoutRef.current[type] = setTimeout(() => {
+        const pending = pendingBroadcastRef.current[type]
+        if (pending) {
+          broadcastUIEvent(pending.type as any, pending.data)
+          lastBroadcastRef.current[type] = Date.now()
+          delete pendingBroadcastRef.current[type]
+        }
+      }, delay - (now - lastTime))
+    }
+  }, [broadcastUIEvent, isSharing, delay])
+
+  // 清理
+  useEffect(() => {
+    return () => {
+      Object.values(timeoutRef.current).forEach(clearTimeout)
+    }
+  }, [])
+
+  return throttledBroadcast
+}
 
 export function ResumeConfigToolbar() {
   const isMobile = useIsMobile()
   const { spacing, font, theme, updateSpacing, updateFont, updateTheme } = useResumeConfigStore()
+  const { isSharing, broadcastUIEvent, subscribeUIEvent } = useCollaborationStore()
+
+  // 节流广播
+  const throttledBroadcast = useThrottledBroadcast(broadcastUIEvent, isSharing, 50)
+
+  // 下拉菜单打开状态
+  const [spacingOpen, setSpacingOpen] = useState(false)
+  const [fontOpen, setFontOpen] = useState(false)
+  const [themeOpen, setThemeOpen] = useState(false)
+
+  // 追踪是否是本地操作，避免循环广播
+  const isLocalActionRef = useRef(true)
+
+  // 追踪本地编辑状态，避免远程更新覆盖本地输入
+  const isLocalEditingRef = useRef(false)
+  const localEditTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 标记本地编辑（缩短到 100ms，加快响应）
+  const markLocalEditing = () => {
+    isLocalEditingRef.current = true
+    if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
+    localEditTimeoutRef.current = setTimeout(() => { isLocalEditingRef.current = false }, 100)
+  }
+
+  // 处理下拉菜单打开/关闭，同时广播到协作者
+  const handleDropdownChange = (dropdownId: 'spacing' | 'font' | 'theme', open: boolean) => {
+    // 更新本地状态
+    if (dropdownId === 'spacing') setSpacingOpen(open)
+    else if (dropdownId === 'font') setFontOpen(open)
+    else if (dropdownId === 'theme') setThemeOpen(open)
+
+    // 仅本地操作时广播
+    if (isSharing && isLocalActionRef.current) {
+      broadcastUIEvent(open ? 'dropdown-open' : 'dropdown-close', { dropdownId })
+    }
+    isLocalActionRef.current = true
+  }
+
+  // 包装更新函数，同时广播到协作者（使用节流）
+  const handleUpdateSpacing = (data: Partial<SpacingConfigType>) => {
+    markLocalEditing()
+    updateSpacing(data)
+    throttledBroadcast('config-spacing-update', { spacing: { ...spacing, ...data } })
+  }
+
+  const handleUpdateFont = (data: Partial<FontConfigType>) => {
+    markLocalEditing()
+    updateFont(data)
+    throttledBroadcast('config-font-update', { font: { ...font, ...data } })
+  }
+
+  const handleUpdateTheme = (data: Partial<ThemeConfigType>) => {
+    markLocalEditing()
+    updateTheme(data)
+    throttledBroadcast('config-theme-update', { theme: { ...theme, ...data } })
+  }
+
+  // 监听协作者的配置变更和下拉菜单状态
+  useEffect(() => {
+    if (!isSharing) return
+
+    const handleUIEvent = (payload: UIEventPayload) => {
+      // 处理下拉菜单打开/关闭事件
+      if (payload.type === 'dropdown-open' || payload.type === 'dropdown-close') {
+        const open = payload.type === 'dropdown-open'
+        const dropdownId = payload.data.dropdownId as 'spacing' | 'font' | 'theme'
+        isLocalActionRef.current = false
+        if (dropdownId === 'spacing') setSpacingOpen(open)
+        else if (dropdownId === 'font') setFontOpen(open)
+        else if (dropdownId === 'theme') setThemeOpen(open)
+        return
+      }
+
+      // 如果正在本地编辑，忽略远程配置更新
+      if (isLocalEditingRef.current) return
+
+      if (payload.type === 'config-spacing-update' && payload.data.spacing) {
+        updateSpacing(payload.data.spacing)
+      }
+      else if (payload.type === 'config-font-update' && payload.data.font) {
+        updateFont(payload.data.font)
+      }
+      else if (payload.type === 'config-theme-update' && payload.data.theme) {
+        updateTheme(payload.data.theme)
+      }
+    }
+
+    const unsubscribe = subscribeUIEvent(handleUIEvent)
+    return () => {
+      unsubscribe()
+      if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
+    }
+  }, [isSharing, subscribeUIEvent, updateSpacing, updateFont, updateTheme])
 
   return (
     <div className={cn('flex flex-row gap-2')}>
 
       {/* 间距设置 */}
-      <DropdownMenu>
+      <DropdownMenu open={spacingOpen} onOpenChange={(open) => handleDropdownChange('spacing', open)}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
@@ -54,7 +204,7 @@ export function ResumeConfigToolbar() {
               </div>
               <Slider
                 value={[spacing.sectionSpacing]}
-                onValueChange={([value]) => updateSpacing({ sectionSpacing: value })}
+                onValueChange={([value]) => handleUpdateSpacing({ sectionSpacing: value })}
                 min={0}
                 max={100}
                 step={2}
@@ -70,7 +220,7 @@ export function ResumeConfigToolbar() {
               </div>
               <Slider
                 value={[spacing.lineHeight * 10]}
-                onValueChange={([value]) => updateSpacing({ lineHeight: value / 10 })}
+                onValueChange={([value]) => handleUpdateSpacing({ lineHeight: value / 10 })}
                 min={10}
                 max={30}
                 step={1}
@@ -89,7 +239,7 @@ export function ResumeConfigToolbar() {
               </div>
               <Slider
                 value={[spacing.pageMargin]}
-                onValueChange={([value]) => updateSpacing({ pageMargin: value })}
+                onValueChange={([value]) => handleUpdateSpacing({ pageMargin: value })}
                 min={0}
                 max={100}
                 step={2}
@@ -101,7 +251,7 @@ export function ResumeConfigToolbar() {
       </DropdownMenu>
 
       {/* 字体设置 */}
-      <DropdownMenu>
+      <DropdownMenu open={fontOpen} onOpenChange={(open) => handleDropdownChange('font', open)}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
@@ -128,7 +278,7 @@ export function ResumeConfigToolbar() {
               <Select
                 value={font.fontFamily}
                 onValueChange={(value: typeof font.fontFamily) =>
-                  updateFont({
+                  handleUpdateFont({
                     fontFamily: value,
                   })}
               >
@@ -151,7 +301,7 @@ export function ResumeConfigToolbar() {
               <Select
                 value={font.fontSize.toString()}
                 onValueChange={value =>
-                  updateFont({
+                  handleUpdateFont({
                     fontSize: Number.parseInt(value),
                   })}
               >
@@ -172,7 +322,7 @@ export function ResumeConfigToolbar() {
       </DropdownMenu>
 
       {/* 皮肤设置 */}
-      <DropdownMenu>
+      <DropdownMenu open={themeOpen} onOpenChange={(open) => handleDropdownChange('theme', open)}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
@@ -195,7 +345,7 @@ export function ResumeConfigToolbar() {
             <Select
               value={theme.theme}
               onValueChange={value =>
-                updateTheme({
+                handleUpdateTheme({
                   theme: value as typeof theme.theme,
                 })}
             >

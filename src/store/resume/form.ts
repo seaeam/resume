@@ -341,7 +341,28 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     try {
       const manager = new DocumentManager(resumeId, user.id)
       const handle = await manager.initialize()
-      const doc = handle.doc()
+      
+      // 文档可能还没有 ready（等待协作网络同步）
+      // 先尝试获取文档，如果没有则使用默认值
+      let doc = handle.doc()
+      
+      // 如果文档还没 ready，设置一个等待监听
+      // 当文档通过协作同步过来时会触发 change 事件
+      if (!doc) {
+        // 异步等待文档 ready，但不阻塞 UI
+        handle.whenReady().then(() => {
+          const readyDoc = handle.doc()
+          if (readyDoc) {
+            set(prev => ({
+              ...prev,
+              ...mapDocToState(readyDoc),
+              isInitialized: true,
+            }))
+          }
+        }).catch(() => {
+          // 忽略错误，change 事件会处理
+        })
+      }
 
       const changeHandler = ({ doc }: { doc: AutomergeResumeDocument | null }) => {
         if (!doc)
@@ -387,7 +408,8 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
         pendingChanges: false,
         syncError: null,
         mode: 'online',
-        isInitialized: true,
+        // 如果有文档则标记已初始化，否则等待协作同步
+        isInitialized: !!doc,
       })
     }
     catch (error) {

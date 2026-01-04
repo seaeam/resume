@@ -6,7 +6,7 @@
 
 import type { DocHandle, Repo } from '@automerge/automerge-repo'
 import type { AutomergeResumeDocument, ChangeFn } from '../types'
-import type { CollaborationCallbacks } from '../adapters/supabase'
+import type { CollaborationCallbacks, UIEventType } from '../adapters/supabase'
 import { SupabaseNetworkAdapter } from '../adapters/supabase'
 import { PersistenceService } from '../data/persistence'
 import { getAutomergeRepo } from './repo'
@@ -119,8 +119,8 @@ export class DocumentManager {
 
     this.handle = handle
 
-    // 等待就绪
-    await handle.whenReady()
+    // 等待就绪（带超时）
+    await this.withTimeout(handle.whenReady(), 5000, '新文档就绪超时')
 
     this.networkAdapter?.setLocalDocumentInfo({
       documentUrl: this.getDocumentUrl(),
@@ -137,6 +137,19 @@ export class DocumentManager {
   }
 
   /**
+   * 带超时的 Promise 包装器
+   * @private
+   */
+  private withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(errorMessage)), timeoutMs),
+      ),
+    ])
+  }
+
+  /**
    * 从持久层加载文档
    * @private
    * @param {Repo} repo - Automerge Repo
@@ -148,25 +161,51 @@ export class DocumentManager {
 
     const { documentUrl, binary } = result
 
-    // 1. 尝试通过 URL 查找（IndexedDB 缓存）
+    // 1. 优先尝试通过 URL 查找（适用于文档所有者或已有本地缓存的情况）
     if (documentUrl) {
       try {
-        const handle = await repo.find<AutomergeResumeDocument>(documentUrl as any)
-        if (handle) {
-          await handle.whenReady()
-          return handle
+        const handle = repo.find<AutomergeResumeDocument>(documentUrl as any)
+        
+        // 等待文档就绪，带超时
+        // whenReady() 在文档 unavailable 时会 reject
+        try {
+          await this.withTimeout(handle.whenReady(), 3000, '通过 URL 查找文档超时')
+          // 检查文档是否真的可用
+          if (handle.doc()) {
+            return handle
+          }
+        } catch (readyErr: any) {
+          // whenReady 失败，可能是：
+          // 1. 超时
+          // 2. 文档 unavailable（本地没有且无网络连接）
+          // 检查状态来确定原因
+          const state = handle.state
+          logger.debug(`文档就绪失败，状态: ${state}`, { documentUrl, error: readyErr?.message })
+          
+          // 如果是 unavailable 或 deleted，回退到 binary
+          if (state === 'unavailable' || state === 'deleted') {
+            logger.debug(`文档状态为 ${state}，回退到二进制导入`, { documentUrl })
+            // 继续到 binary 导入
+          } else if (handle.doc()) {
+            // 虽然超时但有文档内容，使用它
+            return handle
+          } else {
+            // 其他状态（如 requesting）且无内容，回退到 binary
+            logger.debug(`文档状态为 ${state} 且无内容，回退到二进制导入`)
+          }
         }
-        logger.debug('本地未找到 documentUrl，回退到二进制导入')
       } catch (err) {
-        logger.warn('通过 documentUrl 加载失败，回退到二进制导入', err as any)
+        logger.debug('通过 documentUrl 加载失败，回退到二进制导入', err as any)
       }
     }
 
-    // 2. 从二进制导入
+    // 2. 从二进制导入（适用于协作访客或数据迁移场景）
+    // 协作访客本地没有文档，需要从 binary 创建
+    // 协作同步通过 Supabase Broadcast Channel 进行，不依赖 documentUrl 匹配
     if (binary && binary.length > 0) {
       try {
         const handle = repo.import<AutomergeResumeDocument>(binary)
-        await handle.whenReady()
+        await this.withTimeout(handle.whenReady(), 5000, '等待文档就绪超时')
         return handle
       } catch (err) {
         logger.error('导入二进制数据失败', err as any)
@@ -312,7 +351,7 @@ export class DocumentManager {
       if (binary && binary.length > 0 && this.repo) {
         try {
           const imported = this.repo.import<AutomergeResumeDocument>(binary)
-          await imported.whenReady()
+          await this.withTimeout(imported.whenReady(), 5000, '远程快照就绪超时')
           if (!this.handle) {
             this.handle = imported
           }
@@ -366,6 +405,23 @@ export class DocumentManager {
    */
   broadcastCollaborationEvent(type: string, data: Record<string, any> = {}) {
     this.networkAdapter?.broadcastControlMessage(type, data)
+  }
+
+  /**
+   * 广播 UI 同步事件
+   * @param {UIEventType} type - UI 事件类型
+   * @param {Record<string, any>} data - 事件数据
+   */
+  broadcastUIEvent(type: UIEventType, data: Record<string, any> = {}) {
+    this.networkAdapter?.broadcastUIEvent(type, data)
+  }
+
+  /**
+   * 检查是否处于协作状态
+   * @returns {boolean} 是否正在协作
+   */
+  isCollaborating(): boolean {
+    return this.networkAdapter !== null && this.currentSessionId !== null
   }
 
   /**

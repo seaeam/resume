@@ -5,7 +5,7 @@
 
 // 适配器
 export { SupabaseNetworkAdapter } from './adapters/supabase'
-export type { CollaborationCallbacks } from './adapters/supabase'
+export type { CollaborationCallbacks, UIEventPayload, UIEventType } from './adapters/supabase'
 
 // 核心
 export { DocumentManager } from './core/manager'
