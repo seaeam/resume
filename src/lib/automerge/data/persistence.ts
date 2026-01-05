@@ -145,8 +145,8 @@ export class PersistenceService {
       return { success: false, error: '文档为空' }
     }
 
-    const binary = Automerge.save(doc)
-    const heads = Automerge.getHeads(doc)
+    const binary = Automerge.save(doc as any)
+    const heads = Automerge.getHeads(doc as any)
     const base64 = uint8ArrayToBase64(binary)
     const documentUrl = handle.url
 

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { IconDoorExit } from '@tabler/icons-react'
 import { Laptop, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
@@ -22,7 +22,6 @@ import useResumeStore from '@/store/resume/form'
 
 function CampusExperienceForm({ className }: { className?: string }) {
   const campusExperience = useResumeStore(state => state.campusExperience)
-  const [isUptoNow, setIsUptoNow] = useState(() => campusExperience.items?.some(item => item.duration?.[1] === '至今') || false)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
 
@@ -65,7 +64,6 @@ function CampusExperienceForm({ className }: { className?: string }) {
     const newValues = { items: campusExperience.items || DEFAULT_CAMPUS_EXPERIENCE.items }
     if (JSON.stringify(currentValues) !== JSON.stringify(newValues)) {
       form.reset(newValues, { keepDirtyValues: false })
-      setIsUptoNow(campusExperience.items?.some(item => item.duration?.[1] === '至今') || false)
     }
   }, [campusExperience, form])
 
@@ -159,7 +157,7 @@ function CampusExperienceForm({ className }: { className?: string }) {
 
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button disabled={isUptoNow} variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
+                            <Button disabled={field.value?.[1] === '至今'} variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
                               {field.value?.[1] || '结束时间'}
                               <IconDoorExit className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -178,18 +176,12 @@ function CampusExperienceForm({ className }: { className?: string }) {
                           </PopoverContent>
                         </Popover>
                         <div className="flex items-center space-x-2">
-                          <Label htmlFor="up-to-now">至今</Label>
+                          <Label htmlFor={`up-to-now-${index}`}>至今</Label>
                           <Checkbox
-                            id="up-to-now"
-                            checked={isUptoNow}
+                            id={`up-to-now-${index}`}
+                            checked={field.value?.[1] === '至今'}
                             onCheckedChange={(checked) => {
-                              setIsUptoNow(!!checked)
-                              if (checked) {
-                                field.onChange([field.value?.[0], '至今'])
-                              }
-                              else {
-                                field.onChange([field.value?.[0], ''])
-                              }
+                              field.onChange([field.value?.[0], checked ? '至今' : ''])
                             }}
                           />
                         </div>

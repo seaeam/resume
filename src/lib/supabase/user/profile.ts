@@ -19,12 +19,12 @@ export async function getUserProfile() {
 }
 
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser()
+  const { data: { session }, error } = await supabase.auth.getSession()
 
-  if (error)
+  if (error || !session)
     return null
 
-  return data.user
+  return session.user
 }
 
 export async function changeAvatar(file: File) {
