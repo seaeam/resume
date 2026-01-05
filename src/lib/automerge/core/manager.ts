@@ -298,7 +298,7 @@ export class DocumentManager {
     return null
   }
 
-  private async saveToSupabase(handle: DocHandle<AutomergeResumeDocument>) {
+  async saveToSupabase(handle: DocHandle<AutomergeResumeDocument>) {
     if (!this.canPersistToSupabase) {
       this.notify(this.saveListeners, { success: true })
       return

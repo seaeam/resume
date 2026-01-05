@@ -71,15 +71,18 @@ export function useRealtimeCursors({
 
   const channelRef = useRef<RealtimeChannel | null>(null)
 
-  const callback = useCallback(
-    (event: MouseEvent) => {
-      const { clientX, clientY } = event
+  const callback
+    = (event: MouseEvent) => {
+      // 使用 window.innerWidth/innerHeight 来匹配 clientX/clientY 的坐标系统
+      const windowWidth = window.innerWidth || 1
+      const windowHeight = window.innerHeight || 1
+
+      // 归一化坐标到 0-1 范围
+      const x = event.clientX / windowWidth
+      const y = event.clientY / windowHeight
 
       const payload: CursorEventPayload = {
-        position: {
-          x: clientX,
-          y: clientY,
-        },
+        position: { x, y },
         user: {
           id: userId,
           name: username,
@@ -95,9 +98,7 @@ export function useRealtimeCursors({
         event: EVENT_NAME,
         payload,
       })
-    },
-    [color, userId, username],
-  )
+    }
 
   const handleMouseMove = useThrottleCallback(callback, throttleMs)
 

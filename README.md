@@ -6,6 +6,7 @@
 
 ## 🥁 最新进展
 
+- **协作链接安全机制**：实现一次性链接失效系统，用户关闭协作后所有历史链接立即失效，拒绝后续访问并提供明确错误提示，附带完整安全审计日志。
 - **Automerge + Supabase 双引擎协作**：自研 `SupabaseNetworkAdapter`，通过 Realtime 频道传输 Automerge diff，支持分享链接、角色管理、实时光标与协作者在线状态。
 - **离线/云端一体化简历库**：新的仪表盘整合 IndexedDB 草稿与云端文档，提供批量同步、选择性迁移、远程删除同步提示。
 - **模块化编辑体验升级**：Tiptap 3 富文本 + 12 个语义区块表单，支持拖拽排序、按模块隐藏、主题/字体/间距实时预览。
@@ -39,7 +40,11 @@
 │  ├─ hooks/                      # 自定义 hooks（实时光标、设备检测等）
 │  ├─ lib/
 │  │  ├─ automerge/               # Automerge 文档管理、Supabase 网络适配器
-│  │  ├─ collaboration/           # 协作会话本地缓存 & 工具
+│  │  ├─ collaboration/           # 协作会话管理、安全日志、链接验证
+│  │  │  ├─ collaboration-session-service.ts  # 会话生命周期管理
+│  │  │  ├─ collaboration-security-logger.ts  # 安全审计日志
+│  │  │  ├─ session-storage.ts                # 本地会话存储
+│  │  │  └─ index.ts
 │  │  ├─ supabase/                # Supabase 客户端、数据访问层
 │  │  ├─ schema/                  # JSON Schema、默认值、类型定义
 │  │  ├─ offline-resume-manager.ts# IndexedDB 数据层
@@ -187,6 +192,52 @@ create policy "owner can update document"
 4. **Presence & 光标**：`RealtimeCursors` 监听同一 `roomName`，广播鼠标坐标与昵称，实现成员标识。
 5. **离线同步**：`SyncResumesDialog` 支持批量勾选本地草稿 → 云端，合并后保留历史；远端删除时根据订阅触发 toast 提示与界面刷新。
 
+## 🔐 协作链接安全机制
+
+为防止已关闭协作的链接被恶意访问，系统实现了完整的链接安全管理：
+
+### 核心模块
+
+| 模块     | 路径                                                 | 功能                           |
+| -------- | ---------------------------------------------------- | ------------------------------ |
+| 会话服务 | `lib/collaboration/collaboration-session-service.ts` | 会话创建、验证、失效、状态跟踪 |
+| 安全日志 | `lib/collaboration/collaboration-security-logger.ts` | 记录所有安全事件，支持审计导出 |
+| 本地存储 | `lib/collaboration/session-storage.ts`               | 会话状态持久化、失效标记管理   |
+
+### 安全工作流
+
+1. **开启协作**：创建会话记录，生成唯一 `sessionId`，设置 24 小时过期时间
+2. **分享链接**：链接包含 `resumeId` 和 `collabSession` 参数
+3. **访客加入**：
+   - 预验证：检查链接是否已被标记为失效
+   - 会话验证：通过 `collaborationSessionService.validateSession` 验证
+   - 记录访问：更新访问计数和用户列表
+4. **关闭协作**：
+   - 广播 `share-ended` 事件通知在线协作者
+   - 立即标记会话为 `invalidated` 状态
+   - 批量失效该简历的所有历史会话
+5. **后续访问**：
+   - 检测到失效标记，拒绝加载协作内容
+   - 显示"协作链接已失效"错误提示
+   - 自动重定向到简历列表页
+
+### 会话状态
+
+| 状态          | 说明                   |
+| ------------- | ---------------------- |
+| `active`      | 活跃状态，可正常访问   |
+| `invalidated` | 已失效，主机主动关闭   |
+| `expired`     | 已过期（默认 24 小时） |
+
+### 安全日志事件
+
+- `session_created` - 会话创建
+- `session_invalidated` - 会话失效
+- `link_accessed` / `link_access_denied` - 链接访问成功/被拒绝
+- `link_validation_success` / `link_validation_failed` - 链接验证结果
+- `collaboration_started` / `collaboration_ended` - 协作开始/结束
+- `security_bypass_attempt` - 安全绕过尝试
+
 ## 🧪 关键用例
 
 - [x] 未登录创建 `local-*` 简历 → 断网编辑 → 登录后在同步对话框中勾选 → 批量迁移到云端。
@@ -200,17 +251,24 @@ create policy "owner can update document"
 - `resume_config` & `automerge_documents` 均启用 RLS，限制为 `auth.uid()` 拥有者。
 - `automerge_documents` 仅存储 Base64 快照 + metadata，不包含明文密码等敏感数据。
 - 通过 `x-client-info` 自定义 Header 便于 Supabase 侧追踪调用来源。
+- **协作链接安全**：关闭协作后所有历史链接立即失效，完整审计日志记录所有访问尝试。
 
 ## 🛠️ 常见问题
 
 **Q: 协作者如何加入？**
 A: 发起者点击「开启协作」后复制链接，访问者需登录 Supabase 后自动加入；链接携带 `resumeId` 与 `collabSession`，对等端会导入最新快照。
 
+**Q: 关闭协作后链接还能用吗？**
+A: 不能。关闭协作会立即使所有相关链接失效，后续访问会显示"协作链接已失效"错误并重定向到简历列表。
+
 **Q: 忘记密码的重置链接跳转失败？**
 A: 请在环境变量中配置 `VITE_BASE_URL`，Supabase 将把重置链接重定向至 `<BASE_URL>/editor`。
 
 **Q: 没有 Supabase 权限时还能协作吗？**
 A: 若命中 RLS 拒绝，`DocumentManager` 会进入只读协作模式：继续接收他人广播的 Automerge diff，但本地不会再尝试持久化至云端。
+
+**Q: 如何查看协作安全日志？**
+A: 调用 `securityLogger.getLogs()` 获取日志，支持按 `sessionId`、`resumeId`、`eventType` 过滤；使用 `securityLogger.exportLogs()` 导出 JSON 用于审计。
 
 ## 🗺️ Roadmap
 

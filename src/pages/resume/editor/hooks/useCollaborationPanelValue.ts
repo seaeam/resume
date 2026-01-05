@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { getStoredSessionRole } from '@/lib/collaboration/session-storage'
+import { securityLogger } from '@/lib/collaboration/collaboration-security-logger'
+import { getStoredSessionRole, isSessionInvalidated } from '@/lib/collaboration/session-storage'
 import useCollaborationStore from '@/store/collaboration'
 
 import useResumeStore from '@/store/resume/form'
@@ -24,6 +25,7 @@ export function useCollaborationPanelValue({
   const [collabDialogOpen, setCollabDialogOpen] = useState(false)
   const [joinedSessionId, setJoinedSessionId] = useState<string | null>(null)
   const [lastStoppedSessionId, setLastStoppedSessionId] = useState<string | null>(null)
+  const [sessionValidationFailed, setSessionValidationFailed] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -88,6 +90,7 @@ export function useCollaborationPanelValue({
         setSearchParams(params, { replace: true })
         setJoinedSessionId(newSessionId)
         setLastStoppedSessionId(null)
+        setSessionValidationFailed(false)
       }
     }
     catch (error: any) {
@@ -141,6 +144,59 @@ export function useCollaborationPanelValue({
     }
   }, [collabSessionParam, joinedSessionId])
 
+  /**
+   * 预验证协作会话链接
+   * 在尝试加入之前检查链接是否有效
+   */
+  useEffect(() => {
+    if (!collabSessionParam || !activeResumeId || !currentUser)
+      return
+    if (isSharing)
+      return
+    if (lastStoppedSessionId && collabSessionParam === lastStoppedSessionId)
+      return
+    if (joinedSessionId === collabSessionParam)
+      return
+    if (sessionValidationFailed)
+      return
+
+    // 预先检查链接是否已失效
+    if (isSessionInvalidated(collabSessionParam, activeResumeId)) {
+      setSessionValidationFailed(true)
+
+      // 记录安全日志
+      securityLogger.logLinkAccess({
+        sessionId: collabSessionParam,
+        resumeId: activeResumeId,
+        userId: currentUser.id,
+        success: false,
+        reason: 'SESSION_INVALIDATED',
+        details: { checkType: 'pre_validation' },
+      })
+
+      toast.error('协作链接已失效', {
+        description: '发起者已关闭实时协作，请联系分享者获取新链接',
+        duration: 6000,
+      })
+
+      // 清除URL参数并导航
+      const params = new URLSearchParams(window.location.search)
+      params.delete('collabSession')
+      setSearchParams(params, { replace: true })
+      navigate('/resume')
+    }
+  }, [
+    collabSessionParam,
+    activeResumeId,
+    currentUser,
+    isSharing,
+    lastStoppedSessionId,
+    joinedSessionId,
+    sessionValidationFailed,
+    setSearchParams,
+    navigate,
+  ])
+
   useEffect(() => {
     if (!collabSessionParam || !activeResumeId)
       return
@@ -152,6 +208,8 @@ export function useCollaborationPanelValue({
       return
     if (!isDocumentInitialized || mode !== 'online' || !currentUser)
       return
+    if (sessionValidationFailed)
+      return
 
     const payload = {
       sessionId: collabSessionParam,
@@ -162,8 +220,22 @@ export function useCollaborationPanelValue({
 
     const action = sessionRoleHint === 'host' ? resumeHosting : joinSession
     action(payload)
-      .then(() => setJoinedSessionId(collabSessionParam))
-      .catch(() => setJoinedSessionId(collabSessionParam))
+      .then(() => {
+        setJoinedSessionId(collabSessionParam)
+        setSessionValidationFailed(false)
+      })
+      .catch((error) => {
+        setJoinedSessionId(collabSessionParam)
+        setSessionValidationFailed(true)
+
+        // 如果是验证失败，清除URL参数并导航
+        if (error?.message?.includes('失效') || error?.message?.includes('invalid')) {
+          const params = new URLSearchParams(window.location.search)
+          params.delete('collabSession')
+          setSearchParams(params, { replace: true })
+          navigate('/resume')
+        }
+      })
   }, [
     collabSessionParam,
     activeResumeId,
@@ -177,6 +249,9 @@ export function useCollaborationPanelValue({
     sessionRoleHint,
     joinSession,
     resumeHosting,
+    sessionValidationFailed,
+    setSearchParams,
+    navigate,
   ])
 
   useEffect(() => {
