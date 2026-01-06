@@ -155,7 +155,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
           transition: 'transform 0.1s ease',
         }}
       >
-        <div className="h-full w-full shadow-2xl rounded-lg border-primary/50 bg-background/95 backdrop-blur-sm">
+        <div className="h-full w-full">
           {/* 克隆原始内容 */}
           <div
             dangerouslySetInnerHTML={{

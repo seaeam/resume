@@ -10,8 +10,6 @@ interface DraggableItemProps {
   index: number
   disabled?: boolean
   className?: string
-  showHoverHint?: boolean
-  hoverHintText?: string
   children: ReactNode
 }
 
@@ -20,11 +18,9 @@ export function DraggableItem({
   index,
   disabled = false,
   className,
-  showHoverHint = true,
-  hoverHintText = '拖动排序',
   children,
 }: DraggableItemProps) {
-  const { elementRef, isDragging, isHovered, handleMouseDown, handleMouseEnter, handleMouseLeave } = useDraggableItem(
+  const { elementRef, isDragging, handleMouseDown, handleMouseEnter, handleMouseLeave } = useDraggableItem(
     id,
     index,
     disabled,
@@ -99,7 +95,6 @@ export function DraggableItem({
       animate={{
         x: xOffset,
         opacity: isDragging ? (isDraggingBackToOriginal ? 0.3 : 0) : 1,
-        scale: isDragging ? 0.98 : 1,
       }}
       transition={{
         x: draggedItem
@@ -111,7 +106,6 @@ export function DraggableItem({
             }
           : { duration: 0 }, // 拖拽结束后立即归零，不要动画
         opacity: { duration: 0.15 },
-        scale: { duration: 0.2 },
       }}
       style={{
         // 只有在拖拽到其他位置时才隐藏原位置
@@ -119,7 +113,6 @@ export function DraggableItem({
       }}
       className={cn(
         'relative',
-        isHovered && !disabled && 'bg-muted/50 shadow-sm',
         !disabled && 'cursor-grab active:cursor-grabbing',
         className,
       )}
@@ -127,18 +120,6 @@ export function DraggableItem({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 悬停提示 */}
-      {showHoverHint && isHovered && !disabled && (
-        <motion.div
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.15 }}
-          className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-muted-foreground bg-background px-2 py-1 rounded border shadow-sm whitespace-nowrap z-10"
-        >
-          {hoverHintText}
-        </motion.div>
-      )}
 
       {children}
     </motion.div>
