@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { RealtimeCursors } from '@/components/realtime-cursors'
 import { useTheme } from '@/components/theme-provider'
+import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
-import { RainbowButton } from '@/components/ui/rainbow-button'
 import { Spinner } from '@/components/ui/spinner'
 import { DragProvider } from '@/contexts/DragContext'
 import { useCurrentUserName } from '@/hooks/use-current-user-name'
@@ -84,14 +84,14 @@ function Editor() {
       <DragProvider>
         <Drawer open={open} onOpenChange={setOpen} handleOnly>
           <DrawerTrigger asChild>
-            <RainbowButton
-              variant="outline"
+            <Button
+              variant="secondary"
               className="fixed bottom-6 left-1/2 z-1 -transform -translate-x-1/2"
               size={isMobile ? 'icon' : 'default'}
             >
               <Edit />
               {!isMobile && '编辑简历'}
-            </RainbowButton>
+            </Button>
           </DrawerTrigger>
           <DrawerContent className="h-160">
             <CollaborationControls />

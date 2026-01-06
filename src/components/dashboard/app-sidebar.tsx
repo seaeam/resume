@@ -1,6 +1,6 @@
 import type React from 'react'
 import { IconHelp, IconInnerShadowTop, IconSearch, IconSettings } from '@tabler/icons-react'
-import { FileUser, LayoutTemplate } from 'lucide-react'
+import { FileUser, HomeIcon, LayoutTemplate } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
   Sidebar,
@@ -17,6 +17,11 @@ import { NavUser } from './nav-user'
 
 const data = {
   options: [
+    {
+      title: '首页',
+      url: '/',
+      icon: HomeIcon,
+    },
     {
       title: '我的简历',
       url: '/resume',
