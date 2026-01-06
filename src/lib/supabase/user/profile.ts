@@ -21,7 +21,7 @@ export async function getUserProfile() {
 export async function getCurrentUser() {
   const { data, error } = await supabase.auth.getSession()
 
-  if (error || !data.session)
+  if (error)
     return null
 
   return data.session?.user ?? null

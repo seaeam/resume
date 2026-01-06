@@ -3,7 +3,7 @@ import type { ShallowPartial } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Trash2, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
@@ -49,36 +49,12 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
     name: 'skills',
   })
 
-  // 追踪本地编辑状态
-  const isLocalEditingRef = useRef(false)
-  const localEditTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // 监听表单变化，更新 store
   useEffect(() => {
     const subscription = form.watch((value) => {
-      isLocalEditingRef.current = true
-      if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
-      localEditTimeoutRef.current = setTimeout(() => { isLocalEditingRef.current = false }, 150)
       updateForm('skillSpecialty', value as ShallowPartial<SkillSpecialtyFormType>)
     })
-    return () => {
-      subscription.unsubscribe()
-      if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
-    }
+    return () => subscription.unsubscribe()
   }, [form, updateForm])
-
-  // 监听 store 变化（来自协作者），同步到表单
-  useEffect(() => {
-    if (isLocalEditingRef.current) return
-    const currentValues = form.getValues()
-    const newValues = {
-      description: skillSpecialty.description || '',
-      skills: skillSpecialty.skills || [],
-    }
-    if (JSON.stringify(currentValues) !== JSON.stringify(newValues)) {
-      form.reset(newValues, { keepDirtyValues: false })
-    }
-  }, [skillSpecialty, form])
 
   // 检查预设技能是否已添加
   const isPresetSkillAdded = (skillLabel: string) => {

@@ -10,11 +10,11 @@
  */
 
 import type { DocHandle } from '@automerge/automerge-repo'
-import type { AutomergeResumeDocument } from '@/lib/automerge'
+import type { AutomergeResumeDocument } from '@/lib/automerge/schema'
 import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { DocumentManager } from '@/lib/automerge'
+import { DocumentManager } from '@/lib/automerge/document-manager'
 import {
 
   DEFAULT_APPLICATION_INFO,

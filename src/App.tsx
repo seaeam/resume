@@ -12,11 +12,11 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <AppSidebar variant="floating" />
-      <SidebarInset className="relative flex flex-col overflow-hidden">
+      <SidebarInset className="relative flex flex-col">
         <SidebarHeader className="sticky top-0 z-1 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
           <SiteHeader />
         </SidebarHeader>
-        <div className="flex-1 p-4">
+        <div className="flex-1 overflow-auto p-4">
           <Suspense fallback={<Loading />}>{useRoutes(routes)}</Suspense>
         </div>
         <Toaster position="top-right" richColors />

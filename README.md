@@ -1,294 +1,132 @@
 # Resume · 智能简历平台
 
-> 一体化的所见即所得简历工作台：离线/在线统一存储、Automerge 实时协作、可定制模板主题。
+> **一体化的所见即所得简历工作台**
+>
+> 离线/在线统一存储 · Automerge 实时协作 · AI 智能解析 · 可定制模板主题
 
-- 在线演示（Demo）：**[https://506resume.vercel.app/](https://506resume.vercel.app/)**
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fseam-github%2Fresume)
 
-## 🥁 最新进展
+## 📖 项目概述
 
-- **协作链接安全机制**：实现一次性链接失效系统，用户关闭协作后所有历史链接立即失效，拒绝后续访问并提供明确错误提示，附带完整安全审计日志。
-- **Automerge + Supabase 双引擎协作**：自研 `SupabaseNetworkAdapter`，通过 Realtime 频道传输 Automerge diff，支持分享链接、角色管理、实时光标与协作者在线状态。
-- **离线/云端一体化简历库**：新的仪表盘整合 IndexedDB 草稿与云端文档，提供批量同步、选择性迁移、远程删除同步提示。
-- **模块化编辑体验升级**：Tiptap 3 富文本 + 12 个语义区块表单，支持拖拽排序、按模块隐藏、主题/字体/间距实时预览。
-- **账号与偏好中心**：接入 Supabase Auth 登录注册、忘记密码跳转、个人资料页与环境变量健康检查。
+**Resume** 是一款现代化的简历制作平台，致力于提供极致的编辑体验。它结合了 Notion 式的富文本编辑与结构化的表单管理，支持实时预览和多人协作。无论是离线使用还是云端同步，Resume 都能确保您的数据安全且随时可用。
+
+最新版本引入了 **DeepSeek** 驱动的 AI 解析功能，支持从图片智能提取简历信息，进一步提升创作效率。
 
 ## ✨ 核心特性
 
-- **WYSIWYG 简历编辑器**：侧边抽屉驱动的区块表单 + 实时预览，覆盖个人信息、教育/工作/实习、项目、技能、荣誉、自我评价等模块；内置富文本能力（高亮、列表、图片、对齐等）。
-- **实时协作**：Automerge 文档驱动的数据层，点击一键生成分享链接，协作人数、角色、光标位置与颜色实时可视。
-- **离线优先与容灾**：所有草稿自动落盘到 IndexedDB，断网继续编辑；恢复网络后自动回放更改，也可手动触发同步。
-- **同步与版本守护**：字段级合并策略 + 删除优先，云端保存 Automerge 快照与 heads，确保新会话立即对齐；远端删除时提供 toast 提示与跳转。
-- **可扩展模板系统**：JSON Schema + Zustand 配置器定义字段、默认值、主题；Preview 组件支持主题色、字体、间距等即刻切换。
-- **工程化体验**：Vite 7 + React 19 + Tailwind CSS v4 + pnpm，配合 shadcn/ui、motion、lucide/Tabler 图标，快速开发与迭代。
+- **WYSIWYG 编辑器**：侧边栏表单 + 实时预览双向绑定。支持拖拽排序、模块隐藏/显示。内置 Tiptap 3 富文本引擎，提供流畅的文本编辑体验。
+- **🤖 AI 智能解析**：基于 DeepSeek 大模型，支持上传简历图片自动解析为结构化数据（需配置 API Key）。
+- **👥 实时协作**：基于 Automerge 的 CRDT 算法，支持多人同时编辑同一份简历。实时显示协作者光标、选区和在线状态。
+- **🔗 安全分享**：一键生成协作链接，支持一次性链接失效机制，保障隐私安全。
+- **💾 离线优先**：采用 IndexedDB 本地存储，断网即可用。网络恢复后自动与云端（Supabase）同步，支持差异合并。
+- **🎨 模板与主题**：内置多种专业模板（Basic, Modern），支持一键切换主题色、字体、间距和排版风格。
+- **🔒 账号系统**：完整的用户认证流程（登录、注册、找回密码），支持个人资料管理。
+- **📤 多格式导出**：支持导出高清 PDF，完美还原排版效果。
 
-## 🧱 技术栈
+## 🛠 技术栈
 
-- **前端框架**：React 19 · Vite 7 · React Router 7
-- **编辑器与 UI**：Tiptap 3 · Tailwind CSS 4 · shadcn/ui · motion · lucide-react
-- **状态管理**：Zustand · React Hook Form · Zod
-- **协作与数据层**：Automerge Repo · IndexedDB Storage · Supabase (Auth / Postgres / Realtime)
-- **工具链**：TypeScript 5.9 · ESLint 9 · Prettier 3 · pnpm
+本项目采用最新的前端技术栈构建，确保高性能与良好的开发体验：
 
-## 📦 目录结构
+- **前端框架**：[React 19](https://react.dev/) · [Vite 7](https://vitejs.dev/) · [React Router 7](https://reactrouter.com/)
+- **UI 组件库**：[Tailwind CSS 4](https://tailwindcss.com/) · [shadcn/ui](https://ui.shadcn.com/) · [Motion](https://motion.dev/)
+- **编辑器**：[Tiptap 3](https://tiptap.dev/) (Headless WYSIWYG Editor)
+- **状态管理**：[Zustand](https://zustand-demo.pmnd.rs/) · React Hook Form · Zod
+- **协作引擎**：[Automerge](https://automerge.org/) (CRDT) · WebSocket
+- **后端服务**：[Supabase](https://supabase.com/) (Auth, Postgres, Realtime)
+- **AI 服务**：DeepSeek API (OpenAI Compatible)
 
-```
-.
-├─ public/                        # 静态资源
-├─ src/
-│  ├─ components/                 # 通用 UI、业务组件（协作面板、抽屉、光标等）
-│  ├─ contexts/                   # 全局上下文（拖拽、协作面板）
-│  ├─ hooks/                      # 自定义 hooks（实时光标、设备检测等）
-│  ├─ lib/
-│  │  ├─ automerge/               # Automerge 文档管理、Supabase 网络适配器
-│  │  ├─ collaboration/           # 协作会话管理、安全日志、链接验证
-│  │  │  ├─ collaboration-session-service.ts  # 会话生命周期管理
-│  │  │  ├─ collaboration-security-logger.ts  # 安全审计日志
-│  │  │  ├─ session-storage.ts                # 本地会话存储
-│  │  │  └─ index.ts
-│  │  ├─ supabase/                # Supabase 客户端、数据访问层
-│  │  ├─ schema/                  # JSON Schema、默认值、类型定义
-│  │  ├─ offline-resume-manager.ts# IndexedDB 数据层
-│  │  └─ resume-sync-service.ts   # 离线 → 云端同步服务
-│  ├─ pages/                      # 路由页面（登录、注册、仪表盘、编辑器、个人中心等）
-│  ├─ store/                      # Zustand 状态仓库
-│  ├─ styles/                     # Tailwind & 全局样式
-│  ├─ App.tsx
-│  ├─ main.tsx
-│  └─ index.css
-├─ package.json
-├─ pnpm-lock.yaml
-├─ vite.config.ts
-├─ vercel.json
-└─ README.md
-```
+## ⚙️ 环境配置
 
-## ⚙️ 环境变量
+在开始开发之前，请确保您的环境满足以下要求：
 
-在根目录创建 `.env.local`，并设置以下变量：
+- **Node.js**: >= 18.0.0
+- **pnpm**: >= 8.0.0
+
+### 1. 克隆项目
 
 ```bash
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key
-
-# 可选：用于 Supabase 忘记密码重定向
-VITE_BASE_URL=https://506resume.vercel.app
+git clone https://github.com/seam-github/resume.git
+cd resume
 ```
 
-> Vite 仅会注入以 `VITE_` 开头的变量。推荐在开发环境使用 `.env.local`，部署到 Vercel 时在项目 Settings → Environment Variables 中配置。
-
-## 🚀 快速开始
+### 2. 安装依赖
 
 ```bash
-pnpm install        # 安装依赖
-pnpm dev            # 启动开发服务器：http://localhost:5173
-pnpm build          # 生产构建
-pnpm preview        # 本地预览生产包
+pnpm install
 ```
 
-## ☁️ 部署到 Vercel
+### 3. 配置环境变量
 
-1. **连接仓库**：在 [Vercel](https://vercel.com) 导入 Git 仓库，选择 `pnpm`。
-2. **配置环境变量**：在 Vercel 项目 Settings 中新增：
-   ```
-   VITE_SUPABASE_URL=…
-   VITE_SUPABASE_PUBLISHABLE_KEY=…
-   VITE_BASE_URL=https://<your-domain> (可选)
-   ```
-3. **数据库与权限**：按照下方 `Supabase 数据模型` 建表并配置 RLS；确保部署环境的匿名 Key 拥有访问权限。
-4. **验证部署**：
-   - 登录后检查仪表盘是否能加载在线 + 离线列表；
-   - 触发一次协作链接，确认协作者可以加入并看到实时光标；
-   - 查看右上角的环境状态徽章是否显示「配置正确」。
+在项目根目录创建 `.env.local` 文件，并填入以下配置：
 
-> `vercel.json` 默认启用了静态资源缓存和对长连接友好的设置，可按需调整。
+```env
+# Supabase 配置 (必须)
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
 
-## 🗃️ Supabase 数据模型
+# AI 功能配置 (DeepSeek / OpenAI Compatible) (可选，用于图片解析)
+VITE_DOUBAO_KEY=your-api-key
 
-### `resume_config`（核心简历数据）
-
-```sql
-create table public.resume_config (
-  id bigint generated by default as identity primary key,
-  resume_id uuid not null default gen_random_uuid(),
-  user_id uuid not null default auth.uid(),
-  type text default 'default',
-  display_name text,
-  description text,
-  basics jsonb,
-  job_intent jsonb,
-  application_info jsonb,
-  edu_background jsonb,
-  work_experience jsonb,
-  internship_experience jsonb,
-  campus_experience jsonb,
-  project_experience jsonb,
-  skill_specialty jsonb,
-  honors_certificates jsonb,
-  self_evaluation jsonb,
-  hobbies jsonb,
-  "order" jsonb default '["basics","jobIntent","applicationInfo","eduBackground"]'::jsonb,
-  visibility jsonb,
-  document_version integer default 1,
-  total_changes_count integer default 0,
-  last_automerge_sync timestamptz,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
-alter table public.resume_config
-  add constraint resume_config_resume_id_unique unique (resume_id);
-
-alter table public.resume_config enable row level security;
-
--- 每个用户只能访问自己的简历
-create policy "users can read own resume"
-  on public.resume_config
-  for select using (auth.uid() = user_id);
-
-create policy "users can modify own resume"
-  on public.resume_config
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-
--- 为 Realtime 推送包含变更前后的值
-alter table public.resume_config replica identity full;
+# 应用基础 URL (可选，用于邮件重定向等)
+VITE_BASE_URL=http://localhost:5173
 ```
 
-### `automerge_documents`（协作文档快照）
+> **注意**：`VITE_DOUBAO_KEY` 虽然命名为 Doubao，但在代码中配置为连接 DeepSeek API (`https://api.deepseek.com`)。请填入兼容 OpenAI 格式的 API Key。
 
-```sql
-create table public.automerge_documents (
-  resume_id uuid primary key references public.resume_config(resume_id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  document_data text,         -- Automerge.save() 的 Base64
-  heads jsonb,
-  document_version integer default 1,
-  change_count integer default 0,
-  metadata jsonb,
-  updated_at timestamptz default now()
-);
+## 🚀 运行与构建
 
-alter table public.automerge_documents enable row level security;
+### 启动开发服务器
 
-create policy "owner can read document"
-  on public.automerge_documents
-  for select using (auth.uid() = user_id);
-
-create policy "owner can write document"
-  on public.automerge_documents
-  for insert with check (auth.uid() = user_id);
-
-create policy "owner can update document"
-  on public.automerge_documents
-  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+```bash
+pnpm dev
 ```
 
-> `DocumentManager` 会优先使用 `metadata.documentUrl` 找回同一个 Automerge 文档；若无快照，会回退到 `resume_config` 的 JSON 字段生成默认文档。
+访问 http://localhost:5173 开始开发。
 
-## 🧩 协作与同步架构
+### 构建生产版本
 
-1. **初始化阶段**：`DocumentManager` 优先尝试从 `automerge_documents` 拉取快照；若没有则从 `resume_config` JSON 初始化，并持久化 `documentUrl`。
-2. **本地编辑流**：表单数据写入 Automerge 文档；对离线 ID（`local-*`）使用 IndexedDB；在线状态下 3 秒内聚合写入 Supabase。
-3. **实时协作**：发起者点击「开启协作」后创建 session，`SupabaseNetworkAdapter` 通过 `automerge:resume:{resumeId}:{sessionId}` 频道转发 diff；协作者加入时自动导入最新快照并回放缺失变化。
-4. **Presence & 光标**：`RealtimeCursors` 监听同一 `roomName`，广播鼠标坐标与昵称，实现成员标识。
-5. **离线同步**：`SyncResumesDialog` 支持批量勾选本地草稿 → 云端，合并后保留历史；远端删除时根据订阅触发 toast 提示与界面刷新。
+```bash
+pnpm build
+```
 
-## 🔐 协作链接安全机制
+### 本地预览生产包
 
-为防止已关闭协作的链接被恶意访问，系统实现了完整的链接安全管理：
+```bash
+pnpm preview
+```
 
-### 核心模块
+## ☁️ 部署指南
 
-| 模块     | 路径                                                 | 功能                           |
-| -------- | ---------------------------------------------------- | ------------------------------ |
-| 会话服务 | `lib/collaboration/collaboration-session-service.ts` | 会话创建、验证、失效、状态跟踪 |
-| 安全日志 | `lib/collaboration/collaboration-security-logger.ts` | 记录所有安全事件，支持审计导出 |
-| 本地存储 | `lib/collaboration/session-storage.ts`               | 会话状态持久化、失效标记管理   |
+本项目适配 Vercel 零配置部署：
 
-### 安全工作流
+1. Fork 本仓库到您的 GitHub。
+2. 登录 [Vercel](https://vercel.com/) 并导入项目。
+3. 在 Vercel 的 **Environment Variables** 中配置上述环境变量。
+4. 点击 **Deploy**。
 
-1. **开启协作**：创建会话记录，生成唯一 `sessionId`，设置 24 小时过期时间
-2. **分享链接**：链接包含 `resumeId` 和 `collabSession` 参数
-3. **访客加入**：
-   - 预验证：检查链接是否已被标记为失效
-   - 会话验证：通过 `collaborationSessionService.validateSession` 验证
-   - 记录访问：更新访问计数和用户列表
-4. **关闭协作**：
-   - 广播 `share-ended` 事件通知在线协作者
-   - 立即标记会话为 `invalidated` 状态
-   - 批量失效该简历的所有历史会话
-5. **后续访问**：
-   - 检测到失效标记，拒绝加载协作内容
-   - 显示"协作链接已失效"错误提示
-   - 自动重定向到简历列表页
+### Supabase 数据库设置
 
-### 会话状态
+项目依赖 Supabase 进行用户认证和数据存储。您需要在 Supabase 控制台执行以下操作：
 
-| 状态          | 说明                   |
-| ------------- | ---------------------- |
-| `active`      | 活跃状态，可正常访问   |
-| `invalidated` | 已失效，主机主动关闭   |
-| `expired`     | 已过期（默认 24 小时） |
-
-### 安全日志事件
-
-- `session_created` - 会话创建
-- `session_invalidated` - 会话失效
-- `link_accessed` / `link_access_denied` - 链接访问成功/被拒绝
-- `link_validation_success` / `link_validation_failed` - 链接验证结果
-- `collaboration_started` / `collaboration_ended` - 协作开始/结束
-- `security_bypass_attempt` - 安全绕过尝试
-
-## 🧪 关键用例
-
-- [x] 未登录创建 `local-*` 简历 → 断网编辑 → 登录后在同步对话框中勾选 → 批量迁移到云端。
-- [x] 同一份简历多人实时编辑：字段级合并 + Automerge heads 确保顺序一致，协作者退出后链接立即失效。
-- [x] 协作者删除或远程删除在线简历：主会话收到通知并回退到列表页，避免编辑空文档。
-- [x] 手动保存与自动保存互补：Pending 状态提示 + 最近一次成功同步时间戳。
-
-## 🛡️ 安全与权限
-
-- 依赖 Supabase Auth（支持匿名/邮箱登录），前端只持有匿名 Key。
-- `resume_config` & `automerge_documents` 均启用 RLS，限制为 `auth.uid()` 拥有者。
-- `automerge_documents` 仅存储 Base64 快照 + metadata，不包含明文密码等敏感数据。
-- 通过 `x-client-info` 自定义 Header 便于 Supabase 侧追踪调用来源。
-- **协作链接安全**：关闭协作后所有历史链接立即失效，完整审计日志记录所有访问尝试。
-
-## 🛠️ 常见问题
-
-**Q: 协作者如何加入？**
-A: 发起者点击「开启协作」后复制链接，访问者需登录 Supabase 后自动加入；链接携带 `resumeId` 与 `collabSession`，对等端会导入最新快照。
-
-**Q: 关闭协作后链接还能用吗？**
-A: 不能。关闭协作会立即使所有相关链接失效，后续访问会显示"协作链接已失效"错误并重定向到简历列表。
-
-**Q: 忘记密码的重置链接跳转失败？**
-A: 请在环境变量中配置 `VITE_BASE_URL`，Supabase 将把重置链接重定向至 `<BASE_URL>/editor`。
-
-**Q: 没有 Supabase 权限时还能协作吗？**
-A: 若命中 RLS 拒绝，`DocumentManager` 会进入只读协作模式：继续接收他人广播的 Automerge diff，但本地不会再尝试持久化至云端。
-
-**Q: 如何查看协作安全日志？**
-A: 调用 `securityLogger.getLogs()` 获取日志，支持按 `sessionId`、`resumeId`、`eventType` 过滤；使用 `securityLogger.exportLogs()` 导出 JSON 用于审计。
-
-## 🗺️ Roadmap
-
-- [x] Automerge CRDT 实时协作（含分享链接、实时光标）
-- [x] 离线草稿与云端同步对话框
-- [ ] 正式版导出（PDF/JSON）
-- [ ] 模板市场 & 多主题库
-- [ ] 多语言/RTL 支持
-- [ ] AI 助理：要点抽取、反馈建议
-- [ ] Webhook / Edge Functions 生成版本快照
+1. 创建新项目。
+2. 开启 **Email Auth** 提供商。
+3. 在 **Table Editor** 中根据 `src/lib/supabase/schema` (如有) 或自动生成的表结构创建必要的表。
+   - _注：当前版本主要利用 Supabase Auth 和 Realtime 功能，简历数据主要通过 Automerge Blob 存储或同步。具体 Schema 请参考 `src/lib/supabase` 目录下的定义。_
 
 ## 🤝 贡献指南
 
-欢迎提交 Issue / PR！在提交前请确认：
+欢迎提交 Issue 和 Pull Request！
 
-1. `pnpm install` 安装依赖；
-2. `pnpm exec eslint "src/**/*.{ts,tsx}"` 保持代码风格；
-3. 附带必要的单元或端到端验证（若涉及核心逻辑或同步流程）；
-4. 建议遵循约定式提交信息。
+1. Fork 本项目。
+2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)。
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)。
+4. 推送到分支 (`git push origin feature/AmazingFeature`)。
+5. 开启一个 Pull Request。
 
-## 📝 License
+## 许可证
 
-本项目使用 **MIT** 许可证，详见 [LICENSE](./LICENSE)。
+本项目目前设为私有 (`private: true`)。如需开源使用，请遵循相关协议或联系作者。
+
+## 联系方式
+
+如有问题或建议，欢迎通过 GitHub Issues 反馈。

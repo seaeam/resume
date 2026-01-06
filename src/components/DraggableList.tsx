@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
-import { useDrag } from '@/pages/resume/editor/components/sidebar/context/DragContext'
+import { useDrag } from '@/contexts/DragContext'
 
 interface DraggableListProps<T> {
   items: T[]

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { Cake, Delete, Plus } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -45,49 +45,12 @@ function BasicResumeForm({ className }: { className?: string }) {
   }
   const [open, setOpen] = useState(false)
 
-  // 追踪本地编辑状态，避免远程更新覆盖正在输入的内容
-  const isLocalEditingRef = useRef(false)
-  const localEditTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // 监听表单变化，更新 store
   useEffect(() => {
     const subscription = form.watch((value) => {
-      // 标记正在本地编辑
-      isLocalEditingRef.current = true
-      
-      // 清除之前的 timeout
-      if (localEditTimeoutRef.current) {
-        clearTimeout(localEditTimeoutRef.current)
-      }
-      
-      // 150ms 后清除标记，表示本地编辑暂停
-      localEditTimeoutRef.current = setTimeout(() => {
-        isLocalEditingRef.current = false
-      }, 150)
-      
       updateForm('basics', value as ShallowPartial<BasicFormType>)
     })
-    return () => {
-      subscription.unsubscribe()
-      if (localEditTimeoutRef.current) {
-        clearTimeout(localEditTimeoutRef.current)
-      }
-    }
+    return () => subscription.unsubscribe()
   }, [form, updateForm])
-
-  // 监听 store 变化（来自协作者），同步到表单
-  useEffect(() => {
-    // 如果正在本地编辑，跳过远程更新，避免覆盖用户输入
-    if (isLocalEditingRef.current) {
-      return
-    }
-    
-    const currentValues = form.getValues()
-    // 深度比较，避免不必要的 reset
-    if (JSON.stringify(currentValues) !== JSON.stringify(basics)) {
-      form.reset(basics, { keepDirtyValues: false })
-    }
-  }, [basics, form])
 
   return (
     <Form {...form}>

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { IconDoorExit } from '@tabler/icons-react'
 import { Laptop, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,7 @@ import useResumeStore from '@/store/resume/form'
 
 function WorkExperienceForm({ className }: { className?: string }) {
   const workExperience = useResumeStore(state => state.workExperience)
+  const [isUptoNow, setIsUptoNow] = useState(() => workExperience.items?.some(item => item.workDuration?.[1] === '至今') || false)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
 
@@ -39,33 +40,12 @@ function WorkExperienceForm({ className }: { className?: string }) {
     name: 'items',
   })
 
-  // 追踪本地编辑状态
-  const isLocalEditingRef = useRef(false)
-  const localEditTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // 监听表单变化，更新 store
   useEffect(() => {
     const subscription = form.watch((value) => {
-      isLocalEditingRef.current = true
-      if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
-      localEditTimeoutRef.current = setTimeout(() => { isLocalEditingRef.current = false }, 150)
       updateForm('workExperience', value as ShallowPartial<WorkExperienceFormType>)
     })
-    return () => {
-      subscription.unsubscribe()
-      if (localEditTimeoutRef.current) clearTimeout(localEditTimeoutRef.current)
-    }
+    return () => subscription.unsubscribe()
   }, [form, updateForm])
-
-  // 监听 store 变化（来自协作者），同步到表单
-  useEffect(() => {
-    if (isLocalEditingRef.current) return
-    const currentValues = form.getValues()
-    const newValues = { items: workExperience.items || DEFAULT_WORK_EXPERIENCE.items }
-    if (JSON.stringify(currentValues) !== JSON.stringify(newValues)) {
-      form.reset(newValues, { keepDirtyValues: false })
-    }
-  }, [workExperience, form])
 
   function onAddItem() {
     append(DEFAULT_WORK_EXPERIENCE.items![0])
@@ -157,7 +137,7 @@ function WorkExperienceForm({ className }: { className?: string }) {
 
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button disabled={field.value?.[1] === '至今'} variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
+                            <Button disabled={isUptoNow} variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
                               {field.value?.[1] || '离职时间'}
                               <IconDoorExit className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -176,12 +156,18 @@ function WorkExperienceForm({ className }: { className?: string }) {
                           </PopoverContent>
                         </Popover>
                         <div className="flex items-center space-x-2">
-                          <Label htmlFor={`up-to-now-${index}`}>至今</Label>
+                          <Label htmlFor="up-to-now">至今</Label>
                           <Checkbox
-                            id={`up-to-now-${index}`}
-                            checked={field.value?.[1] === '至今'}
+                            id="up-to-now"
+                            checked={isUptoNow}
                             onCheckedChange={(checked) => {
-                              field.onChange([field.value?.[0], checked ? '至今' : ''])
+                              setIsUptoNow(!!checked)
+                              if (checked) {
+                                field.onChange([field.value?.[0], '至今'])
+                              }
+                              else {
+                                field.onChange([field.value?.[0], ''])
+                              }
                             }}
                           />
                         </div>

@@ -1,8 +1,8 @@
 import type { DocHandle } from '@automerge/automerge-repo'
-import type { AutomergeResumeDocument } from '@/lib/automerge'
+import type { AutomergeResumeDocument } from '@/lib/automerge/schema'
 import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import { create } from 'zustand'
-import { DocumentManager } from '@/lib/automerge'
+import { DocumentManager } from '@/lib/automerge/document-manager'
 import {
   getOfflineResumeById,
   isOfflineResumeId,
@@ -341,28 +341,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     try {
       const manager = new DocumentManager(resumeId, user.id)
       const handle = await manager.initialize()
-
-      // 文档可能还没有 ready（等待协作网络同步）
-      // 先尝试获取文档，如果没有则使用默认值
-      let doc = handle.doc()
-
-      // 如果文档还没 ready，设置一个等待监听
-      // 当文档通过协作同步过来时会触发 change 事件
-      if (!doc) {
-        // 异步等待文档 ready，但不阻塞 UI
-        handle.whenReady().then(() => {
-          const readyDoc = handle.doc()
-          if (readyDoc) {
-            set(prev => ({
-              ...prev,
-              ...mapDocToState(readyDoc),
-              isInitialized: true,
-            }))
-          }
-        }).catch(() => {
-          // 忽略错误，change 事件会处理
-        })
-      }
+      const doc = handle.doc()
 
       const changeHandler = ({ doc }: { doc: AutomergeResumeDocument | null }) => {
         if (!doc)
@@ -408,8 +387,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
         pendingChanges: false,
         syncError: null,
         mode: 'online',
-        // 如果有文档则标记已初始化，否则等待协作同步
-        isInitialized: !!doc,
+        isInitialized: true,
       })
     }
     catch (error) {

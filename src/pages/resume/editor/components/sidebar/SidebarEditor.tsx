@@ -33,11 +33,12 @@ export function SidebarEditor({
 
   return (
     <DraggableList items={orderDraggable} onOrderChange={order => onUpdateOrder(['basics', ...order])}>
-      <SideTabsWrapper defaultId={activeTabId} activeId={activeTabId} onActiveChange={onUpdateActiveTabId}>
+      <SideTabsWrapper defaultId={activeTabId}>
         <SideTabs>
           <div className="flex flex-col items-center justify-end gap-2">
             <Tab
               id="basics"
+              onClick={() => onUpdateActiveTabId('basics')}
               disabled={visibilityState['basics' as VisibilityItemsType]}
             >
               {ITEMS.find(item => item.id === 'basics')?.icon}
@@ -64,6 +65,7 @@ export function SidebarEditor({
                   )}
                   <Tab
                     id={item.id}
+                    onClick={() => onUpdateActiveTabId(item.id)}
                     disabled={visibilityState[item.id as VisibilityItemsType]}
                   >
                     {item.icon}

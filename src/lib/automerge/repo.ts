@@ -1,9 +1,3 @@
-/**
- * Automerge 仓库工厂
- * @module core/repo
- * @description 管理 Automerge Repo 单例实例。
- */
-
 import type { RepoConfig } from '@automerge/automerge-repo'
 import { Repo } from '@automerge/automerge-repo'
 import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-indexeddb'
@@ -13,11 +7,8 @@ let currentResumeId: string | null = null
 
 /**
  * 获取或创建 Automerge Repo 单例
- * @description 确保只有一个 Repo 实例存在。如果 resumeId 发生变化，则重新创建它。
- * @param {string} resumeId - 当前简历 ID
- * @returns {Repo} Automerge Repo 实例
  */
-export function getAutomergeRepo(resumeId: string): Repo {
+export function getAutomergeRepo(resumeId: string) {
   // 如果 resumeId 变化，需要重新创建 repo（因为网络适配器绑定到特定简历）
   if (repoInstance && resumeId && resumeId !== currentResumeId) {
     destroyAutomergeRepo()
@@ -32,9 +23,7 @@ export function getAutomergeRepo(resumeId: string): Repo {
 }
 
 /**
- * 创建新的 Automerge Repo 实例
- * @private
- * @returns {Repo} 新的 Repo 实例
+ * 创建 Automerge Repo
  */
 function createResumeRepo(): Repo {
   const config: RepoConfig = {
@@ -51,8 +40,7 @@ function createResumeRepo(): Repo {
 }
 
 /**
- * 销毁 Repo 实例
- * @description 断开网络并清除单例引用。
+ * 销毁 Repo 实例（用于登出或切换简历）
  */
 export function destroyAutomergeRepo() {
   if (repoInstance) {

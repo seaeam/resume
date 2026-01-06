@@ -10,10 +10,6 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   defaultId: string
-  /** 受控模式：当前激活的 tab id */
-  activeId?: string
-  /** 受控模式：tab 变化时的回调 */
-  onActiveChange?: (id: string) => void
   className?: string
   gapPx?: number // tabs 区域与内容区间距（主轴方向）
   offsetX?: number // 线条从按钮偏移量，避免压住按钮圆角
@@ -67,8 +63,6 @@ function useSideTabsContext() {
 
 export function SideTabsWrapper({
   defaultId,
-  activeId,
-  onActiveChange,
   className,
   gapPx = 6,
   offsetX = 12,
@@ -79,21 +73,7 @@ export function SideTabsWrapper({
   controlDown = 12,
   ...props
 }: PropsWithChildren<Props>) {
-  // 支持受控和非受控模式
-  const isControlled = activeId !== undefined
-  const [internalActive, setInternalActive] = useState<string>(defaultId)
-  
-  // 使用受控值或内部状态
-  const active = isControlled ? activeId : internalActive
-  
-  // 包装 setActive，支持受控模式
-  const setActive = useCallback((newActive: string | ((prev: string) => string)) => {
-    const nextValue = typeof newActive === 'function' ? newActive(active) : newActive
-    if (!isControlled) {
-      setInternalActive(nextValue)
-    }
-    onActiveChange?.(nextValue)
-  }, [active, isControlled, onActiveChange])
+  const [active, setActive] = useState<string>(defaultId)
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const tabsRef = useRef<HTMLDivElement | null>(null)

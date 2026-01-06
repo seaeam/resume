@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
+import { useDrag } from '@/contexts/DragContext'
 import { useDraggableItem } from '@/hooks/use-draggable-item'
 import { cn } from '@/lib/utils'
-import { useDrag } from '@/pages/resume/editor/components/sidebar/context/DragContext'
 
 interface DraggableItemProps {
   id: string
