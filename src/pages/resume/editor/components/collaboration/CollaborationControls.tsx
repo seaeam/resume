@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { formatTime } from '@/utils/date'
 import { useCollaborationPanel } from './CollaborationPanelProvider'
 
 export function CollaborationControls() {
@@ -113,7 +114,7 @@ function renderSyncStatus({
     return (
       <span className="text-sm text-green-600 font-normal">
         已同步
-        {new Date(lastSyncTime).toLocaleTimeString()}
+        {formatTime(lastSyncTime)}
       </span>
     )
   }

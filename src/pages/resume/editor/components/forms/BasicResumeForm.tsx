@@ -1,6 +1,7 @@
 import type { BasicFormType, Gender, MaritalStatus, PoliticalStatus, WorkYears } from '@/lib/schema'
 import type { ShallowPartial } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
+import dayjs from 'dayjs'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { Cake, Delete, Plus } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -113,7 +114,7 @@ function BasicResumeForm({ className }: { className?: string }) {
                           selected={field.value ? new Date(field.value) : undefined}
                           captionLayout="dropdown"
                           onSelect={(date) => {
-                            field.onChange(date && date.toLocaleDateString())
+                            field.onChange(date && dayjs(date).format('YYYY-MM-DD'))
                           }}
                         />
                       </PopoverContent>

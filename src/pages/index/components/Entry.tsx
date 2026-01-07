@@ -6,34 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import useCurrentResumeStore from '@/store/resume/current'
+import { diffDates, formatRelativeTime } from '@/utils/date'
 import { TYPE_LABELS } from '../const'
 
 interface Props {
   isOnline: boolean
   resumes: Resume[]
-}
-
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
-  if (minutes < 1)
-    return '刚刚'
-  if (minutes < 60)
-    return `${minutes}分钟前`
-  if (hours < 24)
-    return `${hours}小时前`
-  if (days < 7)
-    return `${days}天前`
-  if (days < 30)
-    return `${Math.floor(days / 7)}周前`
-
-  return date.toLocaleDateString('zh-CN')
 }
 
 function Entry({ isOnline, resumes }: Props) {
@@ -42,7 +20,7 @@ function Entry({ isOnline, resumes }: Props) {
 
   // 获取最近更新的3个简历
   const recentResumes = [...resumes]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a, b) => diffDates(b.created_at, a.created_at))
     .slice(0, 3)
 
   return (

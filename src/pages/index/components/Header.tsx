@@ -17,6 +17,7 @@ function Header() {
 
   useEffect(() => {
     const hour = new Date().getHours()
+
     if (hour < 5)
       setGreeting('夜深了，注意休息')
     else if (hour < 11)

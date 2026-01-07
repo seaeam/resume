@@ -1,17 +1,7 @@
-/*
- * @Author: lll 347552878@qq.com
- * @Date: 2025-10-28 18:57:34
- * @LastEditors: lll 347552878@qq.com
- * @LastEditTime: 2025-11-08 13:05:16
- * @FilePath: /resume/src/lib/automerge/supabase-network-adapter.ts
- * @Description: 使用 Supabase Realtime 作为 Automerge 的网络传输层，并允许按会话隔离协作。
- */
 import type { Message, PeerId, PeerMetadata } from '@automerge/automerge-repo'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { NetworkAdapter } from '@automerge/automerge-repo'
-import { logger } from '@/lib/logger'
 import supabase from '@/lib/supabase/client'
-import { base64ToUint8Array, uint8ArrayToBase64 } from './binary-utils'
 
 export interface CollaborationCallbacks {
   onPeerJoin?: (payload: { peerId: string, metadata?: Record<string, any> }) => void
@@ -21,6 +11,10 @@ export interface CollaborationCallbacks {
   presenceMetadata?: Record<string, any>
 }
 
+/**
+ * Supabase Realtime Network Adapter for Automerge
+ * 使用 Supabase Realtime 作为 Automerge 的网络传输层，并允许按会话隔离协作。
+ */
 export class SupabaseNetworkAdapter extends NetworkAdapter {
   private channel: RealtimeChannel | null = null
   peerId?: PeerId = undefined
@@ -31,11 +25,15 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
   private readonly channelName: string
   private readonly presenceMetadata: Record<string, any>
   private ready = false
+  // 本地 documentUrl（handle.url），用于在接收消息时将来自网络的 documentId 映射到本地 handle
+  private localDocumentUrl: string | null = null
   private localDocumentId: string | null = null
-  private pendingMessages: Array<{ senderId: any, targetId: any, messageType: any, documentId: any, message: string }> = []
+  // 收到但尚未分派到本地文档的消息缓存（当本地文档信息未知时使用）
+  private pendingMessages: Array<{ senderId: any, targetId: any, messageType: any, documentId: any, message: string }>
+    = []
 
   /**
-   * 使用 resumeId 来生成频道名
+   * note: 使用 resumeId 而不是文档本地 URL 来生成频道名，resumeId 在不同浏览器/设备上是稳定的
    */
   constructor(resumeId: string, sessionId: string, callbacks: CollaborationCallbacks = {}) {
     super()
@@ -48,42 +46,36 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
   }
 
   /**
-   * 设置本地文档信息,用于将远端消息映射到本地文档
+   * 设置本地文档信息（Automerge handle.url + documentId），用于将远端消息映射到本地文档
    */
-  setLocalDocumentInfo({ documentId }: { documentUrl: string | null, documentId: string | null }) {
+  setLocalDocumentInfo({ documentUrl, documentId }: { documentUrl: string | null, documentId: string | null }) {
+    this.localDocumentUrl = documentUrl
     this.localDocumentId = documentId
+    if (this.localDocumentId) {
+      // 冲刷队列（最多 200 条以防内存泄漏）
+      const toFlush = this.pendingMessages.splice(0, 200)
+      toFlush.forEach(({ senderId, targetId, messageType, documentId, message }) => {
+        try {
+          const uint8Array = this.base64ToUint8Array(message)
+          const resolvedDocumentId = this.localDocumentId || documentId
+          const messageObj: Message = {
+            type: messageType || 'message',
+            senderId,
+            targetId: targetId || this.peerId!,
+            data: uint8Array,
+          }
+          // 设置消息的 documentId 和 channelId
+          ;(messageObj as any).documentId = resolvedDocumentId
+          ;(messageObj as any).channelId = resolvedDocumentId
 
-    if (!this.localDocumentId) {
-      return
-    }
-
-    // 冲刷缓存消息队列 (最多 200 条)
-    const toFlush = this.pendingMessages.splice(0, 200)
-    toFlush.forEach(({ senderId, targetId, messageType, documentId, message }) => {
-      try {
-        const uint8Array = base64ToUint8Array(message)
-        const resolvedDocumentId = this.localDocumentId || documentId
-
-        const messageObj: Message = {
-          type: messageType || 'message',
-          senderId,
-          targetId: targetId || this.peerId!,
-          data: uint8Array,
+          // 发给 repo
+          this.emit('message', messageObj)
         }
-        ;(messageObj as any).documentId = resolvedDocumentId
-        ;(messageObj as any).channelId = resolvedDocumentId
-
-        logger.automerge.network('冲刷缓存消息', {
-          originalDocumentId: documentId,
-          mappedDocumentId: resolvedDocumentId,
-        })
-
-        this.emit('message', messageObj)
-      }
-      catch {
-        // 忽略单个消息错误
-      }
-    })
+        catch {
+          // ignore individual message errors
+        }
+      })
+    }
   }
 
   /**
@@ -126,43 +118,27 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
     this.peerMetadata = peerMetadata
 
     // 创建频道，使用 resumeId + sessionId 作为房间名，确保每次分享都是独立会话
-    // 配置 broadcast 选项以避免回退到 REST API
-    this.channel = supabase.channel(this.channelName, {
-      config: {
-        broadcast: {
-          self: true, // 允许接收自己发送的消息
-          ack: false, // 不需要确认机制，提高性能
-        },
-      },
-    })
+    this.channel = supabase.channel(this.channelName)
 
     // 监听其他 peer 的消息
     this.channel.on('broadcast', { event: 'automerge-sync' }, (payload: any) => {
       const { senderId, targetId, messageType, documentId, message } = payload.payload
 
-      logger.automerge.network('收到同步消息', {
-        from: senderId,
-        to: targetId,
-        messageType,
-        documentId,
-      })
-
       // 只处理发给自己的消息或广播消息
-      if (targetId && targetId !== this.peerId) {
+      if (targetId && targetId !== this.peerId)
         return
-      }
 
-      // 如果本地文档信息还未就绪，则缓存消息
+      // 如果本地文档信息还未就绪，则缓存消息，等待 setLocalDocumentInfo 时冲刷
       if (!this.localDocumentId) {
+        // 限制队列长度
         if (this.pendingMessages.length < 1000) {
           this.pendingMessages.push({ senderId, targetId, messageType, documentId, message })
         }
-        logger.automerge.network('localDocumentId 未就绪，已缓存消息', { senderId, targetId })
+
         return
       }
 
-      const uint8Array = base64ToUint8Array(message)
-      const resolvedDocumentId = this.localDocumentId || documentId || this.resumeId
+      const uint8Array = this.base64ToUint8Array(message)
 
       const messageObj: Message = {
         type: messageType || 'message',
@@ -170,28 +146,25 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
         targetId: targetId || this.peerId!,
         data: uint8Array,
       }
+
+      const resolvedDocumentId = this.localDocumentId || documentId || this.resumeId
+
+      // 设置消息的 documentId 和 channelId，优先映射到本地文档 URL
       ;(messageObj as any).documentId = resolvedDocumentId
       ;(messageObj as any).channelId = resolvedDocumentId
-
-      logger.automerge.network('处理同步消息', {
-        originalDocumentId: documentId,
-        mappedDocumentId: resolvedDocumentId,
-      })
 
       this.emit('message', messageObj)
     })
 
     // 监听 peer 加入
     this.channel.on('presence', { event: 'join' }, ({ newPresences }) => {
-      logger.automerge.collab('新用户加入', { count: newPresences.length })
-
       newPresences.forEach((presence: any) => {
+        // Supabase presence 的结构可能包含 key、session_id、metadata 等
         const remotePeerId = presence.key || presence.peerId || presence.metadata?.peerId
 
         if (remotePeerId && String(remotePeerId) !== String(this.peerId)) {
-          logger.automerge.collab('发现新 peer', { remotePeerId })
-
           this.emit('peer-candidate', {
+            // PeerId 在类型上是一个品牌类型，做简单断言以兼容外部字符串
             peerId: String(remotePeerId) as unknown as PeerId,
             peerMetadata: presence.metadata || {},
           })
@@ -207,7 +180,6 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
     // 监听控制消息
     this.channel.on('broadcast', { event: 'automerge-control' }, (payload: any) => {
       const { type, data } = payload.payload || {}
-      logger.automerge.collab('收到控制消息', { type })
 
       if (type) {
         this.callbacks.onControlMessage?.({ type, data })
@@ -220,8 +192,6 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
         const remotePeerId = presence.key || presence.peerId || presence.metadata?.peerId
 
         if (remotePeerId && String(remotePeerId) !== String(this.peerId)) {
-          logger.automerge.collab('Peer 离开', { remotePeerId })
-
           this.emit('peer-disconnected', { peerId: String(remotePeerId) as unknown as PeerId })
           this.callbacks.onPeerLeave?.({ peerId: String(remotePeerId) })
         }
@@ -230,9 +200,8 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
 
     // 订阅频道
     this.channel.subscribe(async (status) => {
-      logger.automerge.network('频道订阅状态变化', { status, channelName: this.channelName })
-
       if (status === 'SUBSCRIBED') {
+        // 使用 key 字段作为 presence 的唯一标识，这与 useRealtimeCursors 的 track 调用一致
         await this.channel!.track({
           key: String(this.peerId),
           metadata: { ...(peerMetadata || {}), ...this.presenceMetadata, peerId: String(this.peerId) },
@@ -241,24 +210,29 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
         })
 
         this.ready = true
-        logger.automerge.network('Automerge 网络适配器已连接', { channelName: this.channelName, peerId: this.peerId })
+
         this.callbacks.onChannelReady?.(this.channelName)
       }
     })
   }
 
+  /**
+   * 断开连接
+   */
   disconnect(): void {
     if (this.channel) {
       this.channel.unsubscribe()
       this.channel = null
     }
     this.ready = false
-    logger.automerge.network('Automerge 网络适配器已断开', { peerId: this.peerId })
   }
 
+  /**
+   * 发送消息给其他 peer
+   */
   send(message: Message): void {
     if (!this.channel || !this.ready) {
-      logger.warn('网络适配器未就绪，无法发送消息')
+      console.warn('⚠️ 网络适配器未就绪，无法发送消息')
       return
     }
 
@@ -266,14 +240,10 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
       return
     }
 
-    const base64Message = uint8ArrayToBase64(message.data)
-    const outgoingDocumentId = (message as any).documentId || this.localDocumentId || this.resumeId
+    const base64Message = this.uint8ArrayToBase64(message.data)
 
-    logger.automerge.network('发送同步消息', {
-      type: message.type,
-      to: message.targetId,
-      documentId: outgoingDocumentId,
-    })
+    // 优先使用 message 中携带的 documentId（通常由 automerge-repo 提供），若不存在则使用本地 known documentUrl，最后回退到 resumeId
+    const outgoingDocumentId = (message as any).documentId || this.localDocumentId || this.resumeId
 
     this.channel.send({
       type: 'broadcast',
@@ -282,6 +252,7 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
         senderId: this.peerId,
         targetId: message.targetId,
         messageType: message.type,
+        // 发送 resumeId 作为 documentId，确保频道内所有客户端都能识别这是同一个业务文档
         documentId: outgoingDocumentId,
         message: base64Message,
         sessionId: this.sessionId,
@@ -307,5 +278,24 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
         sessionId: this.sessionId,
       },
     })
+  }
+
+  /**
+   * Uint8Array 转 Base64
+   */
+  private uint8ArrayToBase64(uint8Array: Uint8Array): string {
+    return btoa(String.fromCharCode(...Array.from(uint8Array)))
+  }
+
+  /**
+   * Base64 转 Uint8Array
+   */
+  private base64ToUint8Array(base64: string): Uint8Array {
+    const binaryString = atob(base64)
+    const uint8Array = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      uint8Array[i] = binaryString.charCodeAt(i)
+    }
+    return uint8Array
   }
 }

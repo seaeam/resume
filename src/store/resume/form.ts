@@ -1,6 +1,7 @@
 import type { DocHandle } from '@automerge/automerge-repo'
 import type { AutomergeResumeDocument } from '@/lib/automerge/schema'
 import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
+import dayjs from 'dayjs'
 import { create } from 'zustand'
 import { DocumentManager } from '@/lib/automerge/document-manager'
 import {
@@ -27,6 +28,7 @@ import {
 
 } from '@/lib/schema'
 import { getCurrentUser } from '@/lib/supabase/user'
+import { getTimestamp } from '@/utils/date'
 import useCurrentResumeStore from './current'
 
 // 表单数据映射
@@ -255,7 +257,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
           pendingChanges: false,
           isSyncing: false,
           syncError: null,
-          lastSyncTime: Date.now(),
+          lastSyncTime: getTimestamp(),
         })
       }
       catch (error) {
@@ -328,7 +330,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
         syncError: null,
         mode: 'offline',
         isInitialized: true,
-        lastSyncTime: offlineResume.updated_at ? new Date(offlineResume.updated_at).getTime() : null,
+        lastSyncTime: offlineResume.updated_at ? dayjs(offlineResume.updated_at).valueOf() : null,
       })
       return
     }
@@ -367,7 +369,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
             isSyncing: false,
             pendingChanges: false,
             syncError: null,
-            lastSyncTime: Date.now(),
+            lastSyncTime: getTimestamp(),
           })
         }
         else {

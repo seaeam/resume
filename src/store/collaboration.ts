@@ -2,7 +2,6 @@ import type { CollaborationCallbacks } from '@/lib/automerge/supabase-network-ad
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { clearStoredSession, rememberSessionRole } from '@/lib/collaboration/session-storage'
-import { logger } from '@/lib/logger'
 import useResumeStore from '@/store/resume/form'
 
 type CollaborationRole = 'host' | 'guest'
@@ -242,7 +241,6 @@ const useCollaborationStore = create<CollaborationState>()((set, get) => ({
     }
 
     const sessionId = createSessionId()
-    logger.automerge.collab('开启协作会话', { sessionId, resumeId })
 
     try {
       await enableCollaboration({
@@ -271,8 +269,6 @@ const useCollaborationStore = create<CollaborationState>()((set, get) => ({
       return
     }
 
-    logger.automerge.collab('加入协作会话', { sessionId, resumeId })
-
     try {
       await enableCollaboration({
         sessionId,
@@ -296,8 +292,6 @@ const useCollaborationStore = create<CollaborationState>()((set, get) => ({
   },
 
   resumeHosting: async ({ sessionId, resumeId, userId, userName }) => {
-    logger.automerge.collab('恢复协作会话', { sessionId, resumeId })
-
     try {
       await enableCollaboration({
         sessionId,

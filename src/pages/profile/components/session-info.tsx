@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator'
 interface SessionInfoProps {
   lastSignInAt?: string
   provider?: string
-  formatDate: (dateString?: string) => string
+  formatDate: (dateString: string) => string
 }
 
 export function SessionInfo({ lastSignInAt, provider, formatDate }: SessionInfoProps) {

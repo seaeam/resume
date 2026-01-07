@@ -2,6 +2,7 @@ import type { InternshipExperienceFormType } from '@/lib/schema'
 import type { ShallowPartial } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconDoorExit } from '@tabler/icons-react'
+import dayjs from 'dayjs'
 import { Laptop, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
@@ -155,8 +156,9 @@ function InternshipExperienceForm({ className }: { className?: string }) {
                               endMonth={new Date(2035, 11)}
                               selected={field.value?.[1] ? new Date(field.value[1]) : undefined}
                               onSelect={(date) => {
-                                field.onChange([field.value?.[0], date?.toLocaleDateString()])
+                                field.onChange([field.value?.[0], date && dayjs(date).format('YYYY-MM-DD')])
                               }}
+                              disabled={date => date > new Date()}
                             />
                           </PopoverContent>
                         </Popover>

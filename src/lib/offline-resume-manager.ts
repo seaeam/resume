@@ -2,15 +2,17 @@
 /*
  * @Author: lll 347552878@qq.com
  * @Date: 2025-10-24 21:56:16
- * @LastEditors: lll 347552878@qq.com
- * @LastEditTime: 2025-11-08 12:36:34
+ * @LastEditors: shemingcong shemingcong@dcarlife.com
+ * @LastEditTime: 2026-01-07 11:03:02
  * @FilePath: /resume/src/lib/offline-resume-manager.ts
  * @Description: 离线简历管理器,使用 IndexedDB 存储本地简历
  */
 
 import type { DBSchema, IDBPDatabase } from 'idb'
 import type { ResumeSchema } from '@/lib/schema'
+import dayjs from 'dayjs'
 import { openDB } from 'idb'
+import { diffDates } from '@/utils/date'
 
 interface ResumeDB extends DBSchema {
   resumes: {
@@ -80,8 +82,8 @@ export async function createOfflineResume(options: {
     display_name: options.display_name || '未命名简历',
     description: options.description || '',
     type: options.type || 'default',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: dayjs().toISOString(),
+    updated_at: dayjs().toISOString(),
     data: {},
   }
 
@@ -126,7 +128,7 @@ export async function updateOfflineResume(
   }
 
   resume.data = { ...resume.data, ...data }
-  resume.updated_at = new Date().toISOString()
+  resume.updated_at = dayjs().toISOString()
 
   await db.put('resumes', resume)
 

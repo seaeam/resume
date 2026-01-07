@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UpdatePasswordDialog } from '@/components/update-password-dialog'
 import { getCurrentUser } from '@/lib/supabase/user'
+import { formatRelativeDateTime } from '@/utils/date'
 import { SessionInfo } from './session-info'
 
 interface AccountSettingsCardProps {
@@ -42,37 +43,6 @@ export function AccountSettingsCard({ user }: AccountSettingsCardProps) {
     fetchSessionInfo()
   }, [user])
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString)
-      return '未知'
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInMs = now.getTime() - date.getTime()
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
-    const diffInDays = Math.floor(diffInHours / 24)
-
-    // 如果是最近的时间，显示相对时间
-    if (diffInHours < 1) {
-      const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
-      return diffInMinutes < 1 ? '刚刚' : `${diffInMinutes} 分钟前`
-    }
-    else if (diffInHours < 24) {
-      return `${diffInHours} 小时前`
-    }
-    else if (diffInDays < 7) {
-      return `${diffInDays} 天前`
-    }
-
-    // 否则显示完整日期
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -90,7 +60,7 @@ export function AccountSettingsCard({ user }: AccountSettingsCardProps) {
 
         <Separator />
 
-        {sessionInfo ? <SessionInfo {...sessionInfo} formatDate={formatDate} /> : <LoadingSkeleton />}
+        {sessionInfo ? <SessionInfo {...sessionInfo} formatDate={formatRelativeDateTime} /> : <LoadingSkeleton />}
       </CardContent>
     </Card>
   )

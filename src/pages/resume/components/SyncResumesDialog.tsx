@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { formatDate } from '@/utils/date'
 
 interface OfflineResume {
   resume_id: string
@@ -141,7 +142,7 @@ export function SyncResumesDialog({
                     <CardContent className="pt-0 pl-12">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
-                        <span>{new Date(resume.created_at).toLocaleDateString('zh-CN')}</span>
+                        <span>{formatDate(resume.created_at)}</span>
                         <Badge variant="outline" className="text-xs">
                           {resume.type}
                         </Badge>

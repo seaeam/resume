@@ -8,14 +8,14 @@ let currentResumeId: string | null = null
 /**
  * 获取或创建 Automerge Repo 单例
  */
-export function getAutomergeRepo(resumeId: string) {
+export function getAutomergeRepo(userId: string, resumeId?: string) {
   // 如果 resumeId 变化，需要重新创建 repo（因为网络适配器绑定到特定简历）
   if (repoInstance && resumeId && resumeId !== currentResumeId) {
     destroyAutomergeRepo()
   }
 
   if (!repoInstance) {
-    repoInstance = createResumeRepo()
+    repoInstance = createResumeRepo(userId)
   }
 
   currentResumeId = resumeId ?? currentResumeId ?? null
@@ -25,7 +25,7 @@ export function getAutomergeRepo(resumeId: string) {
 /**
  * 创建 Automerge Repo
  */
-function createResumeRepo(): Repo {
+function createResumeRepo(userId: string): Repo {
   const config: RepoConfig = {
     // 本地存储适配器
     storage: new IndexedDBStorageAdapter('resume-automerge-v1'),
@@ -51,7 +51,7 @@ export function destroyAutomergeRepo() {
       console.warn('⚠️ 断开 Automerge 网络适配器时出错', error)
     }
 
-    // Repo 没有明确的销毁方法，设为 null
+    // Repo 没有明确的销毁方法，设为 null 即可
     repoInstance = null
     currentResumeId = null
   }

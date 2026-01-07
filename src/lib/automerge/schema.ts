@@ -1,7 +1,8 @@
 import type { ORDERType, ResumeSchema, VisibilityItemsType } from '@/lib/schema'
 
 /**
- * Automerge 结构
+ * Automerge 文档结构
+ * 扩展自现有的 ResumeSchema
  */
 export interface AutomergeResumeDocument extends ResumeSchema {
   // 文档元数据

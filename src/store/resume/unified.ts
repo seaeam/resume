@@ -16,7 +16,6 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { DocumentManager } from '@/lib/automerge/document-manager'
 import {
-
   DEFAULT_APPLICATION_INFO,
   DEFAULT_BASICS,
   DEFAULT_CAMPUS_EXPERIENCE,
@@ -34,6 +33,7 @@ import {
 
 } from '@/lib/schema'
 import { getCurrentUser } from '@/lib/supabase/user'
+import { getTimestamp } from '@/utils/date'
 
 // 表单数据映射
 interface FormDataMap {
@@ -265,7 +265,7 @@ const useUnifiedResumeStore = create<UnifiedResumeState>()(
           await docManager.saveToSupabase(docHandle)
           set({
             isSyncing: false,
-            lastSyncTime: Date.now(),
+            lastSyncTime: getTimestamp(),
             syncError: null,
             pendingChanges: false,
           })
@@ -402,7 +402,7 @@ async function initializeAutomerge(resumeId: string, userId: string, set: any) {
         hobbies: doc.hobbies || DEFAULT_HOBBIES,
         order: doc.order || DEFAULT_ORDER,
         visibility: doc.visibility || DEFAULT_VISIBILITY,
-        lastSyncTime: Date.now(),
+        lastSyncTime: getTimestamp(),
       })
     })
 
