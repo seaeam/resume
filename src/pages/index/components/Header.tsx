@@ -1,11 +1,10 @@
-import type { User } from '@supabase/supabase-js'
 import type { ChangeEvent } from 'react'
 import { Plus, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import supabase from '@/lib/supabase/client'
+import useCurrentUser from '@/hooks/use-current-user'
 
 function Header() {
   const navigate = useNavigate()
@@ -13,7 +12,7 @@ function Header() {
   const [searchValue, setSearchValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [auth, setAuth] = useState<User | undefined>()
+  const auth = useCurrentUser()
 
   useEffect(() => {
     const hour = new Date().getHours()
@@ -28,10 +27,6 @@ function Header() {
       setGreeting('下午好，继续加油')
     else
       setGreeting('晚上好，享受闲暇时光')
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuth(session?.user)
-    })
   }, [])
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {

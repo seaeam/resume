@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Resume } from '../type'
 import { ArrowRight, BarChart3, Clock, Cloud, CloudOff, FileUser, Plus, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -88,8 +89,8 @@ function Entry({ isOnline, resumes }: Props) {
                       <RecentActivity
                         key={resume.resume_id}
                         title={resume.display_name || '未命名简历'}
-                        description={`类型: ${TYPE_LABELS[resume.type] || '标准'}`}
-                        time={formatRelativeTime(resume.created_at)}
+                        description={TYPE_LABELS[resume.type]}
+                        time={formatRelativeTime(resume.updated_at || resume.created_at)}
                         isOffline={resume.isOffline}
                         onClick={() => {
                           setCurrentResume(resume.resume_id, resume.type)
@@ -99,13 +100,9 @@ function Entry({ isOnline, resumes }: Props) {
                     ))}
                   </div>
                   <div className="pt-4 border-t flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm">
                       共有
-                      {' '}
-                      <span className="font-medium text-foreground">
-                        {resumes.length}
-                      </span>
-                      {' '}
+                      <Badge variant="outline">{resumes.length}</Badge>
                       份简历
                     </p>
                     <Button

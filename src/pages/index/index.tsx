@@ -2,18 +2,17 @@ import type { Resume } from './type'
 import type { ResumeType } from '@/store/resume/current'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { getAllOfflineResumes } from '@/lib/offline-resume-manager'
-import { getAllResumesFromUser, searchOnlineResumes } from '@/lib/supabase/resume/form'
+import { getAllResumesFromUser } from '@/lib/supabase/resume/form'
 import { getCurrentUser } from '@/lib/supabase/user'
-import Chart from './components/Chart'
+import { diffDates } from '@/utils/date'
+import Charts from './components/charts'
 import Entry from './components/Entry'
 import Header from './components/Header'
+import DashboardSkeleton from './components/Skeleton'
 import StatisticalCard from './components/statistical-card'
 
-const container = {
+const Container = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -22,8 +21,7 @@ const container = {
     },
   },
 }
-
-const item = {
+const MotionItem = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 },
 }
@@ -32,7 +30,6 @@ export default function DashboardPage() {
   const [resumes, setResumes] = useState<Resume[]>([])
   const [loading, setLoading] = useState(true)
   const [isOnline, setIsOnline] = useState(false)
-  const [searchResults, setSearchResults] = useState<Resume[]>([])
 
   useEffect(() => {
     loadResumes()
@@ -56,6 +53,7 @@ export default function DashboardPage() {
       const offlineResumes = localResumes.map(r => ({
         resume_id: r.resume_id,
         created_at: r.created_at,
+        updated_at: r.updated_at,
         type: r.type as ResumeType,
         display_name: r.display_name,
         description: r.description,
@@ -84,7 +82,7 @@ export default function DashboardPage() {
 
     // 最近更新的简历
     const sortedByDate = [...resumes].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      (a, b) => diffDates(b.updated_at, a.updated_at),
     )
     const latestResume = sortedByDate[0]
 
@@ -97,69 +95,26 @@ export default function DashboardPage() {
 
   return (
     <motion.div
-      variants={container}
+      variants={Container}
       initial="hidden"
       animate="show"
       className="flex flex-col gap-4 md:gap-6 p-4 md:p-8 max-w-7xl mx-auto"
     >
-      <motion.div variants={item}>
+      <motion.div variants={MotionItem}>
         <Header />
       </motion.div>
 
-      <motion.div variants={item}>
+      <motion.div variants={MotionItem}>
         <StatisticalCard stats={stats} />
       </motion.div>
 
-      <motion.div variants={item}>
+      <motion.div variants={MotionItem}>
         <Entry isOnline={isOnline} resumes={resumes} />
       </motion.div>
 
-      <motion.div variants={item}>
-        <Chart stats={stats} resumes={resumes} />
+      <motion.div variants={MotionItem}>
+        <Charts stats={stats} resumes={resumes} />
       </motion.div>
     </motion.div>
   )
 }
-
-// 骨架屏
-function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-4 p-4 md:gap-6 md:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="mt-2 h-4 w-48" />
-        </div>
-        <Skeleton className="h-10 w-28" />
-      </div>
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-        {['stat-1', 'stat-2', 'stat-3', 'stat-4'].map(id => (
-          <Card key={id}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-20" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="mt-1 h-3 w-24" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {['chart-1', 'chart-2', 'chart-3'].map(id => (
-          <Card key={id}>
-            <CardHeader>
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-4 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[200px] w-full" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// 格式化相对时间

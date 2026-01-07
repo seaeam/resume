@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { ResumeStats } from '../type'
 import { Cloud, CloudOff, FileUser, TrendingUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { NumberTicker } from '@/components/ui/number-ticker'
 import { cn } from '@/lib/utils'
 
 function StatisticalCard({ stats }: { stats: ResumeStats }) {
@@ -73,7 +74,9 @@ function StatCard({
             <div>
               <p className="text-xs md:text-sm font-bold leading-none text-muted-foreground">{title}</p>
               <div className="mt-2 flex items-baseline gap-2">
-                <h3 className="text-2xl font-bold tracking-tight">{value}</h3>
+                <h3 className="text-2xl font-bold tracking-tight">
+                  <NumberTicker value={value} className="text-2xl font-bold tracking-tight text-foreground" />
+                </h3>
                 {trend && (
                   <span className="text-xs font-medium text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">
                     {trend}

@@ -9,7 +9,7 @@ export async function getAllResumesFromUser() {
 
   const { data, error } = await supabase
     .from('resume_config')
-    .select('id,resume_id,created_at,type,display_name,description')
+    .select('id,resume_id,created_at,updated_at,type,display_name,description')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .range(0, 10)
@@ -29,7 +29,7 @@ export async function searchOnlineResumes(query: string) {
 
   const { data, error } = await supabase
     .from('resume_config')
-    .select('id,resume_id,created_at,type,display_name,description')
+    .select('id,resume_id,created_at,updated_at,type,display_name,description')
     .eq('user_id', user.id)
     .or(`display_name.ilike.%${query}%,description.ilike.%${query}%`)
     .order('created_at', { ascending: false })

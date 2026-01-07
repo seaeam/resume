@@ -11,6 +11,7 @@ export interface ResumeStats {
 export interface Resume {
   resume_id: string
   created_at: string
+  updated_at: string
   type: ResumeType
   display_name?: string
   description?: string

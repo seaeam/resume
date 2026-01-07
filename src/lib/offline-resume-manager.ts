@@ -12,7 +12,6 @@ import type { DBSchema, IDBPDatabase } from 'idb'
 import type { ResumeSchema } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { openDB } from 'idb'
-import { diffDates } from '@/utils/date'
 
 interface ResumeDB extends DBSchema {
   resumes: {

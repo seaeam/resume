@@ -1,9 +1,6 @@
 'use client'
 
-import type { User } from '@supabase/supabase-js'
-
 import { IconDotsVertical, IconLogin, IconLogout, IconUserCircle } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -15,44 +12,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
-import supabase from '@/lib/supabase/client'
+import useCurrentUser from '@/hooks/use-current-user'
 import { SignOut } from '@/lib/supabase/user'
 import { CurrentUserAvatar } from '../current-user-avatar'
 
 export function NavUser() {
-  const [user, setUser] = useState<User | null>(null)
+  const user = useCurrentUser()
   const { isMobile } = useSidebar()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getSession()
-      setUser(data.session?.user ?? null)
-    }
-
-    fetchUser()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    // 清理监听器
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
 
   const handleSignOut = async () => {
     try {
       await SignOut()
       toast.success('已登出')
-      setUser(null)
       navigate('/login')
     }
     catch (error) {
-      toast.error('登出失败，请稍后重试')
+      toast.error(`登出失败，请稍后重试, ${error}`)
     }
   }
 
