@@ -102,7 +102,7 @@ function Entry({ isOnline, resumes }: Props) {
                   <div className="pt-4 border-t flex items-center justify-between">
                     <p className="text-sm">
                       共有
-                      <Badge variant="outline">{resumes.length}</Badge>
+                      <Badge variant="outline" className="mx-1">{resumes.length}</Badge>
                       份简历
                     </p>
                     <Button

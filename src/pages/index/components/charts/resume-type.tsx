@@ -114,9 +114,6 @@ function ResumeType({ stats, resumes }: ResumeTypeProps) {
                 '最近7天无新增简历'
               )}
         </div>
-        <div className="leading-none text-muted-foreground">
-          展示所有简历的类型分布
-        </div>
       </CardFooter>
     </Card>
   )

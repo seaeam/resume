@@ -106,9 +106,6 @@ function ResumeStorage({ stats }: ResumeStorageProps) {
                 </>
               )}
         </div>
-        <div className="leading-none text-muted-foreground">
-          展示简历的存储位置分布
-        </div>
       </CardFooter>
     </Card>
   )
