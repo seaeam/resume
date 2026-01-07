@@ -59,7 +59,7 @@ function Header() {
         </div>
         <Button
           onClick={() => navigate('/resume')}
-          variant="outline"
+          variant="default"
         >
           <Plus className="size-4" />
           新建简历

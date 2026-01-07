@@ -11,6 +11,7 @@ import Entry from './components/Entry'
 import Header from './components/Header'
 import DashboardSkeleton from './components/Skeleton'
 import StatisticalCard from './components/statistical-card'
+import { TodoCard } from './components/todo'
 
 const Container = {
   hidden: { opacity: 0 },
@@ -102,6 +103,10 @@ export default function DashboardPage() {
     >
       <motion.div variants={MotionItem}>
         <Header />
+      </motion.div>
+
+      <motion.div variants={MotionItem}>
+        <TodoCard />
       </motion.div>
 
       <motion.div variants={MotionItem}>

@@ -1,0 +1,56 @@
+import { motion } from 'motion/react'
+import { Card, CardContent } from '@/components/ui/card'
+import { CompletenessModule } from './content-complete'
+import { ExportModule } from './export-module'
+import { FollowUpModule } from './follow-up'
+import { TodoHeader } from './todo-header'
+
+export function TodoCard() {
+  const completeness = {
+    score: 85,
+    missingCount: 2,
+    missingItems: ['量化信息', '项目亮点'],
+  }
+
+  const exportInfo = {
+    lastExportDays: 5,
+  }
+
+  const followUp = {
+    pendingCount: 3,
+    days: 7,
+  }
+
+  return (
+    <Card>
+      <motion.div
+        initial={{ opacity: 0, width: 0 }}
+        whileHover={{ opacity: 1, width: 4 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="absolute left-0 top-0 bottom-0 bg-primary z-10"
+      />
+
+      <TodoHeader />
+
+      <CardContent>
+        <div className="flex -mx-6 px-6 overflow-x-auto gap-4 pb-2 snap-x snap-mandatory md:grid md:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden scroll-smooth">
+          <div className="min-w-[85%] snap-center md:min-w-0">
+            <CompletenessModule
+              missingCount={completeness.missingCount}
+              missingItems={completeness.missingItems}
+            />
+          </div>
+          <div className="min-w-[85%] snap-center md:min-w-0">
+            <ExportModule lastExportDays={exportInfo.lastExportDays} />
+          </div>
+          <div className="min-w-[85%] snap-center md:min-w-0">
+            <FollowUpModule
+              pendingCount={followUp.pendingCount}
+              days={followUp.days}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
