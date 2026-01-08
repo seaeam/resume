@@ -9,7 +9,7 @@ import { diffDates } from '@/utils/date'
 import Charts from './components/charts'
 import Entry from './components/Entry'
 import Header from './components/Header'
-import DashboardSkeleton from './components/Skeleton'
+import { ChartsSkeleton, EntrySkeleton, HeaderSkeleton, StatsSkeleton } from './components/Skeleton'
 import StatisticalCard from './components/statistical-card'
 import { TodoCard } from './components/todo'
 
@@ -29,28 +29,39 @@ const MotionItem = {
 
 export default function DashboardPage() {
   const [resumes, setResumes] = useState<Resume[]>([])
-  const [loading, setLoading] = useState(true)
+  const [resumesLoading, setResumesLoading] = useState(true)
+  const [userLoading, setUserLoading] = useState(true)
   const [isOnline, setIsOnline] = useState(false)
 
   useEffect(() => {
-    loadResumes()
+    loadData()
   }, [])
 
-  async function loadResumes() {
+  async function loadData() {
     try {
-      const user = await getCurrentUser()
+      // 1. 并行启动用户状态检查和离线简历加载
+      const userPromise = getCurrentUser()
+      const offlinePromise = getAllOfflineResumes()
+
+      // 2. 优先处理用户状态，以便尽快展示 Header
+      const user = await userPromise
       setIsOnline(!!user)
+      setUserLoading(false)
 
-      let allResumes: Resume[] = []
-
-      // 加载在线简历
+      // 3. 如果用户已登录，获取在线简历
+      let onlineResumes: Resume[] = []
       if (user) {
-        const onlineResumes = await getAllResumesFromUser()
-        allResumes = onlineResumes.map(r => ({ ...r, isOffline: false }))
+        try {
+          const rawOnlineResumes = await getAllResumesFromUser()
+          onlineResumes = rawOnlineResumes.map(r => ({ ...r, isOffline: false }))
+        }
+        catch (error) {
+          console.error('Failed to load online resumes:', error)
+        }
       }
 
-      // 加载离线简历
-      const localResumes = await getAllOfflineResumes()
+      // 4. 等待离线简历加载完成
+      const localResumes = await offlinePromise
       const offlineResumes = localResumes.map(r => ({
         resume_id: r.resume_id,
         created_at: r.created_at,
@@ -60,12 +71,14 @@ export default function DashboardPage() {
         description: r.description,
         isOffline: true,
       }))
-      allResumes = [...allResumes, ...offlineResumes]
 
-      setResumes(allResumes)
+      // 5. 合并数据并更新状态
+      setResumes([...onlineResumes, ...offlineResumes])
     }
     finally {
-      setLoading(false)
+      setResumesLoading(false)
+      // 确保在异常情况下 userLoading 也能被重置
+      setUserLoading(false)
     }
   }
 
@@ -90,10 +103,6 @@ export default function DashboardPage() {
     return { total, online, offline, recentCount, latestResume }
   }, [resumes])
 
-  if (loading) {
-    return <DashboardSkeleton />
-  }
-
   return (
     <motion.div
       variants={Container}
@@ -102,7 +111,7 @@ export default function DashboardPage() {
       className="flex flex-col gap-4 md:gap-6 p-4 md:p-8 max-w-7xl mx-auto"
     >
       <motion.div variants={MotionItem}>
-        <Header />
+        {userLoading ? <HeaderSkeleton /> : <Header />}
       </motion.div>
 
       <motion.div variants={MotionItem}>
@@ -110,15 +119,15 @@ export default function DashboardPage() {
       </motion.div>
 
       <motion.div variants={MotionItem}>
-        <StatisticalCard stats={stats} />
+        {resumesLoading ? <StatsSkeleton /> : <StatisticalCard stats={stats} />}
       </motion.div>
 
       <motion.div variants={MotionItem}>
-        <Entry isOnline={isOnline} resumes={resumes} />
+        {resumesLoading ? <EntrySkeleton /> : <Entry isOnline={isOnline} resumes={resumes} />}
       </motion.div>
 
       <motion.div variants={MotionItem}>
-        <Charts stats={stats} resumes={resumes} />
+        {resumesLoading ? <ChartsSkeleton /> : <Charts stats={stats} resumes={resumes} />}
       </motion.div>
     </motion.div>
   )
