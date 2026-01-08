@@ -1,56 +1,11 @@
 import type React from 'react'
-import { IconHelp, IconInnerShadowTop, IconSearch, IconSettings } from '@tabler/icons-react'
-import { FileUser, HomeIcon, LayoutTemplate } from 'lucide-react'
+import { IconInnerShadowTop } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import { Data } from './const'
 import { NavOptions } from './nav-options'
 import { NavSecondary } from './nav-secondary'
 import { NavUser } from './nav-user'
-
-const data = {
-  options: [
-    {
-      title: '首页',
-      url: '/',
-      icon: HomeIcon,
-    },
-    {
-      title: '我的简历',
-      url: '/resume',
-      icon: FileUser,
-    },
-    {
-      title: '简历模板',
-      url: '/template',
-      icon: LayoutTemplate,
-    },
-  ],
-  navSecondary: [
-    {
-      title: '设置',
-      url: '/settings',
-      icon: IconSettings,
-    },
-    {
-      title: '帮助',
-      url: '/help',
-      icon: IconHelp,
-    },
-    {
-      title: '搜索',
-      url: '/search',
-      icon: IconSearch,
-    },
-  ],
-}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -68,8 +23,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavOptions options={data.options} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavOptions options={Data.modules} description="模块" />
+        <NavSecondary items={Data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
