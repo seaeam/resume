@@ -15,6 +15,8 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/c
 import useCurrentUser from '@/hooks/use-current-user'
 import { SignOut } from '@/lib/supabase/user'
 import { CurrentUserAvatar } from '../current-user-avatar'
+import { Data } from './const'
+import { NavSecondary } from './nav-secondary'
 
 export function NavUser() {
   const user = useCurrentUser()
@@ -66,6 +68,10 @@ export function NavUser() {
                 <DropdownMenuSeparator />
               </>
             )}
+
+            <NavSecondary items={Data.navSecondary} className="p-0" />
+            <DropdownMenuSeparator />
+
             {user
               ? (
                   <DropdownMenuItem onClick={handleSignOut}>

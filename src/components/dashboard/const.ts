@@ -1,5 +1,5 @@
 import { IconHelp, IconSearch, IconSettings } from '@tabler/icons-react'
-import { FileUser, HomeIcon, LayoutTemplate } from 'lucide-react'
+import { FileUser, HomeIcon, LayoutTemplate, PencilRuler } from 'lucide-react'
 
 export const Data = {
   modules: [
@@ -17,6 +17,11 @@ export const Data = {
       title: '简历模板',
       url: '/template',
       icon: LayoutTemplate,
+    },
+    {
+      title: '简历优化',
+      url: '/optimize',
+      icon: PencilRuler,
     },
   ],
   navSecondary: [

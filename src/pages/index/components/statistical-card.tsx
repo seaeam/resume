@@ -4,8 +4,13 @@ import { Cloud, CloudOff, FileUser, TrendingUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { NumberTicker } from '@/components/ui/number-ticker'
 import { cn } from '@/lib/utils'
+import { StatsSkeleton } from './Skeleton'
 
-function StatisticalCard({ stats }: { stats: ResumeStats }) {
+function StatisticalCard({ stats, loading }: { stats: ResumeStats, loading?: boolean }) {
+  if (loading) {
+    return <StatsSkeleton />
+  }
+
   return (
     <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
       <StatCard

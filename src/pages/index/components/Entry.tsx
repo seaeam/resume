@@ -9,15 +9,21 @@ import { cn } from '@/lib/utils'
 import useCurrentResumeStore from '@/store/resume/current'
 import { diffDates, formatRelativeTime } from '@/utils/date'
 import { TYPE_LABELS } from '../const'
+import { EntrySkeleton } from './Skeleton'
 
 interface Props {
   isOnline: boolean
   resumes: Resume[]
+  loading?: boolean
 }
 
-function Entry({ isOnline, resumes }: Props) {
+function Entry({ isOnline, resumes, loading }: Props) {
   const navigate = useNavigate()
   const { setCurrentResume } = useCurrentResumeStore()
+
+  if (loading) {
+    return <EntrySkeleton />
+  }
 
   // 获取最近更新的3个简历
   const recentResumes = [...resumes]

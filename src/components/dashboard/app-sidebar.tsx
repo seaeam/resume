@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 import { Data } from './const'
 import { NavOptions } from './nav-options'
-import { NavSecondary } from './nav-secondary'
 import { NavUser } from './nav-user'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -24,7 +23,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavOptions options={Data.modules} description="模块" />
-        <NavSecondary items={Data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

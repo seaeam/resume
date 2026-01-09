@@ -33,7 +33,7 @@ export function TodoCard() {
       <TodoHeader />
 
       <CardContent>
-        <div className="flex -mx-6 px-6 overflow-x-auto gap-4 pb-2 snap-x snap-mandatory md:grid md:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden scroll-smooth">
+        <div className="flex -mx-6 px-6 overflow-x-auto gap-4 pb-2 snap-x snap-mandatory md:grid lg:grid-cols-3 md:grid-cols-2 md:gap-6 md:pb-0 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden scroll-smooth">
           <div className="min-w-[85%] snap-center md:min-w-0">
             <CompletenessModule
               missingCount={completeness.missingCount}

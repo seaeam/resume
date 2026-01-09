@@ -1,14 +1,11 @@
 import { IconTool } from '@tabler/icons-react'
 import { ArrowUpRightIcon } from 'lucide-react'
-import { lazy } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Highlighter } from '@/components/ui/highlighter'
 import { LightRays } from '@/components/ui/light-rays'
 import { useIsMobile } from '@/hooks/use-mobile'
-
-const Globe = lazy(() => import('@/components/ui/globe').then(module => ({ default: module.Globe })))
 
 export default function NotFound() {
   const isMobile = useIsMobile()
@@ -35,9 +32,6 @@ export default function NotFound() {
         </Button>
       </EmptyContent>
       {!isMobile && <LightRays length="100vh" />}
-      <div className="absolute bottom-1/4 w-full">
-        <Globe />
-      </div>
     </Empty>
   )
 }
