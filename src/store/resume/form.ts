@@ -4,29 +4,8 @@ import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, 
 import dayjs from 'dayjs'
 import { create } from 'zustand'
 import { DocumentManager } from '@/lib/automerge/document-manager'
-import {
-  getOfflineResumeById,
-  isOfflineResumeId,
-  updateOfflineResume,
-} from '@/lib/offline-resume-manager'
-import {
-
-  DEFAULT_APPLICATION_INFO,
-  DEFAULT_BASICS,
-  DEFAULT_CAMPUS_EXPERIENCE,
-  DEFAULT_EDU_BACKGROUND,
-  DEFAULT_HOBBIES,
-  DEFAULT_HONORS_CERTIFICATES,
-  DEFAULT_INTERNSHIP_EXPERIENCE,
-  DEFAULT_JOB_INTENT,
-  DEFAULT_ORDER,
-  DEFAULT_PROJECT_EXPERIENCE,
-  DEFAULT_SELF_EVALUATION,
-  DEFAULT_SKILL_SPECIALTY,
-  DEFAULT_VISIBILITY,
-  DEFAULT_WORK_EXPERIENCE,
-
-} from '@/lib/schema'
+import { getOfflineResumeById, isOfflineResumeId, updateOfflineResume } from '@/lib/offline-resume-manager'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE } from '@/lib/schema'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { getTimestamp } from '@/utils/date'
 import useCurrentResumeStore from './current'
@@ -72,6 +51,7 @@ interface ResumeState extends FormDataMap {
   getVisibility: (id: VisibilityItemsType) => boolean
   setVisibility: (id: VisibilityItemsType, isHidden: boolean) => void
   updateActiveTabId: (newActiveTab: ORDERType) => void
+  getResumeFormData: () => FormDataMap
   updateForm: <K extends keyof FormDataMap>(key: K, data: Partial<FormDataMap[K]>) => void
   updateOrder: (newOrder: ORDERType[]) => void
 
@@ -123,6 +103,21 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   docHandle: null,
   cleanupFns: [],
   isInitialized: false,
+
+  getResumeFormData: () => ({
+    basics: get().basics,
+    jobIntent: get().jobIntent,
+    applicationInfo: get().applicationInfo,
+    eduBackground: get().eduBackground,
+    workExperience: get().workExperience,
+    internshipExperience: get().internshipExperience,
+    campusExperience: get().campusExperience,
+    projectExperience: get().projectExperience,
+    skillSpecialty: get().skillSpecialty,
+    honorsCertificates: get().honorsCertificates,
+    selfEvaluation: get().selfEvaluation,
+    hobbies: get().hobbies,
+  }),
 
   updateActiveTabId: newActiveTab => set({ activeTabId: newActiveTab }),
 

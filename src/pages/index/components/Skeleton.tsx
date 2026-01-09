@@ -1,21 +1,6 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export function HeaderSkeleton() {
-  return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-64" />
-      </div>
-      <div className="flex items-center gap-3 w-full md:w-auto">
-        <Skeleton className="hidden md:block h-10 w-64" />
-        <Skeleton className="h-10 w-28" />
-      </div>
-    </div>
-  )
-}
-
 export function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
@@ -101,17 +86,6 @@ export function ChartsSkeleton() {
           </CardContent>
         </Card>
       ))}
-    </div>
-  )
-}
-
-export default function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-4 md:gap-6 p-4 md:p-8 max-w-7xl mx-auto">
-      <HeaderSkeleton />
-      <StatsSkeleton />
-      <EntrySkeleton />
-      <ChartsSkeleton />
     </div>
   )
 }
