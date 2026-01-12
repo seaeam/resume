@@ -1,6 +1,6 @@
-import { Badge } from '@/components/ui/badge'
-import { AlertCircle, AlertTriangle, Info } from 'lucide-react'
 import type { Issue } from '../types'
+import { AlertCircle, AlertTriangle, Info } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
 interface SeverityBadgeProps {
   severity: Issue['severity']

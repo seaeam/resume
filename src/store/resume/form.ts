@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { DocumentManager } from '@/lib/automerge/document-manager'
 import { getOfflineResumeById, isOfflineResumeId, updateOfflineResume } from '@/lib/offline-resume-manager'
 import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE } from '@/lib/schema'
+import { updateResumeConfig } from '@/lib/supabase/resume'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { getTimestamp } from '@/utils/date'
 import useCurrentResumeStore from './current'
@@ -271,6 +272,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     set({ isSyncing: true })
     try {
       await state.docManager.saveToSupabase(state.docHandle)
+      await updateResumeConfig(resumeId, get().getResumeFormData())
     }
     catch (error) {
       set({
