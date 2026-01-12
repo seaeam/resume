@@ -23,7 +23,7 @@ export default defineConfig({
         '**/models/*',
         '**/data/*',
         '**/info/*',
-        '*.ts',
+        '**/*.ts',
       ],
       importMode: 'async',
     }),

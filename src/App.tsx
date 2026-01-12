@@ -16,7 +16,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <AppSidebar variant="floating" />
-      <SidebarInset className="relative flex flex-col">
+      <SidebarInset className="flex flex-col">
         <SidebarHeader className="sticky top-0 z-1 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
           <SiteHeader />
         </SidebarHeader>

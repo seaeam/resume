@@ -42,7 +42,7 @@ export function CompletenessModule({ missingCount, missingItems }: CompletenessM
         <Button
           variant="link"
           className="h-auto p-0 text-xs text-orange-600 dark:text-orange-400 hover:text-orange-700 w-full justify-start text-center"
-          onClick={() => navigate('/resume/editor')}
+          onClick={() => navigate('/optimize')}
         >
           去完善
           <ArrowRight className="size-3" />
