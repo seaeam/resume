@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "meta": {
+    "resume_id": "e1c7e428-1162-4e89-8949-18eef2f79bd3",
+    "document_version": 1,
+    "language": "zh",
+    "generated_at": "2026-01-12T08:40:00Z",
+    "mode": "general_ats_check"
+  },
+  "summary": {
+    "overall_score": 62,
+    "grade": "C",
+    "top_risks": [
+      "联系方式缺失（邮箱/电话为空），会影响 ATS 与 HR 联系与筛选字段匹配",
+      "工作/项目经历内容为空或过于笼统，缺少可量化结果",
+      "技能为空或缺少证据支撑，岗位匹配度无法建立"
+    ],
+    "next_actions": [
+      {
+        "title": "补齐邮箱与电话",
+        "priority": "high",
+        "locate": { "sectionKey": "basics", "field": "email" }
+      },
+      {
+        "title": "完善至少 1 个项目经历，补齐动作 + 技术点 + 量化结果",
+        "priority": "medium",
+        "locate": { "sectionKey": "project_experience", "itemIndex": 0, "field": "projectInfo" }
+      }
+    ]
+  },
+  "scores": {
+    "ats_parsing": { "score": 12, "max": 20 },
+    "format_readability": { "score": 16, "max": 20 },
+    "content_completeness": { "score": 10, "max": 20 },
+    "impact_quantification": { "score": 6, "max": 20 },
+    "job_match": { "score": 18, "max": 30 }
+  },
+  "findings": {
+    "high": [
+      {
+        "id": "H-001",
+        "type": "missing_contact",
+        "title": "联系方式缺失（邮箱/电话为空）",
+        "why": {
+          "explanation": "ATS 与 HR 常用邮箱/电话作为关键字段；缺失会降低可联系性与筛选匹配。",
+          "evidence": [
+            {
+              "quote": "basics.email = \"\"，basics.phone = \"\"",
+              "anchor": { "sectionKey": "basics", "fields": ["email", "phone"] }
+            }
+          ]
+        },
+        "how_to_fix": {
+          "action": "补齐邮箱与手机号（建议使用常用邮箱 + 可长期接听手机号）。",
+          "replacement": [
+            {
+              "field": "basics.email",
+              "example": "xxx@gmail.com"
+            },
+            {
+              "field": "basics.phone",
+              "example": "138****8888"
+            }
+          ]
+        },
+        "locate": { "sectionKey": "basics", "field": "email" }
+      }
+    ],
+    "medium": [
+      {
+        "id": "M-003",
+        "type": "empty_project_content",
+        "title": "项目经历内容过少，无法体现能力与岗位匹配",
+        "why": {
+          "explanation": "项目经历是前端简历最核心的证明材料。当前项目描述为空/过少，ATS 与 HR 无法判断你的技术栈与贡献。",
+          "evidence": [
+            {
+              "quote": "project_experience.items[0].projectInfo = \"\"",
+              "anchor": { "sectionKey": "project_experience", "itemIndex": 0, "field": "projectInfo" }
+            }
+          ]
+        },
+        "how_to_fix": {
+          "action": "按“背景-职责-技术-结果”补全，并加入可量化指标。",
+          "rewrite_suggestions": [
+            {
+              "before": "",
+              "after": "【项目背景】为 X 业务搭建前端管理台。\n【职责】负责权限路由与表单组件封装。\n【技术】React + TypeScript + Vite，使用 React Hook Form + Zod 做表单校验。\n【结果】将表单开发耗时从 2 天/页降低到 0.5 天/页，线上错误率降低 30%。",
+              "reason": "补齐技术证据与量化结果，ATS 更容易匹配关键词，HR 更容易判断贡献。"
+            }
+          ]
+        },
+        "locate": { "sectionKey": "project_experience", "itemIndex": 0, "field": "projectInfo" }
+      },
+      {
+        "id": "M-005",
+        "type": "skills_empty",
+        "title": "技能专长为空或缺少结构化分组",
+        "why": {
+          "explanation": "ATS 常会从 Skills 区域提取关键词；为空会显著影响匹配。",
+          "evidence": [
+            {
+              "quote": "skill_specialty.skills = []",
+              "anchor": { "sectionKey": "skill_specialty", "field": "skills" }
+            }
+          ]
+        },
+        "how_to_fix": {
+          "action": "至少按“语言/框架/工程化/工具”分组列出，并在项目经历中出现对应证据。",
+          "replacement": [
+            {
+              "field": "skill_specialty.skills",
+              "example": [
+                "语言：JavaScript/TypeScript",
+                "框架：React",
+                "工程化：Vite/Webpack/ESLint/Prettier",
+                "状态管理：Redux/Zustand（按你实际）",
+                "测试：Jest/Playwright（按你实际）"
+              ]
+            }
+          ]
+        },
+        "locate": { "sectionKey": "skill_specialty", "field": "skills" }
+      }
+    ],
+    "low": [
+      {
+        "id": "L-001",
+        "type": "weak_self_evaluation",
+        "title": "自我评价建议减少空话，增加证据型表述",
+        "why": {
+          "explanation": "自我评价若只写“学习能力强/积极主动”信息密度低，建议用可验证的事实替代。",
+          "evidence": [
+            {
+              "quote": "self_evaluation.content 目前为空或未体现证据",
+              "anchor": { "sectionKey": "self_evaluation", "field": "content" }
+            }
+          ]
+        },
+        "how_to_fix": {
+          "action": "用“技能 + 场景 + 结果”写 2-3 句即可。",
+          "rewrite_suggestions": [
+            {
+              "before": "",
+              "after": "偏前端工程化方向，熟悉 React + TypeScript 开发流程；在项目中落地 ESLint/Prettier 规范与组件复用，减少重复代码并提升交付效率。",
+              "reason": "把抽象形容词替换为具体技能与实践结果。"
+            }
+          ]
+        },
+        "locate": { "sectionKey": "self_evaluation", "field": "content" }
+      }
+    ]
+  }
+}
