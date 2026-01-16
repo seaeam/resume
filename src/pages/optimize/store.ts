@@ -1,16 +1,19 @@
 import type { AtsEvaluationResult } from './types'
 import { toast } from 'sonner'
 import { create } from 'zustand'
-import { getAtsFromUserId, updateFixChecklist } from '@/lib/supabase/resume'
+import { getAtsFromUserId, getAtsResumeFromResumeId, updateFixChecklist } from '@/lib/supabase/resume'
 import { DEFAULT_ATS } from './const'
 
 interface AtsStore extends AtsEvaluationResult {
-  history: AtsEvaluationResult[] | []
+  history: AtsEvaluationResult[]
   loading: boolean
+  selectedResumeId: string | null
 
   setAtsEvaluation: (atsEvaluation: AtsEvaluationResult | null) => void
   revertFixChecklist: (id: string) => Promise<void>
   setHistory: (history: AtsEvaluationResult[]) => void
+  getAtsResumes: () => ReturnType<typeof getAtsResumeFromResumeId>
+  setSelectedResumeId: (id: string | null) => void
   init: () => void
 }
 
@@ -24,10 +27,9 @@ const useAtsStore = create<AtsStore>()(
       try {
         set({ loading: true })
 
-        const { history, ...rest } = await getAtsFromUserId()
+        const data = await getAtsFromUserId()
 
-        setAtsEvaluation(rest)
-        setHistory(history)
+        setAtsEvaluation(data)
       }
       catch (error: any) {
         toast.error(error.message)
@@ -53,15 +55,22 @@ const useAtsStore = create<AtsStore>()(
       }
     }
 
+    const getAtsResumes = async () => await getAtsResumeFromResumeId()
+
+    const setSelectedResumeId = (id: string | null) => set({ selectedResumeId: id })
+
     return {
       ...DEFAULT_ATS,
-      history: [] as AtsEvaluationResult[] | [],
+      history: [] as AtsEvaluationResult[],
       loading: false,
+      selectedResumeId: null,
 
       setAtsEvaluation,
       setHistory,
       init,
       revertFixChecklist,
+      getAtsResumes,
+      setSelectedResumeId,
     }
   },
 )

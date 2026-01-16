@@ -13,7 +13,7 @@ export function RepairChecklist() {
   return (
     <Card className="border-blue-100 dark:border-blue-900 shadow-md overflow-hidden bg-white dark:bg-card p-0 gap-0 rounded-2xl relative">
       <div className="bg-blue-50/50 dark:bg-blue-900/20 pt-6 pb-10 relative">
-        <div className="px-6 space-y-1 relative z-10">
+        <div className="px-6 space-y-1 relative">
           <CardTitle className="text-lg flex items-center gap-2.5 text-blue-700 dark:text-blue-400 font-bold">
             <Wand2 className="w-5 h-5" />
             优化修复清单

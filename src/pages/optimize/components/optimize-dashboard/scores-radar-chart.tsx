@@ -1,0 +1,113 @@
+import type { Scores } from '../../types'
+import type { ChartConfig } from '@/components/ui/chart'
+import { Activity } from 'lucide-react'
+import { useMemo } from 'react'
+import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from 'recharts'
+import { Card, CardContent } from '@/components/ui/card'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { Spinner } from '@/components/ui/spinner'
+import { SCORE_LABELS } from '../../const'
+
+interface ScoresRadarChartProps {
+  scores: Scores | null
+  loading?: boolean
+}
+
+const chartConfig = {
+  score: {
+    label: '得分',
+    color: 'var(--chart-1)',
+  },
+} satisfies ChartConfig
+
+export default function ScoresRadarChart({ scores, loading = false }: ScoresRadarChartProps) {
+  const chartData = useMemo(() => {
+    if (!scores)
+      return []
+
+    return Object.entries(scores).map(([key, value]) => ({
+      category: SCORE_LABELS[key as keyof typeof SCORE_LABELS] || key,
+      score: Math.round((value.score / value.max) * 100),
+      raw: value.score,
+      max: value.max,
+    }))
+  }, [scores])
+
+  return (
+    <Card className="h-full group relative">
+      <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity duration-300">
+        <Activity className="w-20 h-20 text-blue-800 dark:text-blue-100" />
+      </div>
+      <CardContent className="p-4 md:p-5 flex flex-col justify-between h-full relative">
+        <div className="flex items-start justify-between w-full mb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/20 text-blue-600">
+              <Activity className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">能力雷达图</p>
+          </div>
+        </div>
+
+        {loading
+          ? (
+              <div className="flex-1 flex items-center justify-center min-h-[180px]">
+                <Spinner />
+              </div>
+            )
+          : chartData.length > 0
+            ? (
+                <ChartContainer
+                  config={chartConfig}
+                  className="mx-auto w-full flex-1"
+                >
+                  <RadarChart
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="60%"
+                  >
+                    <ChartTooltip
+                      cursor={false}
+                      content={(
+                        <ChartTooltipContent
+                          labelFormatter={value => SCORE_LABELS[value as keyof typeof SCORE_LABELS] || value}
+                          formatter={(value, name, item) => (
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium">{item.payload.raw}</span>
+                              <span className="text-muted-foreground">/</span>
+                              <span className="text-muted-foreground">{item.payload.max}</span>
+                              <span className="text-muted-foreground text-xs ml-1">
+                                (
+                                {value}
+                                %)
+                              </span>
+                            </div>
+                          )}
+                        />
+                      )}
+                    />
+                    <PolarAngleAxis
+                      dataKey="category"
+                      tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                      tickLine={false}
+                    />
+                    <PolarGrid gridType="polygon" stroke="var(--border)" />
+                    <Radar
+                      dataKey="score"
+                      fill="var(--chart-1)"
+                      fillOpacity={0.5}
+                      stroke="var(--chart-1)"
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ChartContainer>
+              )
+            : (
+                <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground min-h-[180px]">
+                  暂无评分数据
+                </div>
+              )}
+      </CardContent>
+    </Card>
+  )
+}

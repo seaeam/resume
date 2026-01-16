@@ -1,4 +1,4 @@
-import type { AtsEvaluationResult, FindingsGroup, Issue, Meta, ReadabilityIndex, ResumeItem, Scores, Summary } from './types'
+import type { AtsEvaluationResult, FindingsGroup, Issue, Meta, ReadabilityIndex, Scores, Summary } from './types'
 
 export const MOCK_ISSUES: Issue[] = [
   {
@@ -43,11 +43,6 @@ export const MOCK_ISSUES: Issue[] = [
   },
 ]
 
-export const MOCK_RESUMES: ResumeItem[] = [
-  { id: '1', name: 'Frontend_Dev_Resume_v2.pdf', date: '2023-10-24', score: 72 },
-  { id: '2', name: 'Frontend_Dev_Resume_v1.docx', date: '2023-10-20', score: 65 },
-]
-
 export const DEFAULT_ATS: AtsEvaluationResult = {
   version: '',
   resume_id: '',
@@ -57,4 +52,12 @@ export const DEFAULT_ATS: AtsEvaluationResult = {
   summary: {} as Summary,
   scores: {} as Scores,
   findings: {} as FindingsGroup,
+}
+
+export const SCORE_LABELS = {
+  job_match: '职位匹配度',
+  ats_parsing: 'ATS 解析度',
+  format_readability: '格式可读性',
+  content_completeness: '内容完整度',
+  impact_quantification: '影响力量化',
 }
