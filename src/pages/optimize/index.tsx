@@ -4,18 +4,23 @@ import { getAllOfflineResumes } from '@/lib/offline-resume-manager'
 import { getAllResumesFromUser } from '@/lib/supabase/resume/form'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { AdvancedTools } from './components/advanced-tools'
+import Header from './components/header'
 import { IssueAnalysis } from './components/issue-analysis'
 import { OptimizeDashboard } from './components/optimize-dashboard'
-import { OptimizeHeader } from './components/optimize-header'
 import { ProTips } from './components/pro-tips'
 import { RepairChecklist } from './components/repair-checklist'
 import { ResumeManager } from './components/resume-manager'
-import { MOCK_CHECKLIST, MOCK_ISSUES, MOCK_RESUMES } from './const'
+import { MOCK_ISSUES, MOCK_RESUMES } from './const'
+import useAtsStore from './store'
 
 function Optimize() {
   const [resumes, setResumes] = useState<ResumeItem[]>(MOCK_RESUMES)
   const [selectedResume, setSelectedResume] = useState(MOCK_RESUMES[0].id)
-  const [checklist, setChecklist] = useState(MOCK_CHECKLIST)
+  const { init } = useAtsStore()
+
+  useEffect(() => {
+    init()
+  }, [init])
 
   useEffect(() => {
     async function loadResumes() {
@@ -63,57 +68,26 @@ function Optimize() {
     loadResumes()
   }, [])
 
-  const toggleChecklist = (id: string) => {
-    setChecklist(prev => prev.map(item =>
-      item.id === id ? { ...item, done: !item.done } : item,
-    ))
-  }
-
-  const completedTasks = checklist.filter(i => i.done).length
-  const progress = Math.round((completedTasks / checklist.length) * 100)
-
   return (
     <div className="min-h-screen bg-background p-4 md:p-6 space-y-6 overflow-x-hidden">
-      {/* Header */}
-      <OptimizeHeader />
+      <Header />
 
-      {/* Dashboard Area */}
-      <OptimizeDashboard
-        progress={progress}
-        completedTasks={completedTasks}
-        totalTasks={checklist.length}
-      />
+      <OptimizeDashboard />
 
       <div className="grid gap-6 md:grid-cols-12">
-        {/* Left Column */}
         <div className="md:col-span-8 space-y-6">
-
-          {/* Resume Selection & Upload Zone */}
           <ResumeManager
             resumes={resumes}
             selectedResume={selectedResume}
             onSelectResume={setSelectedResume}
           />
-
-          {/* Issues Analysis */}
           <IssueAnalysis issues={MOCK_ISSUES} />
         </div>
 
-        {/* Right Column */}
         <div className="md:col-span-4 space-y-6">
-
-          {/* Repair Checklist */}
-          <RepairChecklist
-            checklist={checklist}
-            onToggle={toggleChecklist}
-          />
-
-          {/* Market-Aligned Features */}
+          <RepairChecklist />
           <AdvancedTools />
-
-          {/* Tips Card */}
           <ProTips />
-
         </div>
       </div>
     </div>
