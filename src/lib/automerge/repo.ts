@@ -48,7 +48,7 @@ export function destroyAutomergeRepo() {
       repoInstance.networkSubsystem.disconnect()
     }
     catch (error) {
-      console.warn('⚠️ 断开 Automerge 网络适配器时出错', error)
+      // 忽略错误
     }
 
     // Repo 没有明确的销毁方法，设为 null 即可

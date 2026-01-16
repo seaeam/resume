@@ -1,4 +1,4 @@
-import type { ChecklistItem, Issue, ResumeItem } from './types'
+import type { AtsEvaluationResult, FindingsGroup, Issue, Meta, ReadabilityIndex, Scores, Summary } from './types'
 
 export const MOCK_ISSUES: Issue[] = [
   {
@@ -43,18 +43,21 @@ export const MOCK_ISSUES: Issue[] = [
   },
 ]
 
-export const MOCK_CHECKLIST: ChecklistItem[] = [
-  { id: '1', text: '修复邮箱格式问题', done: false, mandatory: true },
-  { id: '2', text: '添加至少 3 个量化指标到项目经历', done: false, mandatory: true },
-  { id: '3', text: '统一项目符号样式', done: true, mandatory: true },
-  { id: '4', text: '移除复杂表格布局', done: false, mandatory: true },
-  { id: '5', text: '优化字体大小 (10-12pt)', done: true, mandatory: true },
-  { id: '6', text: '添加标准章节标题', done: true, mandatory: true },
-  { id: '7', text: '增加行业关键词', done: false, mandatory: true },
-  { id: '8', text: '调整段落层级', done: false, mandatory: true },
-]
+export const DEFAULT_ATS: AtsEvaluationResult = {
+  version: '',
+  resume_id: '',
+  meta: {} as Meta,
+  readabilityIndex: {} as ReadabilityIndex,
+  fixChecklist: [],
+  summary: {} as Summary,
+  scores: {} as Scores,
+  findings: {} as FindingsGroup,
+}
 
-export const MOCK_RESUMES: ResumeItem[] = [
-  { id: '1', name: 'Frontend_Dev_Resume_v2.pdf', date: '2023-10-24', score: 72 },
-  { id: '2', name: 'Frontend_Dev_Resume_v1.docx', date: '2023-10-20', score: 65 },
-]
+export const SCORE_LABELS = {
+  job_match: '职位匹配度',
+  ats_parsing: 'ATS 解析度',
+  format_readability: '格式可读性',
+  content_completeness: '内容完整度',
+  impact_quantification: '影响力量化',
+}

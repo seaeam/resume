@@ -232,7 +232,6 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
    */
   send(message: Message): void {
     if (!this.channel || !this.ready) {
-      console.warn('⚠️ 网络适配器未就绪，无法发送消息')
       return
     }
 

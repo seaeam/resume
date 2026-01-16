@@ -1,6 +1,7 @@
-import type { ResumeItem } from '../types'
-import { CloudUpload, FileText, List } from 'lucide-react'
-import { useState } from 'react'
+import dayjs from 'dayjs'
+import { CheckCircle, CloudUpload, FileText, List } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -13,18 +14,25 @@ import {
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import useAtsStore from '../store'
 
-interface ResumeManagerProps {
-  resumes: ResumeItem[]
-  selectedResume: string
-  onSelectResume: (id: string) => void
-}
-
-export function ResumeManager({ resumes, selectedResume, onSelectResume }: ResumeManagerProps) {
+export function ResumeManager() {
+  const { getAtsResumes, selectedResumeId, setSelectedResumeId } = useAtsStore()
+  const [resumes, setResumes] = useState<Awaited<ReturnType<typeof getAtsResumes>>>([])
   const [open, setOpen] = useState(false)
 
+  useEffect(() => {
+    getAtsResumes().then((data) => {
+      setResumes(data)
+      // 如果没有选中的简历且有数据，默认选中第一个
+      if (!selectedResumeId && data.length > 0) {
+        setSelectedResumeId(data[0].id)
+      }
+    })
+  }, [getAtsResumes, selectedResumeId, setSelectedResumeId])
+
   const handleSelect = (id: string) => {
-    onSelectResume(id)
+    setSelectedResumeId(id)
     setOpen(false)
   }
 
@@ -58,26 +66,37 @@ export function ResumeManager({ resumes, selectedResume, onSelectResume }: Resum
                       key={resume.id}
                       className={cn(
                         'flex items-center justify-between p-3 rounded-md border transition-colors cursor-pointer hover:bg-muted',
-                        selectedResume === resume.id ? 'bg-accent border-primary/50' : '',
+                        selectedResumeId === resume.id ? 'bg-accent border-primary/50' : '',
                       )}
                       onClick={() => handleSelect(resume.id)}
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="p-2 bg-primary/10 rounded shrink-0">
-                          <FileText className="w-4 h-4 text-primary" />
+                        <div className={cn(
+                          'p-2 rounded shrink-0',
+                          resume.isScored ? 'bg-green-500/10' : 'bg-primary/10',
+                        )}
+                        >
+                          {resume.isScored
+                            ? <CheckCircle className="w-4 h-4 text-green-600" />
+                            : <FileText className="w-4 h-4 text-primary" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate" title={resume.name}>{resume.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate" title={resume.display_name}>{resume.display_name}</p>
+                            {resume.isScored
+                              ? <Badge variant="outline" className="text-green-600 border-green-600/30 bg-green-50 dark:bg-green-950/30 shrink-0">已打分</Badge>
+                              : <Badge variant="outline" className="text-muted-foreground shrink-0">待分析</Badge>}
+                          </div>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{resume.date}</span>
-                            {resume.score > 0 && (
+                            <span>{dayjs(resume.created_at).fromNow()}</span>
+                            {resume.isScored && resume.overall_score != null && resume.overall_score > 0 && (
                               <>
                                 <span>•</span>
                                 <span className={cn(
-                                  resume.score >= 80 ? 'text-green-600' : resume.score >= 60 ? 'text-amber-600' : 'text-red-600',
+                                  resume.overall_score >= 80 ? 'text-green-600' : resume.overall_score >= 60 ? 'text-amber-600' : 'text-red-600',
                                 )}
                                 >
-                                  {resume.score}
+                                  {resume.overall_score}
                                   {' '}
                                   分
                                 </span>
@@ -86,7 +105,7 @@ export function ResumeManager({ resumes, selectedResume, onSelectResume }: Resum
                           </div>
                         </div>
                       </div>
-                      {selectedResume === resume.id && (
+                      {selectedResumeId === resume.id && (
                         <div className="text-primary text-xs font-medium px-2">
                           当前选中
                         </div>
@@ -114,29 +133,42 @@ export function ResumeManager({ resumes, selectedResume, onSelectResume }: Resum
                   key={resume.id}
                   className={cn(
                     'flex items-center justify-between p-2 md:p-3 rounded-md border transition-colors cursor-pointer',
-                    selectedResume === resume.id ? 'bg-accent border-primary/50' : 'hover:bg-muted',
+                    selectedResumeId === resume.id ? 'bg-accent border-primary/50' : 'hover:bg-muted',
                   )}
-                  onClick={() => onSelectResume(resume.id)}
+                  onClick={() => handleSelect(resume.id)}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="p-2 bg-primary/10 rounded shrink-0">
-                      <FileText className="w-4 h-4 text-primary" />
+                    <div className={cn(
+                      'p-2 rounded shrink-0',
+                      resume.isScored ? 'bg-green-500/10' : 'bg-primary/10',
+                    )}
+                    >
+                      {resume.isScored
+                        ? <CheckCircle className="w-4 h-4 text-green-600" />
+                        : <FileText className="w-4 h-4 text-primary" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate" title={resume.name}>{resume.name}</p>
-                      <p className="text-xs text-muted-foreground">{resume.date}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate" title={resume.display_name}>{resume.display_name}</p>
+                        {!resume.isScored && <Badge variant="outline" className="text-muted-foreground shrink-0 text-[10px] px-1.5 py-0">待分析</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{dayjs(resume.created_at).fromNow()}</p>
                     </div>
                   </div>
                   <div className="text-right shrink-0 ml-2">
-                    <span className={cn(
-                      'text-sm font-bold',
-                      resume.score >= 80 ? 'text-green-600' : resume.score >= 60 ? 'text-amber-600' : 'text-red-600',
-                    )}
-                    >
-                      {resume.score}
-                      {' '}
-                      分
-                    </span>
+                    {resume.isScored && resume.overall_score != null
+                      ? (
+                          <span className={cn(
+                            'text-sm font-bold',
+                            resume.overall_score >= 80 ? 'text-green-600' : resume.overall_score >= 60 ? 'text-amber-600' : 'text-red-600',
+                          )}
+                          >
+                            {resume.overall_score}
+                            {' '}
+                            分
+                          </span>
+                        )
+                      : <span className="text-xs text-muted-foreground">--</span>}
                   </div>
                 </div>
               ))

@@ -21,26 +21,6 @@ export async function getAllResumesFromUser() {
   return data
 }
 
-export async function searchOnlineResumes(query: string) {
-  const user = await getCurrentUser()
-
-  if (!user)
-    throw new Error('用户未登陆')
-
-  const { data, error } = await supabase
-    .from('resume_config')
-    .select('id,resume_id,created_at,updated_at,type,display_name,description')
-    .eq('user_id', user.id)
-    .or(`display_name.ilike.%${query}%,description.ilike.%${query}%`)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    throw error
-  }
-
-  return data
-}
-
 export async function getResumeById(id: string) {
   const user = await getCurrentUser()
 
