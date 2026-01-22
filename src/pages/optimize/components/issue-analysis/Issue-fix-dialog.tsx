@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Finding, Severity, Suggestion } from '../../types'
-import { AlertTriangle, ArrowRight, BadgeQuestionMark, Code2, FileDiff, Info, Lightbulb, ListOrdered, MessageSquare, Wand2, XCircle } from 'lucide-react'
+import { AlertTriangle, ArrowRight, BadgeQuestionMark, Code2, Edit3, FileDiff, Info, Lightbulb, ListOrdered, Wand2, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,10 +9,10 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { severityConfig } from '../../const'
+import { SuggestionEditor } from './suggestion-editor'
 import { SuggestionCompareCard } from './suggestion-value-renderer'
 
 function IssueFixDialog({ finding, severity, children }: { finding: Finding, severity: Severity, children: ReactNode }) {
@@ -29,9 +29,7 @@ function IssueFixDialog({ finding, severity, children }: { finding: Finding, sev
   const beforeCode = JSON.stringify(suggestions.map(s => s.before).filter(Boolean), null, 2)
   const afterCode = JSON.stringify(suggestions.map(s => s.after).filter(Boolean), null, 2)
 
-  const defaultNote = `建议优先处理「${finding.title}」，按照“${finding.fix.summary}”进行完善。`
-
-  const contentProps = { finding, severity, config, locationText, steps, suggestions, beforeCode, afterCode, defaultNote }
+  const contentProps = { finding, severity, config, locationText, steps, suggestions, beforeCode, afterCode }
 
   if (isMobile) {
     return (
@@ -113,7 +111,7 @@ function IssueFixDialog({ finding, severity, children }: { finding: Finding, sev
   )
 }
 
-function IssueFixContent({ finding, locationText, steps, suggestions, beforeCode, afterCode, defaultNote }: any) {
+function IssueFixContent({ finding, locationText, steps, suggestions, beforeCode, afterCode }: any) {
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* 信息概览卡片 */}
@@ -181,14 +179,14 @@ function IssueFixContent({ finding, locationText, steps, suggestions, beforeCode
             <span className="hidden xs:inline">代码</span>
             对比
           </TabsTrigger>
-          <TabsTrigger value="note" className="px-2 sm:px-3 py-1.5 text-xs gap-1 sm:gap-1.5">
-            <MessageSquare className="size-3 sm:size-3.5 shrink-0" />
+          <TabsTrigger value="edit" className="px-2 sm:px-3 py-1.5 text-xs gap-1 sm:gap-1.5">
+            <Edit3 className="size-3 sm:size-3.5 shrink-0" />
             自定义
           </TabsTrigger>
         </TabsList>
 
         <div className="mt-3 ring-1 ring-border/40 rounded-lg bg-card overflow-hidden">
-          <TabsContent value="summary" className="m-0 p-3 sm:p-4 space-y-4 max-h-60 sm:max-h-70 overflow-y-auto">
+          <TabsContent value="summary" className="m-0 p-2 sm:p-4 space-y-4 max-h-60 sm:max-h-70 overflow-y-auto">
             {suggestions.map((suggestion: Suggestion) => (
               <SuggestionCompareCard
                 key={`${suggestion.kind}-${suggestion.valueType}-${JSON.stringify(suggestion.after).slice(0, 20)}`}
@@ -206,7 +204,7 @@ function IssueFixContent({ finding, locationText, steps, suggestions, beforeCode
             )}
           </TabsContent>
 
-          <TabsContent value="code" className="m-0 p-3 sm:p-4 max-h-[280px] overflow-y-auto">
+          <TabsContent value="code" className="m-0 p-2 sm:p-4 max-h-[280px] overflow-y-auto">
             <div className="grid gap-3 sm:grid-cols-2">
               <CodeBlock language="json" filename="before.json" className="text-xs max-h-[200px] overflow-auto">
                 {beforeCode}
@@ -217,19 +215,13 @@ function IssueFixContent({ finding, locationText, steps, suggestions, beforeCode
             </div>
           </TabsContent>
 
-          <TabsContent value="note" className="m-0 p-3 sm:p-4 space-y-3">
-            <Textarea
-              defaultValue={defaultNote}
-              placeholder="在此输入您的自定义修复说明..."
-              className="min-h-[120px] sm:min-h-[150px] text-xs sm:text-sm resize-none"
+          <TabsContent value="edit" className="m-0 p-2 sm:p-4 max-h-80 overflow-y-auto">
+            <SuggestionEditor
+              suggestions={suggestions}
+              onChange={(_newSuggestions) => {
+                // TODO: 处理修改后的建议
+              }}
             />
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Info className="size-3" />
-                支持 Markdown 格式
-              </span>
-              <span>可根据实际情况调整说明内容</span>
-            </div>
           </TabsContent>
         </div>
       </Tabs>

@@ -2,9 +2,9 @@ import { BarChart3, CheckCircle2, FileText } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import useAtsStore from '../../store'
+import { calculateRating, calculateReadabilityRating } from '../../utils'
 import MetricCard from './metric-card'
 import ScoresRadarChart from './scores-radar-chart'
-import { calculateRating, calculateReadabilityRating } from './utils'
 
 export function OptimizeDashboard() {
   const { currentAtsConfig, loading } = useAtsStore()

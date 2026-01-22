@@ -1,108 +1,21 @@
-import type { ValueType } from '../../types'
+import type { ComponentType } from 'react'
+import type { SuggestionKind, ValueType } from '../../types'
 import type { SkillItem } from '@/lib/schema/resume/form/skillSpecialty'
-import { ArrowRight, Calendar, Star, Tag } from 'lucide-react'
+import { ArrowRight, Calendar, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
+import { KIND_LABEL_MAP, PROFICIENCY_MAP } from '../../const'
+import { detectValueType, getFieldLabel, isEmptyValue, renderValue } from '../../utils'
 
-// ================================
-// 字段标签映射
-// ================================
-const FIELD_LABEL_MAP: Record<string, string> = {
-  // 基本信息
-  name: '姓名',
-  gender: '性别',
-  birthMonth: '出生年月',
-  phone: '手机号',
-  email: '邮箱',
-  workYears: '工作年限',
-  maritalStatus: '婚姻状况',
-  heightCm: '身高(cm)',
-  weightKg: '体重(kg)',
-  nation: '民族',
-  nativePlace: '籍贯',
-  politicalStatus: '政治面貌',
-  customFields: '自定义字段',
-
-  // 求职意向
-  jobIntent: '求职意向',
-  intentionalCity: '意向城市',
-  expectedSalary: '期望薪资',
-  dateEntry: '到岗时间',
-
-  // 教育背景
-  schoolName: '学校名称',
-  professional: '专业',
-  degree: '学历',
-  duration: '时间段',
-  eduInfo: '教育经历描述',
-
-  // 工作经历
-  companyName: '公司名称',
-  position: '职位',
-  workDuration: '工作时间',
-  workInfo: '工作描述',
-
-  // 项目经历
-  projectName: '项目名称',
-  participantRole: '担任角色',
-  projectDuration: '项目时间',
-  projectInfo: '项目描述',
-
-  // 技能特长
-  label: '技能名称',
-  proficiencyLevel: '熟练度',
-  displayType: '展示方式',
-  skills: '技能列表',
-  description: '描述',
-
-  // 荣誉证书
-  certificates: '证书列表',
-
-  // 自我评价
-  selfEvaluation: '自我评价',
-}
-
-// 熟练度对应百分比
-const PROFICIENCY_MAP: Record<string, number> = {
-  一般: 50,
-  良好: 65,
-  熟练: 80,
-  擅长: 85,
-  精通: 95,
-}
-
-// ================================
-// 工具函数
-// ================================
-function getFieldLabel(key: string): string {
-  return FIELD_LABEL_MAP[key] || key
-}
-
-function isEmptyValue(value: unknown): boolean {
-  if (value === null || value === undefined)
-    return true
-  if (typeof value === 'string' && value.trim() === '')
-    return true
-  if (Array.isArray(value) && value.length === 0)
-    return true
-  if (Array.isArray(value) && value.every(v => v === '' || v === null))
-    return true
-  return false
-}
-
-// ================================
-// 渲染器组件
-// ================================
-
-// 空值渲染
+// 空值
 function EmptyValue() {
   return (
     <span className="text-muted-foreground/50 italic text-xs">空</span>
   )
 }
 
-// 字符串渲染
+// 字符串
 function StringValue({ value, variant }: { value: string, variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -119,7 +32,7 @@ function StringValue({ value, variant }: { value: string, variant?: 'before' | '
   )
 }
 
-// HTML 字符串渲染
+// TODO 使用安全的转换 HTML 字符串
 function HtmlStringValue({ value, variant }: { value: string, variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -136,7 +49,7 @@ function HtmlStringValue({ value, variant }: { value: string, variant?: 'before'
   )
 }
 
-// 日期时间段渲染
+// 日期时间段
 function DateRangeValue({ value, variant }: { value: string[], variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -163,7 +76,7 @@ function DateRangeValue({ value, variant }: { value: string[], variant?: 'before
   )
 }
 
-// 技能项渲染
+// 技能项
 function SkillItemValue({ value, variant }: { value: SkillItem, variant?: 'before' | 'after' }) {
   const percentage = PROFICIENCY_MAP[value.proficiencyLevel] || 50
 
@@ -199,7 +112,7 @@ function SkillItemValue({ value, variant }: { value: SkillItem, variant?: 'befor
   )
 }
 
-// 技能列表渲染
+// 技能列表
 function SkillListValue({ value, variant }: { value: SkillItem[], variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -213,7 +126,7 @@ function SkillListValue({ value, variant }: { value: SkillItem[], variant?: 'bef
   )
 }
 
-// 字符串数组渲染
+// 字符串数组
 function StringArrayValue({ value, variant }: { value: string[], variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -237,7 +150,7 @@ function StringArrayValue({ value, variant }: { value: string[], variant?: 'befo
   )
 }
 
-// 证书列表渲染
+// 证书列表
 function CertificateListValue({ value, variant }: { value: Array<{ name: string }>, variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -262,7 +175,7 @@ function CertificateListValue({ value, variant }: { value: Array<{ name: string 
   )
 }
 
-// 对象渲染（通用）
+// 通用对象
 function ObjectValue({ value, variant }: { value: Record<string, unknown>, variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -298,7 +211,7 @@ function ObjectValue({ value, variant }: { value: Record<string, unknown>, varia
   )
 }
 
-// 对象数组渲染
+// 对象数组
 function ObjectArrayValue({ value, variant }: { value: Array<Record<string, unknown>>, variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -312,62 +225,6 @@ function ObjectArrayValue({ value, variant }: { value: Array<Record<string, unkn
   )
 }
 
-// 简单值渲染
-function renderValue(value: unknown): string {
-  if (value === null || value === undefined)
-    return '-'
-  if (typeof value === 'boolean')
-    return value ? '是' : '否'
-  if (typeof value === 'number')
-    return value.toString()
-  if (typeof value === 'string')
-    return value || '-'
-  if (Array.isArray(value))
-    return value.join(', ') || '-'
-  return JSON.stringify(value)
-}
-
-// ================================
-// 智能值类型检测
-// ================================
-function detectValueType(value: unknown): 'skill_list' | 'skill_item' | 'certificate_list' | 'date_range' | 'string_array' | 'object_array' | 'object' | 'string' | 'empty' {
-  if (isEmptyValue(value))
-    return 'empty'
-
-  // 检测日期范围（长度为2的字符串数组）
-  if (Array.isArray(value) && value.length === 2 && value.every(v => typeof v === 'string' || v === null || v === '')) {
-    return 'date_range'
-  }
-
-  // 检测技能列表
-  if (Array.isArray(value) && value.length > 0 && value[0] && typeof value[0] === 'object') {
-    const first = value[0] as Record<string, unknown>
-    if ('label' in first && 'proficiencyLevel' in first) {
-      return 'skill_list'
-    }
-    if ('name' in first && Object.keys(first).length === 1) {
-      return 'certificate_list'
-    }
-    return 'object_array'
-  }
-
-  // 检测技能项
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    const obj = value as Record<string, unknown>
-    if ('label' in obj && 'proficiencyLevel' in obj) {
-      return 'skill_item'
-    }
-    return 'object'
-  }
-
-  // 检测字符串数组
-  if (Array.isArray(value) && value.every(v => typeof v === 'string')) {
-    return 'string_array'
-  }
-
-  return 'string'
-}
-
 // ================================
 // 主渲染器
 // ================================
@@ -377,64 +234,41 @@ interface SuggestionValueRendererProps {
   variant?: 'before' | 'after'
 }
 
+// 渲染器组件映射表
+const RENDERER_MAP: Record<string, ComponentType<{ value: any, variant?: 'before' | 'after' }>> = {
+  date_range: DateRangeValue,
+  skill_list: SkillListValue,
+  skill_item: SkillItemValue,
+  certificate_list: CertificateListValue,
+  string_array: StringArrayValue,
+  object_array: ObjectArrayValue,
+  object: ObjectValue,
+}
+
 export function SuggestionValueRenderer({ value, valueType, variant }: SuggestionValueRendererProps) {
   // 先检测空值
   if (isEmptyValue(value)) {
     return <EmptyValue />
   }
 
-  // 根据 valueType 和智能检测决定渲染方式
-  const detectedType = detectValueType(value)
-
   // HTML 字符串
   if (valueType === 'html_string') {
     return <HtmlStringValue value={value as string} variant={variant} />
   }
 
-  // 智能渲染
-  switch (detectedType) {
-    case 'date_range':
-      return <DateRangeValue value={value as string[]} variant={variant} />
+  // 根据检测到的类型选择对应的渲染组件
+  const detectedType = detectValueType(value)
+  const Renderer = RENDERER_MAP[detectedType] || StringValue
 
-    case 'skill_list':
-      return <SkillListValue value={value as SkillItem[]} variant={variant} />
-
-    case 'skill_item':
-      return <SkillItemValue value={value as SkillItem} variant={variant} />
-
-    case 'certificate_list':
-      return <CertificateListValue value={value as Array<{ name: string }>} variant={variant} />
-
-    case 'string_array':
-      return <StringArrayValue value={value as string[]} variant={variant} />
-
-    case 'object_array':
-      return <ObjectArrayValue value={value as Array<Record<string, unknown>>} variant={variant} />
-
-    case 'object':
-      return <ObjectValue value={value as Record<string, unknown>} variant={variant} />
-
-    default:
-      return <StringValue value={String(value)} variant={variant} />
-  }
+  return <Renderer value={value} variant={variant} />
 }
 
-// ================================
-// 对比卡片组件
-// ================================
 interface SuggestionCompareCardProps {
   before: unknown
   after: unknown
   valueType: ValueType
   reason?: string
-  kind?: string
-}
-
-const KIND_LABEL_MAP: Record<string, { label: string, icon: typeof Tag }> = {
-  replace_text: { label: '文本替换', icon: Tag },
-  replace_value: { label: '值替换', icon: Tag },
-  fill_field: { label: '字段填充', icon: Tag },
-  normalize_date: { label: '日期格式化', icon: Calendar },
+  kind?: SuggestionKind
 }
 
 export function SuggestionCompareCard({ before, after, valueType, reason, kind }: SuggestionCompareCardProps) {
