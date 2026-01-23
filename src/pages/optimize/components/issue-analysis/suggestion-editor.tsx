@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { CalendarIcon, Edit3, Plus, RotateCcw, Trash2, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useState } from 'react'
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -33,41 +34,6 @@ interface SuggestionEditorProps {
     kind: SuggestionKind
   }>
   onChange?: (suggestions: Array<{ before: unknown, after: unknown, valueType: ValueType, reason: string, kind: SuggestionKind }>) => void
-}
-
-// ================================
-// 字符串编辑器
-// ================================
-function StringEditor({ value, onChange, placeholder }: {
-  value: string
-  onChange: (val: string) => void
-  placeholder?: string
-}) {
-  return (
-    <Input
-      value={value || ''}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder || '输入内容...'}
-      className="h-9"
-    />
-  )
-}
-
-// ================================
-// 富文本编辑器
-// ================================
-function HtmlEditor({ value, onChange }: {
-  value: string
-  onChange: (val: string) => void
-}) {
-  return (
-    <Textarea
-      value={value || ''}
-      onChange={e => onChange(e.target.value)}
-      placeholder="输入内容..."
-      className="min-h-24 resize-none"
-    />
-  )
 }
 
 // ================================
@@ -279,7 +245,7 @@ function SkillListEditor({ value, onChange }: {
       {value.length > 0 && (
         <>
           <Separator />
-          <div className="grid grid-cols-1 gap-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="popLayout" initial={false}>
               {value.map((skill, index) => {
                 // 确保有默认值，防止空值导致 UI 异常
@@ -616,7 +582,7 @@ function ValueEditor({ value, valueType, onChange }: {
   const detectedType = detectValueType(value)
 
   if (valueType === 'html_string') {
-    return <HtmlEditor value={value as string} onChange={onChange} />
+    return <SimpleEditor content={value as string} onChange={editor => onChange(editor.getHTML())} />
   }
 
   switch (detectedType) {
@@ -673,7 +639,7 @@ function ValueEditor({ value, valueType, onChange }: {
     case 'empty':
     case 'string':
     default:
-      return <StringEditor value={String(value || '')} onChange={onChange} />
+      return <SimpleEditor content={String(value || '')} onChange={editor => onChange(editor.getHTML())} />
   }
 }
 
@@ -851,7 +817,7 @@ function renderPreview(value: unknown, valueType: ValueType): string {
 // ================================
 // 主组件
 // ================================
-export function SuggestionEditor({ suggestions: initialSuggestions, onChange }: SuggestionEditorProps) {
+function SuggestionEditor({ suggestions: initialSuggestions, onChange }: SuggestionEditorProps) {
   const [suggestions, setSuggestions] = useState(initialSuggestions)
   const [originalSuggestions] = useState(initialSuggestions)
 

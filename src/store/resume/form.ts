@@ -1,4 +1,5 @@
 import type { DocHandle } from '@automerge/automerge-repo'
+import type { StoreApi } from 'zustand'
 import type { AutomergeResumeDocument } from '@/lib/automerge/schema'
 import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import dayjs from 'dayjs'
@@ -75,6 +76,57 @@ function scheduleOfflinePersist(flushFn: () => Promise<void>) {
   }, SYNC_DELAY)
 }
 
+function ensureSection<T extends keyof AutomergeResumeDocument>(doc: AutomergeResumeDocument, key: T) {
+  if (!doc[key]) {
+    (doc as any)[key] = ({} as any)
+  }
+}
+
+function applyResumeChange(
+  set: StoreApi<ResumeState>['setState'],
+  get: StoreApi<ResumeState>['getState'],
+  stateUpdate: ((prev: ResumeState) => Partial<ResumeState>) | Partial<ResumeState>,
+  docUpdate?: (doc: AutomergeResumeDocument) => void,
+) {
+  const state = get()
+  const resumeId = state.currentResumeId ?? useCurrentResumeStore.getState().resumeId
+
+  // 1. 应用本地状态更新 (Optimistic UI)
+  set((prev: ResumeState) => {
+    try {
+      const updates = typeof stateUpdate === 'function'
+        ? stateUpdate(prev)
+        : stateUpdate
+      return { ...updates, pendingChanges: true, syncError: null }
+    }
+    catch (error) {
+      console.error('State update failed:', error)
+      return { syncError: '状态更新失败' }
+    }
+  })
+
+  // 2. 离线模式：触发延时保存
+  if (!resumeId || state.mode === 'offline' || isOfflineResumeId(resumeId)) {
+    scheduleOfflinePersist(() => get().syncToSupabase())
+    return
+  }
+
+  // 3. 在线模式：更新 Automerge 文档
+  // 可以在此处统一添加节流、审计日志或更复杂的错误恢复策略
+  if (docUpdate) {
+    try {
+      state.docManager?.change((doc) => {
+        docUpdate(doc)
+      })
+    }
+    catch (error) {
+      console.error('Document update failed:', error)
+      set({ syncError: '文档同步失败，请刷新重试' })
+      // TODO: 考虑是否需要回滚本地状态或重新初始化文档
+    }
+  }
+}
+
 const useResumeStore = create<ResumeState>()((set, get) => ({
   basics: DEFAULT_BASICS,
   jobIntent: DEFAULT_JOB_INTENT,
@@ -123,117 +175,65 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   updateActiveTabId: newActiveTab => set({ activeTabId: newActiveTab }),
 
   updateForm: (key, data) => {
-    const state = get()
     const sanitized = sanitizeDeep(data)
-    const resumeId = state.currentResumeId ?? useCurrentResumeStore.getState().resumeId
-
-    if (!resumeId || state.mode === 'offline' || isOfflineResumeId(resumeId)) {
-      set(prev => ({
-        [key]: { ...prev[key], ...sanitized },
-        pendingChanges: true,
-      }))
-      scheduleOfflinePersist(() => get().syncToSupabase())
-      return
-    }
-
-    set(prev => ({
-      [key]: { ...prev[key], ...sanitized },
-      pendingChanges: true,
-    }))
-
-    state.docManager?.change((doc) => {
-      if (!doc[key]) {
-        doc[key] = {} as any
-      }
-      applyPatch(doc[key], sanitized)
-    })
+    applyResumeChange(
+      set,
+      get,
+      prev => ({ [key]: { ...prev[key], ...sanitized } }),
+      (doc) => {
+        ensureSection(doc, key)
+        applyPatch(doc[key], sanitized)
+      },
+    )
   },
 
   updateOrder: (newOrder) => {
-    const state = get()
-    const resumeId = state.currentResumeId ?? useCurrentResumeStore.getState().resumeId
-
-    if (!resumeId || state.mode === 'offline' || isOfflineResumeId(resumeId)) {
-      set({ order: newOrder, pendingChanges: true })
-      scheduleOfflinePersist(() => get().syncToSupabase())
-      return
-    }
-
-    set({ order: newOrder, pendingChanges: true })
-    state.docManager?.change((doc) => {
-      doc.order = [...newOrder]
-    })
+    applyResumeChange(
+      set,
+      get,
+      { order: newOrder },
+      (doc) => {
+        doc.order = [...newOrder]
+      },
+    )
   },
 
   changeType: (type) => {
-    const state = get()
-    const resumeId = state.currentResumeId ?? useCurrentResumeStore.getState().resumeId
-
-    if (!resumeId || state.mode === 'offline' || isOfflineResumeId(resumeId)) {
-      set({ type, pendingChanges: true })
-      scheduleOfflinePersist(() => get().syncToSupabase())
-      return
-    }
-
-    set({ type, pendingChanges: true })
-    state.docManager?.change((doc) => {
-      doc.type = type
-    })
+    applyResumeChange(
+      set,
+      get,
+      { type },
+      (doc) => {
+        doc.type = type
+      },
+    )
   },
 
   toggleVisibility: (id) => {
-    const state = get()
-    const resumeId = state.currentResumeId ?? useCurrentResumeStore.getState().resumeId
-    const nextValue = !state.visibility[id]
-
-    if (!resumeId || state.mode === 'offline' || isOfflineResumeId(resumeId)) {
-      set(prev => ({
-        visibility: { ...prev.visibility, [id]: nextValue },
-        pendingChanges: true,
-      }))
-      scheduleOfflinePersist(() => get().syncToSupabase())
-      return
-    }
-
-    set(prev => ({
-      visibility: { ...prev.visibility, [id]: nextValue },
-      pendingChanges: true,
-    }))
-
-    state.docManager?.change((doc) => {
-      if (!doc.visibility) {
-        doc.visibility = {} as any
-      }
-      doc.visibility[id] = nextValue
-    })
+    const nextValue = !get().visibility[id]
+    applyResumeChange(
+      set,
+      get,
+      prev => ({ visibility: { ...prev.visibility, [id]: nextValue } }),
+      (doc) => {
+        ensureSection(doc, 'visibility')
+        doc.visibility[id] = nextValue
+      },
+    )
   },
 
   getVisibility: id => get().visibility[id],
 
   setVisibility: (id, isHidden) => {
-    const state = get()
-    const resumeId = state.currentResumeId ?? useCurrentResumeStore.getState().resumeId
-
-    if (!resumeId || state.mode === 'offline' || isOfflineResumeId(resumeId)) {
-      set(prev => ({
-        visibility: { ...prev.visibility, [id]: isHidden },
-        pendingChanges: true,
-      }))
-      scheduleOfflinePersist(() => get().syncToSupabase())
-      return
-    }
-
-    set(prev => ({
-      visibility: { ...prev.visibility, [id]: isHidden },
-      pendingChanges: true,
-    }))
-
-    state.docManager?.change((doc) => {
-      if (!doc.visibility) {
-        doc.visibility = {} as any
-      }
-      doc.visibility[id] = isHidden
-    })
+    applyResumeChange(
+      set,
+      get,
+      prev => ({ visibility: { ...prev.visibility, [id]: isHidden } }),
+      (doc) => {
+        ensureSection(doc, 'visibility')
+        doc.visibility[id] = isHidden
+      },
+    )
   },
 
   syncToSupabase: async () => {
@@ -400,7 +400,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   },
 
   resetToDefaults: () => {
-    set({
+    const defaultState = {
       basics: DEFAULT_BASICS,
       jobIntent: DEFAULT_JOB_INTENT,
       applicationInfo: DEFAULT_APPLICATION_INFO,
@@ -415,18 +415,16 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       hobbies: DEFAULT_HOBBIES,
       order: DEFAULT_ORDER,
       visibility: DEFAULT_VISIBILITY,
-      pendingChanges: true,
-    })
+    }
 
-    const state = get()
-    if (state.mode === 'offline' || (state.currentResumeId && isOfflineResumeId(state.currentResumeId))) {
-      scheduleOfflinePersist(() => get().syncToSupabase())
-    }
-    else {
-      state.docManager?.change((doc) => {
+    applyResumeChange(
+      set,
+      get,
+      defaultState,
+      (doc) => {
         Object.assign(doc, mapDocToState(null))
-      })
-    }
+      },
+    )
   },
 
   cleanup: () => {
@@ -450,7 +448,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
 
 function sanitizeDeep<T>(value: T): T {
   if (Array.isArray(value)) {
-    return value.map(item => sanitizeDeep(item)) as unknown as T
+    return value.map(item => sanitizeDeep(item)) as T
   }
   if (value && typeof value === 'object') {
     const result: Record<string, unknown> = {}
@@ -474,55 +472,27 @@ function applyPatch(target: Record<string, any>, patch: Partial<Record<string, a
 
 function mapDocToState(doc: Partial<AutomergeResumeDocument> | null | undefined) {
   const source = doc as Record<string, any> | undefined
+
+  const getVal = <T>(key: string, defaultVal: T, legacyKey?: string) => {
+    const val = source?.[key] ?? (legacyKey ? source?.[legacyKey] : undefined) ?? defaultVal
+    return sanitizeDeep(val as T)
+  }
+
   return {
-    basics: sanitizeDeep((source?.basics as BasicFormType | undefined) || DEFAULT_BASICS),
-    jobIntent: sanitizeDeep(
-      (source?.jobIntent as JobIntentFormType | undefined) || source?.job_intent || DEFAULT_JOB_INTENT,
-    ),
-    applicationInfo: sanitizeDeep(
-      (source?.applicationInfo as ApplicationInfoFormType | undefined) || source?.application_info || DEFAULT_APPLICATION_INFO,
-    ),
-    eduBackground: sanitizeDeep(
-      (source?.eduBackground as EduBackgroundFormType | undefined) || source?.edu_background || DEFAULT_EDU_BACKGROUND,
-    ),
-    workExperience: sanitizeDeep(
-      (source?.workExperience as WorkExperienceFormType | undefined) || source?.work_experience || DEFAULT_WORK_EXPERIENCE,
-    ),
-    internshipExperience: sanitizeDeep(
-      (source?.internshipExperience as InternshipExperienceFormType | undefined)
-      || source?.internship_experience
-      || DEFAULT_INTERNSHIP_EXPERIENCE,
-    ),
-    campusExperience: sanitizeDeep(
-      (source?.campusExperience as CampusExperienceFormType | undefined)
-      || source?.campus_experience
-      || DEFAULT_CAMPUS_EXPERIENCE,
-    ),
-    projectExperience: sanitizeDeep(
-      (source?.projectExperience as ProjectExperienceFormType | undefined)
-      || source?.project_experience
-      || DEFAULT_PROJECT_EXPERIENCE,
-    ),
-    skillSpecialty: sanitizeDeep(
-      (source?.skillSpecialty as SkillSpecialtyFormType | undefined)
-      || source?.skill_specialty
-      || DEFAULT_SKILL_SPECIALTY,
-    ),
-    honorsCertificates: sanitizeDeep(
-      (source?.honorsCertificates as HonorsCertificatesFormType | undefined)
-      || source?.honors_certificates
-      || DEFAULT_HONORS_CERTIFICATES,
-    ),
-    selfEvaluation: sanitizeDeep(
-      (source?.selfEvaluation as SelfEvaluationFormType | undefined)
-      || source?.self_evaluation
-      || DEFAULT_SELF_EVALUATION,
-    ),
-    hobbies: sanitizeDeep((source?.hobbies as HobbiesFormType | undefined) || DEFAULT_HOBBIES),
-    order: sanitizeDeep((source?.order as ORDERType[] | undefined) || source?.order || DEFAULT_ORDER),
-    visibility: sanitizeDeep(
-      (source?.visibility as Record<VisibilityItemsType, boolean> | undefined) || DEFAULT_VISIBILITY,
-    ),
+    basics: getVal('basics', DEFAULT_BASICS),
+    jobIntent: getVal('jobIntent', DEFAULT_JOB_INTENT, 'job_intent'),
+    applicationInfo: getVal('applicationInfo', DEFAULT_APPLICATION_INFO, 'application_info'),
+    eduBackground: getVal('eduBackground', DEFAULT_EDU_BACKGROUND, 'edu_background'),
+    workExperience: getVal('workExperience', DEFAULT_WORK_EXPERIENCE, 'work_experience'),
+    internshipExperience: getVal('internshipExperience', DEFAULT_INTERNSHIP_EXPERIENCE, 'internship_experience'),
+    campusExperience: getVal('campusExperience', DEFAULT_CAMPUS_EXPERIENCE, 'campus_experience'),
+    projectExperience: getVal('projectExperience', DEFAULT_PROJECT_EXPERIENCE, 'project_experience'),
+    skillSpecialty: getVal('skillSpecialty', DEFAULT_SKILL_SPECIALTY, 'skill_specialty'),
+    honorsCertificates: getVal('honorsCertificates', DEFAULT_HONORS_CERTIFICATES, 'honors_certificates'),
+    selfEvaluation: getVal('selfEvaluation', DEFAULT_SELF_EVALUATION, 'self_evaluation'),
+    hobbies: getVal('hobbies', DEFAULT_HOBBIES),
+    order: getVal('order', DEFAULT_ORDER),
+    visibility: getVal('visibility', DEFAULT_VISIBILITY),
     type: source?.type || 'basic',
   }
 }

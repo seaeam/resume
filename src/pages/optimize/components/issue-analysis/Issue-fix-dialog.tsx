@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { severityConfig } from '../../const'
-import { SuggestionEditor } from './suggestion-editor'
+import SuggestionEditor from './suggestion-editor'
 import { SuggestionCompareCard } from './suggestion-value-renderer'
 
 function IssueFixDialog({ finding, severity, children }: { finding: Finding, severity: Severity, children: ReactNode }) {
@@ -37,7 +37,7 @@ function IssueFixDialog({ finding, severity, children }: { finding: Finding, sev
         <DrawerTrigger asChild>
           {children}
         </DrawerTrigger>
-        <DrawerContent className="max-h-[85vh] flex flex-col">
+        <DrawerContent className="flex flex-col h-[85vh]">
           <DrawerHeader className="px-4 pt-4 pb-3 shrink-0 border-b">
             <DrawerTitle className="flex items-center gap-2 text-base">
               <Wand2 className="size-4 text-primary shrink-0" />
@@ -51,7 +51,7 @@ function IssueFixDialog({ finding, severity, children }: { finding: Finding, sev
             <DrawerDescription className={cn('text-xs text-muted-foreground/90 text-left line-clamp-2', config.badgeText)}>{finding.title}</DrawerDescription>
           </DrawerHeader>
 
-          <ScrollArea className="flex-1 overflow-y-auto px-4 py-4">
+          <ScrollArea className="flex-1 px-4 py-4 overflow-y-auto">
             <IssueFixContent {...contentProps} />
           </ScrollArea>
 
@@ -76,34 +76,32 @@ function IssueFixDialog({ finding, severity, children }: { finding: Finding, sev
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] sm:max-w-[540px] md:max-w-[640px] lg:max-w-[720px] max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="w-[70vw] max-w-[100vw]! h-[85vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-4 pt-4 pb-3 sm:px-6 sm:pt-6 shrink-0 border-b">
-          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <Wand2 className="size-4 sm:size-5 text-primary shrink-0" />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg lg:text-xl">
+            <Wand2 className="size-4 sm:size-5 lg:size-6 text-primary shrink-0" />
             <span>问题修复详情</span>
-            <Badge className={cn('text-xs px-2 py-0.5 rounded-full font-medium shadow-none gap-1 shrink-0', config.badgeBg, config.badgeText, 'border-transparent')}>
-              {severity === 'high' && <XCircle className="size-3" />}
-              {severity === 'medium' && <AlertTriangle className="size-3" />}
-              {severity === 'low' && <Info className="size-3" />}
+            <Badge className={cn('text-xs lg:text-sm px-2 py-0.5 lg:px-3 lg:py-1 rounded-full font-medium shadow-none gap-1 shrink-0', config.badgeBg, config.badgeText, 'border-transparent')}>
+              {severity === 'high' && <XCircle className="size-3 lg:size-4" />}
+              {severity === 'medium' && <AlertTriangle className="size-3 lg:size-4" />}
+              {severity === 'low' && <Info className="size-3 lg:size-4" />}
               {config.label}
             </Badge>
           </DialogTitle>
-          <DialogDescription className={cn('text-sm text-muted-foreground/90 text-left line-clamp-2', config.badgeText)}>{finding.title}</DialogDescription>
+          <DialogDescription className={cn('text-sm lg:text-base text-muted-foreground/90 text-left line-clamp-2', config.badgeText)}>{finding.title}</DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 overflow-y-auto">
-          <div className="px-4 py-4 sm:px-6">
-            <IssueFixContent {...contentProps} />
-          </div>
+        <ScrollArea className="flex-1 px-4 py-4 sm:px-6 sm:py-6 overflow-y-auto">
+          <IssueFixContent {...contentProps} />
         </ScrollArea>
 
         <DialogFooter className="px-4 py-3 sm:px-6 sm:py-4 shrink-0 border-t bg-muted/30">
           <DialogClose asChild>
-            <Button variant="outline" size="sm">取消</Button>
+            <Button variant="outline" size="sm" className="lg:h-11 lg:px-8 lg:text-base">取消</Button>
           </DialogClose>
-          <Button size="sm">
+          <Button size="sm" className="lg:h-11 lg:px-8 lg:text-base">
             确认
-            <ArrowRight className="size-3.5" />
+            <ArrowRight className="size-3.5 lg:size-4 ml-2" />
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -113,80 +111,80 @@ function IssueFixDialog({ finding, severity, children }: { finding: Finding, sev
 
 function IssueFixContent({ finding, locationText, steps, suggestions, beforeCode, afterCode }: any) {
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-8">
       {/* 信息概览卡片 */}
-      <div className="space-y-1.5">
-        <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-          <BadgeQuestionMark className="size-3.5" />
+      <div className="space-y-1.5 lg:space-y-2">
+        <span className="text-xs lg:text-sm font-medium text-muted-foreground flex items-center gap-1.5 lg:gap-2">
+          <BadgeQuestionMark className="size-3.5 lg:size-4" />
           问题位置
         </span>
-        <Badge variant="secondary" className="text-xs font-normal px-2.5 py-1 bg-muted text-foreground border border-border/50 max-w-full">
+        <Badge variant="secondary" className="text-xs lg:text-sm font-normal px-2.5 py-1 lg:px-3 lg:py-1.5 bg-muted text-foreground border border-border/50 max-w-full">
           <span className="truncate">{locationText}</span>
         </Badge>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <AlertTriangle className="size-3.5 text-destructive" />
+      <div className="grid gap-3 sm:gap-4 lg:gap-6 sm:grid-cols-2">
+        <div className="space-y-1.5 lg:space-y-2">
+          <span className="text-xs lg:text-sm font-medium text-muted-foreground flex items-center gap-1.5 lg:gap-2">
+            <AlertTriangle className="size-3.5 lg:size-4 text-destructive" />
             问题描述
           </span>
-          <p className="text-xs sm:text-sm leading-relaxed text-foreground/90 bg-destructive/5 p-2.5 sm:p-3 rounded-lg border border-destructive/10">
+          <p className="text-xs sm:text-sm lg:text-base leading-relaxed text-foreground/90 bg-destructive/5 p-2.5 sm:p-3 lg:p-4 rounded-lg border border-destructive/10">
             {finding.why.summary}
           </p>
         </div>
-        <div className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <Lightbulb className="size-3.5 text-green-600" />
+        <div className="space-y-1.5 lg:space-y-2">
+          <span className="text-xs lg:text-sm font-medium text-muted-foreground flex items-center gap-1.5 lg:gap-2">
+            <Lightbulb className="size-3.5 lg:size-4 text-green-600" />
             修复建议
           </span>
-          <p className="text-xs sm:text-sm font-medium leading-relaxed text-foreground/90 bg-green-500/5 p-2.5 sm:p-3 rounded-lg border border-green-500/10">
+          <p className="text-xs sm:text-sm lg:text-base font-medium leading-relaxed text-foreground/90 bg-green-500/5 p-2.5 sm:p-3 lg:p-4 rounded-lg border border-green-500/10">
             {finding.fix.summary}
           </p>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-medium flex items-center gap-1.5 text-blue-600/80 dark:text-blue-400/80">
-          <span className="size-5 rounded-md bg-blue-100/50 dark:bg-blue-900/20 flex items-center justify-center">
-            <ListOrdered className="size-3" />
+      <div className="space-y-2 lg:space-y-3">
+        <p className="text-xs lg:text-sm font-medium flex items-center gap-1.5 lg:gap-2 text-blue-600/80 dark:text-blue-400/80">
+          <span className="size-5 lg:size-6 rounded-md bg-blue-100/50 dark:bg-blue-900/20 flex items-center justify-center">
+            <ListOrdered className="size-3 lg:size-4" />
           </span>
           执行步骤
         </p>
-        <div className="bg-muted/30 rounded-lg p-3 sm:p-4 border border-border/50">
-          <ul className="relative space-y-3 sm:space-y-4 border-l-2 border-blue-200/50 dark:border-blue-800/50 ml-2 pl-4 sm:ml-3 sm:pl-5">
+        <div className="bg-muted/30 rounded-lg p-3 sm:p-4 lg:p-6 border border-border/50">
+          <ul className="relative space-y-3 sm:space-y-4 lg:space-y-6 border-l-2 border-blue-200/50 dark:border-blue-800/50 ml-2 lg:ml-3 pl-4 sm:ml-3 sm:pl-5 lg:pl-6">
             {steps.map((step: string, i: number) => (
               <li key={step} className="relative group">
-                <span className="absolute -left-[25px] sm:-left-[29px] top-0 flex size-5 items-center justify-center rounded-full bg-white dark:bg-zinc-950 border-2 border-blue-200/60 dark:border-blue-800/60 text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 ring-2 ring-background">
+                <span className="absolute -left-[25px] sm:-left-[29px] lg:-left-[35px] top-0 lg:top-0.5 flex size-5 lg:size-7 items-center justify-center rounded-full bg-white dark:bg-zinc-950 border-2 border-blue-200/60 dark:border-blue-800/60 text-[10px] lg:text-xs font-bold text-blue-600/80 dark:text-blue-400/80 ring-2 ring-background">
                   {i + 1}
                 </span>
-                <span className="text-foreground/90 leading-relaxed block text-xs sm:text-sm">{step}</span>
+                <span className="text-foreground/90 leading-relaxed block text-xs sm:text-sm lg:text-base">{step}</span>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      <Tabs defaultValue="summary" className="w-full">
-        <TabsList className="h-auto p-0.5 bg-muted/50 border border-border/50 w-full grid grid-cols-3">
-          <TabsTrigger value="summary" className="px-2 sm:px-3 py-1.5 text-xs gap-1 sm:gap-1.5">
-            <FileDiff className="size-3 sm:size-3.5 shrink-0" />
+      <Tabs defaultValue="summary">
+        <TabsList className="h-auto p-0.5 bg-muted/50 border border-border/50 grid grid-cols-3">
+          <TabsTrigger value="summary" className="px-2 sm:px-3 lg:px-4 py-1.5 lg:py-2.5 text-xs lg:text-sm gap-1 sm:gap-1.5 lg:gap-2">
+            <FileDiff className="size-3 sm:size-3.5 lg:size-4 shrink-0" />
             <span className="hidden xs:inline">改动</span>
             对比
           </TabsTrigger>
-          <TabsTrigger value="code" className="px-2 sm:px-3 py-1.5 text-xs gap-1 sm:gap-1.5">
-            <Code2 className="size-3 sm:size-3.5 shrink-0" />
+          <TabsTrigger value="code" className="px-2 sm:px-3 lg:px-4 py-1.5 lg:py-2.5 text-xs lg:text-sm gap-1 sm:gap-1.5 lg:gap-2">
+            <Code2 className="size-3 sm:size-3.5 lg:size-4 shrink-0" />
             <span className="hidden xs:inline">代码</span>
             对比
           </TabsTrigger>
-          <TabsTrigger value="edit" className="px-2 sm:px-3 py-1.5 text-xs gap-1 sm:gap-1.5">
-            <Edit3 className="size-3 sm:size-3.5 shrink-0" />
+          <TabsTrigger value="edit" className="px-2 sm:px-3 lg:px-4 py-1.5 lg:py-2.5 text-xs lg:text-sm gap-1 sm:gap-1.5 lg:gap-2">
+            <Edit3 className="size-3 sm:size-3.5 lg:size-4 shrink-0" />
             自定义
           </TabsTrigger>
         </TabsList>
 
-        <div className="mt-3 ring-1 ring-border/40 rounded-lg bg-card overflow-hidden">
-          <TabsContent value="summary" className="m-0 p-2 sm:p-4 space-y-4 max-h-60 sm:max-h-70 overflow-y-auto">
+        <div className="mt-3 lg:mt-4 ring-1 ring-border/40 rounded-lg bg-card">
+          <TabsContent value="summary" className="m-0 p-2 sm:p-4 lg:p-6 space-y-4 lg:space-y-6">
             {suggestions.map((suggestion: Suggestion) => (
               <SuggestionCompareCard
                 key={`${suggestion.kind}-${suggestion.valueType}-${JSON.stringify(suggestion.after).slice(0, 20)}`}
@@ -198,24 +196,24 @@ function IssueFixContent({ finding, locationText, steps, suggestions, beforeCode
               />
             ))}
             {suggestions.length === 0 && (
-              <div className="text-center text-muted-foreground py-8 text-xs">
+              <div className="text-center text-muted-foreground py-8 lg:py-12 text-xs lg:text-sm">
                 暂无具体的改动对比数据
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="code" className="m-0 p-2 sm:p-4 max-h-[280px] overflow-y-auto">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <CodeBlock language="json" filename="before.json" className="text-xs max-h-[200px] overflow-auto">
+          <TabsContent value="code" className="m-0 p-2 sm:p-4 lg:p-6">
+            <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2 lg:gap-6">
+              <CodeBlock language="json" filename="before.json" className="text-sm lg:text-base">
                 {beforeCode}
               </CodeBlock>
-              <CodeBlock language="json" filename="after.json" className="text-xs max-h-[200px] overflow-auto">
+              <CodeBlock language="json" filename="after.json" className="text-sm lg:text-base">
                 {afterCode}
               </CodeBlock>
             </div>
           </TabsContent>
 
-          <TabsContent value="edit" className="m-0 p-2 sm:p-4 max-h-80 overflow-y-auto">
+          <TabsContent value="edit" className="m-0 p-2 sm:p-4 lg:p-6">
             <SuggestionEditor
               suggestions={suggestions}
               onChange={(_newSuggestions) => {

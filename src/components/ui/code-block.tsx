@@ -147,7 +147,7 @@ export const CodeBlock: FC<CodeBlockProps> = ({
 
 	const lines = children.split("\n");
 	const deviconClass =
-		deviconMap[language.toLowerCase()] || deviconMap[language];
+	deviconMap[language.toLowerCase()] || deviconMap[language];
 
 	return (
 		<div

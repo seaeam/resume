@@ -292,7 +292,7 @@ export function SuggestionCompareCard({ before, after, valueType, reason, kind }
       )}
 
       {/* Compare */}
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
         {/* Before */}
         <div className="space-y-1.5">
           <div className="text-[10px] font-medium text-destructive/80 flex items-center gap-1">
