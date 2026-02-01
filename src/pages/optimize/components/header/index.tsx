@@ -209,10 +209,10 @@ function Header() {
           >
             {isProcessing
               ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="animate-spin" />
                 )
               : (
-                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  <RefreshCcw />
                 )}
             {hasAnalysis ? '重新检测' : '开始检测'}
           </Button>
