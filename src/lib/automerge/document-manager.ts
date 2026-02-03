@@ -5,6 +5,7 @@ import type { ResumeSchema } from '@/lib/schema'
 import type { Suggestion } from '@/pages/optimize/types'
 import { next as Automerge } from '@automerge/automerge'
 import { set, toPath } from 'lodash'
+import { toast } from 'sonner'
 import { DEFAULT_ORDER, DEFAULT_VISIBILITY } from '@/lib/schema'
 import supabase from '@/lib/supabase/client'
 import { getResumeById, updateResumeConfig } from '@/lib/supabase/resume'
@@ -89,8 +90,7 @@ export class DocumentManager {
         await updateResumeConfig(resumeId, resume_config)
       }
       catch (error) {
-        console.error('Failed to sync to resume_config:', error)
-        // 不抛出错误，以免中断主流程，但记录日志
+        toast.error(`Failed to sync to resume_config：${error}`)
       }
     }
   }

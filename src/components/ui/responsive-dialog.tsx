@@ -49,7 +49,7 @@ export function ResponsiveDialog({
         <DrawerContent className="max-h-[80vh]">
           <div className="flex flex-col h-full overflow-auto">
             {children}
-          </div>
+            </div>
         </DrawerContent>
       </Drawer>
     )
@@ -58,7 +58,7 @@ export function ResponsiveDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-h-[60vh] overflow-auto">
+      <DialogContent className="max-h-[60vh] flex flex-col p-0 overflow-auto">
         {children}
       </DialogContent>
     </Dialog>

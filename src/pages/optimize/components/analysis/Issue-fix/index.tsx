@@ -146,7 +146,7 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
           </DrawerClose>
           <Button onClick={handleConfirm} disabled={isFixing || allFixed}>
             {allFixed ? '已修复' : '确认'}
-            {isFixing ? <Spinner /> : null}
+            {isFixing && <Spinner /> }
           </Button>
         </DrawerFooter>
       </DrawerContent>

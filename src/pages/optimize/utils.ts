@@ -194,9 +194,13 @@ export const callAll = <T>(fns: Array<(...args: T[]) => void | undefined>) => (.
 export function setLeaf(root: any, path: Array<string | number>, value: any) {
   let cur = root
   for (let i = 0; i < path.length - 1; i++) {
-    cur = cur[path[i]]
-    if (cur == null)
-      throw new Error(`Path not found at ${String(path[i])}`)
+    const key = path[i]
+    const nextKey = path[i + 1]
+    if (cur[key] == null) {
+      // 根据下一个 key 的类型决定创建对象还是数组
+      cur[key] = typeof nextKey === 'number' ? [] : {}
+    }
+    cur = cur[key]
   }
   cur[path[path.length - 1]] = value
 }
