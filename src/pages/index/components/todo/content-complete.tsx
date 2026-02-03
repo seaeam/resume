@@ -27,7 +27,7 @@ export default function CompletenessModule() {
       if (error)
         return
 
-      setItems(data[0].todo_items)
+      setItems(data[0]?.todo_items)
     }
 
     fetchAtsTodos()

@@ -184,7 +184,7 @@ export function setLeaf(root: any, path: Array<string | number>, value: any) {
     const nextKey = path[i + 1]
     if (cur[key] == null) {
       // 根据下一个 key 的类型决定创建对象还是数组
-      cur[key] = typeof nextKey === 'number' ? [] : {}
+      cur[key] = typeof Number(nextKey) === 'number' ? [] : {}
     }
     cur = cur[key]
   }
