@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'react'
 import type { Severity } from '../../../types'
 import { Wand2 } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { DocumentManager } from '@/lib/automerge/document-manager'
 import { updateAtsConfig } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
+import { startConfetti } from '@/utils/confetii'
 import { severityConfig } from '../../../const'
 import useAtsStore from '../../../store'
 import Content from './content'
@@ -27,6 +28,7 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
   const [isFixing, setIsFixing] = useState(false)
   const isMobile = useIsMobile()
   const { update, currentAtsConfig } = useAtsStore()
+  const triger = useRef<HTMLButtonElement | null>(null)
 
   const finding = currentAtsConfig?.findings?.[severity]?.find(f => f.id === id)
   const allFixed = finding?.fix.suggestions?.length ? finding.fix.suggestions.every(s => s.fixed) : false
@@ -72,14 +74,13 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
       }
 
       update('findings', { ...currentAtsConfig.findings, [severity]: updatedFinding })
-      toast.success('修复成功')
+      startConfetti(triger)
     }
     catch (error) {
       toast.error('修复除了点问题, 请稍后重试')
       console.error(error)
     }
     finally {
-      setOpen(false)
       setIsFixing(false)
     }
   }
@@ -111,7 +112,7 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
             <DialogClose asChild>
               <Button variant="outline">取消</Button>
             </DialogClose>
-            <Button onClick={handleConfirm} disabled={isFixing || allFixed}>
+            <Button ref={triger} onClick={handleConfirm} disabled={isFixing || allFixed}>
               {allFixed ? '已修复' : '确认'}
               {isFixing ? <Spinner /> : null}
             </Button>
@@ -144,7 +145,7 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
           <DrawerClose asChild>
             <Button variant="outline">取消</Button>
           </DrawerClose>
-          <Button onClick={handleConfirm} disabled={isFixing || allFixed}>
+          <Button ref={triger} onClick={handleConfirm} disabled={isFixing || allFixed}>
             {allFixed ? '已修复' : '确认'}
             {isFixing && <Spinner /> }
           </Button>

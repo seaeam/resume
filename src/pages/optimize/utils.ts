@@ -182,13 +182,19 @@ export function setLeaf(root: any, path: Array<string | number>, value: any) {
   for (let i = 0; i < path.length - 1; i++) {
     const key = path[i]
     const nextKey = path[i + 1]
-    if (cur[key] == null) {
+    // 将字符串形式的数字转换为数字（Automerge 数组索引必须是数字）
+    const normalizedKey = typeof key === 'string' && /^\d+$/.test(key) ? Number(key) : key
+    if (cur[normalizedKey] == null) {
       // 根据下一个 key 的类型决定创建对象还是数组
-      cur[key] = typeof Number(nextKey) === 'number' ? [] : {}
+      const isNextKeyNumeric = typeof nextKey === 'number' || (typeof nextKey === 'string' && /^\d+$/.test(nextKey))
+      cur[normalizedKey] = isNextKeyNumeric ? [] : {}
     }
-    cur = cur[key]
+    cur = cur[normalizedKey]
   }
-  cur[path[path.length - 1]] = value
+  // 最后一个 key 也需要处理
+  const lastKey = path[path.length - 1]
+  const normalizedLastKey = typeof lastKey === 'string' && /^\d+$/.test(lastKey) ? Number(lastKey) : lastKey
+  cur[normalizedLastKey] = value
 }
 
 // Reducer 函数
