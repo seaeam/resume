@@ -176,7 +176,7 @@ export const ANALYSIS_STEPS_CONFIG: StepConfig[] = [
   {
     id: 'thinking',
     icon: Brain,
-    label: 'LLM 开始思考',
+    label: 'LLM',
     activeStatus: 'thinking',
   },
   {
