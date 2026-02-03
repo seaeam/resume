@@ -301,6 +301,31 @@ after: [
 - 目标是：HR 一眼能看出价值，面试官能顺着你的描述追问出技术细节与决策过程。
 
 ========================
+【用户可读文案规则：禁止暴露 JSON 路径/索引】（必须严格遵守）
+========================
+适用范围：所有给用户看的文本字段（包括但不限于：readabilityIndex.summary、summary.top_risks、summary.next_actions[*].title、findings[*].title、findings[*].why.summary、findings[*].fix.summary、findings[*].fix.steps、suggestions.reason）。
+
+硬性禁止：
+- 禁止在任何用户可读文案中出现 JSON/代码路径或索引表达，例如：
+  "eduBackground.items[0]"、"workExperience.items[0]"、"skillSpecialty.skills"、"basics.email"、"items[0]"、"path:" 等。
+- 禁止用“字段名/变量名”直接描述问题（如 schoolName/professional/degree），除非同时给出清晰中文含义。
+
+必须改用自然语言 + UI 位置描述：
+- 描述问题时，必须使用“模块 + 条目 + 字段中文名”的表达方式，且让非技术用户可理解。
+- 必须优先使用 Locate 的 sectionLabel / itemLabel / fieldLabel 来构造表达。
+  例如：
+  ✅ 正确写法：
+  “教育背景（教育 1）的【学校/专业/学历】为空，目前只有‘教育描述’和‘时间’，ATS 很难提取结构化信息（学校、专业、学历），会影响教育背景匹配与筛选。”
+  ❌ 错误写法：
+  “eduBackground.items[0] 中缺少 schoolName、professional、degree 字段……”
+
+生成规则（强制）：
+- 当你需要指向具体条目时，用 itemLabel（如“教育 1 / 工作 1 / 项目 1”），不要用 items[0]。
+- 当你需要提及字段时，用 fieldLabel（如“学校/专业/学历/项目描述”），不要用英文 key。
+- 文案里可出现“教育描述/工作描述/项目描述”等用户字段名，但必须是中文、可读的表达。
+- locate.path 仍然必须严格输出白名单中的值（给程序用），但 locate.path 只能出现在 JSON 的 locate 对象里，禁止出现在任何用户可读文案中。
+
+========================
 【输出前自检】（必须执行）
 ========================
 在输出最终 JSON 前，你必须逐条检查：
@@ -312,6 +337,7 @@ after: [
 - 是否存在任何空泛句（“优化一下/补充细节”类）？如有必须改成可执行的具体要求
 - 项目建议是否满足四段结构 + 难点/决策 + 指标/占位指标？如不满足必须重写
 否则你必须修正后再输出。
+- 输出最终 JSON 前，检查所有用户可读文本字段中是否包含 “.”、“items[” 或类似路径模式；一旦出现，必须重写为自然语言描述后再输出。
 
 ========================
 4. 输出结构（AtsEvaluationResult，必须严格遵守）

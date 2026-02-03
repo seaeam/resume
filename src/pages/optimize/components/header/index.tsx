@@ -1,3 +1,4 @@
+import confetti from 'canvas-confetti'
 import { Loader2, RefreshCcw, Search, Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Markdown from 'react-markdown'
@@ -29,6 +30,7 @@ function Header() {
 
     setIsOpen(true)
     resetAnalysisState()
+    toast.info('分析开始，可能需要一些时间，在此期间你可以随意切换页面，但请不要刷新或关闭浏览器')
 
     try {
       let currentResumeId = selectedResumeId
@@ -37,7 +39,7 @@ function Header() {
       // 上传离线简历
       if (currentResumeType === 'offline') {
         setAnalysisState({ status: 'uploading' })
-        updateLog('upload', '检测到本地简历，正在上传至云端...')
+        updateLog('upload', '检测到本地简历，上传至云端...')
 
         const offlineResume = await getOfflineResumeById(selectedResumeId)
         if (!offlineResume) {
@@ -56,27 +58,27 @@ function Header() {
           throw new Error('上传简历失败')
         }
 
-        updateLog('upload', '✅ 上传成功，已转换为在线简历', true)
+        updateLog('upload', '上传成功', true)
         currentResumeId = onlineResume.resume_id
         setSelectedResume(currentResumeId, 'online')
       }
 
       // 获取简历数据
       setAnalysisState({ status: 'fetching' })
-      updateLog('fetch', '正在获取简历字段...')
+      updateLog('fetch', '正在获取简历...')
       const resumeData = await fetchResumeDataForAnalysis(currentResumeId, false)
-      updateLog('fetch', '✅ 获取成功，准备上传给 LLM', true)
+      updateLog('fetch', '准备上传至LLM', true)
 
       // 发送给 LLM
       setAnalysisState({ status: 'sending' })
-      updateLog('send', '正在上传给 LLM...')
+      updateLog('send', '正在上传...')
 
       let finalContent = ''
 
       await runAtsStructured(resumeData, ({ content: streamContent, reasoning: streamReasoning }) => {
         if (streamReasoning) {
           setAnalysisState({ status: 'thinking', reasoning: streamReasoning })
-          updateLog('send', '✅ 已上传给 LLM，开始思考')
+          updateLog('send', '已上传，开始思考...')
         }
         if (streamContent) {
           setAnalysisState({ status: 'generating', content: streamContent })
@@ -89,7 +91,7 @@ function Header() {
       }
 
       setAnalysisState({ status: 'received' })
-      updateLog('result', '✅ 已收到结果')
+      updateLog('result', '已收到结果')
 
       const result = JSON.parse(finalContent)
 
@@ -104,19 +106,20 @@ function Header() {
 
       if (existingAts) {
         await updateAtsConfig(existingAts.id, payload)
-        updateLog('save', '✅ 报告已更新', true)
+        updateLog('save', '报告已更新', true)
         toast.success('ATS 分析报告已更新')
       }
       else {
         await createAtsConfig(payload)
-        updateLog('save', '✅ 报告已生成', true)
+        updateLog('save', '报告已生成', true)
         toast.success('ATS 分析报告已生成')
       }
 
       await init()
 
       setAnalysisState({ status: 'complete' })
-      updateLog('display', '✅ 已展示分析结果')
+      updateLog('display', '已展示分析结果')
+      congradulation()
     }
     catch (error: any) {
       console.error(error)
@@ -220,15 +223,16 @@ function Header() {
       </div>
 
       <ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
-        <ResponsiveDialogContent className="sm:h-[85vh] sm:max-h-[85vh] flex flex-col p-0">
-          <ResponsiveDialogHeader className="px-6 pt-6 pb-2 shrink-0">
+        <ResponsiveDialogContent className="sm:h-[85vh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden">
+          <ResponsiveDialogHeader className="px-6 pt-6 pb-2 shrink-0 border-b">
             <ResponsiveDialogTitle>ATS 分析过程</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
               大模型分析可能需要一些时间，请耐心等待。
-              <span className="text-amber-500 font-medium ml-1">LLM也不完全正确，请根据实际情况调整。</span>
+              <br />
+              <span className="text-amber-500 font-medium">LLM也不完全正确，请根据实际情况调整。</span>
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
-          <ChainOfThought open className="w-full p-6">
+          <ChainOfThought open className="w-full p-6 overflow-y-auto">
             <ChainOfThoughtContent>
               {visibleSteps.map((stepConfig) => {
                 const stepStatus = getStepStatus(stepConfig, status, logs, reasoning, content)
@@ -305,6 +309,33 @@ function Header() {
       </ResponsiveDialog>
     </div>
   )
+}
+
+function congradulation() {
+  const end = Date.now() + 3 * 1000 // 3 seconds
+  const colors = ['#a786ff', '#fd8bbc', '#eca184', '#f8deb1']
+  const frame = () => {
+    if (Date.now() > end)
+      return
+    confetti({
+      particleCount: 2,
+      angle: 60,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: 0, y: 0.5 },
+      colors,
+    })
+    confetti({
+      particleCount: 2,
+      angle: 120,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: 1, y: 0.5 },
+      colors,
+    })
+    requestAnimationFrame(frame)
+  }
+  frame()
 }
 
 export default Header

@@ -1,20 +1,31 @@
 import { Lightbulb } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { Marquee } from '@/components/ui/marquee'
 
 export default function ProTips() {
+  const tips = [
+    '大多数 ATS 系统无法正确解析复杂的图形或双栏布局',
+    '建议保持简单的层级结构，使用标准字体（如 Arial, Calibri）',
+    '确保内容能被准确抓取，避免使用图片代替文字',
+    '使用常见的章节标题，如"工作经历"、"教育背景"',
+    '避免使用页眉页脚放置重要信息',
+    '保存为 PDF 格式以确保格式一致性',
+  ]
+
   return (
-    <Card className="bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-900/50 shadow-sm">
-      <CardContent className="p-4 flex gap-3">
-        <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 shrink-0 h-fit">
-          <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-        </div>
-        <div className="space-y-1 pt-1">
-          <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">专业提示</p>
-          <p className="text-xs text-amber-800 dark:text-amber-200/80 leading-relaxed">
-            大多数 ATS 系统无法正确解析复杂的图形或双栏布局。建议保持简单的层级结构，使用标准的字体（如 Arial, Calibri），以确保内容能被准确抓取。
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="w-full bg-amber-50/80 dark:bg-amber-950/20 border-y border-amber-200/50 dark:border-amber-900/50">
+      <Marquee
+        pauseOnHover
+        className="[--gap:3rem] py-2"
+      >
+        {tips.map(tip => (
+          <div key={tip} className="flex items-center gap-2 shrink-0">
+            <Lightbulb className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="text-xs text-amber-800 dark:text-amber-200/90 whitespace-nowrap">
+              {tip}
+            </span>
+          </div>
+        ))}
+      </Marquee>
+    </div>
   )
 }

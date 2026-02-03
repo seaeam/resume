@@ -15,19 +15,23 @@ function Optimize() {
   }, [init])
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
-      <Header />
-      <OptimizeDashboard />
+    <div className="pt-10 relative">
+      <div className="fixed left-0 right-0 top-13 z-1">
+        <ProTips />
+      </div>
+      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+        <Header />
+        <OptimizeDashboard />
 
-      <div className="grid gap-8 lg:grid-cols-12 items-start">
-        <div className="lg:col-span-8 space-y-8">
-          <IssueAnalysis />
-          <AdvancedTools />
-        </div>
+        <div className="grid gap-8 lg:grid-cols-12 items-start">
+          <div className="lg:col-span-8 space-y-8">
+            <IssueAnalysis />
+            <AdvancedTools />
+          </div>
 
-        <div className="lg:col-span-4 space-y-8">
-          <RepairChecklist />
-          <ProTips />
+          <div className="lg:col-span-4 space-y-8">
+            <RepairChecklist />
+          </div>
         </div>
       </div>
     </div>
