@@ -495,7 +495,11 @@ export default function HistoryPage() {
       />
 
       {previewData && (
-        <VersionPreview data={previewData} onClose={() => setPreviewData(null)} />
+        <VersionPreview
+          key={previewData.timestamp} // 添加 key，每个版本都有唯一的 key
+          data={previewData}
+          onClose={() => setPreviewData(null)}
+        />
       )}
 
       <AlertDialog open={!!restoreEntry} onOpenChange={(open: boolean) => !open && setRestoreEntry(null)}>
@@ -503,7 +507,7 @@ export default function HistoryPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>确认恢复</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要恢复到此版本？当前未保存的更改将丢失。
+              确定要恢复到此版本?当前未保存的更改将丢失。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

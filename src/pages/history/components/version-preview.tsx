@@ -1,15 +1,16 @@
 import { Download, Loader2, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useResumeStyles } from '@/hooks/use-resume-styles'
+import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
 import ResumeWrapper from '@/pages/resume/editor/components/preview/ResumeWrapper'
 import resumeComponents from '@/pages/template/components'
 import BasicResume from '@/pages/template/components/basic/Basic'
@@ -23,18 +24,48 @@ interface VersionPreviewProps {
 
 export function VersionPreview({ data, onClose }: VersionPreviewProps) {
   const resumeRef = useRef<HTMLDivElement>(null)
-  const { font, spacing, theme } = useResumeStyles()
   const [ready, setReady] = useState(false)
   const [exporting, setExporting] = useState(false)
 
-  // 使用 react-to-print
+  // 计算此版本的独立样式
+  const versionStyles = useMemo(() => {
+    const currentConfig = useResumeConfigStore.getState()
+    const versionConfig = data.config || currentConfig
+
+    const fontSize = versionConfig.font?.fontSize || currentConfig.font.fontSize
+    const fontFamily = versionConfig.font?.fontFamily || currentConfig.font.fontFamily
+    const themeKey = (versionConfig.theme?.theme || currentConfig.theme.theme || 'default') as keyof typeof themeColorMap
+    const spacing = versionConfig.spacing || currentConfig.spacing
+
+    return {
+      font: {
+        fontFamily: getFontFamilyCSS(fontFamily),
+        nameSize: `${fontSize * 1.5}px`,
+        jobIntentSize: `${fontSize}px`,
+        sectionTitleSize: `${fontSize}px`,
+        contentSize: `${fontSize * 0.875}px`,
+        smallSize: `${fontSize * 0.75}px`,
+        boldWeight: 700,
+        mediumWeight: 600,
+        normalWeight: 400,
+      },
+      spacing: {
+        pagePadding: `${spacing.pageMargin}px`,
+        sectionMargin: `${spacing.sectionSpacing}px`,
+        sectionTitleMargin: '0.75rem',
+        itemSpacing: '0.55rem',
+        paragraphSpacing: '0.25rem',
+        lineHeight: spacing.lineHeight,
+        proseLineHeight: spacing.lineHeight,
+      },
+      theme: themeColorMap[themeKey],
+    }
+  }, [data.config])
+
   const handlePrint = useReactToPrint({
     contentRef: resumeRef,
-    documentTitle: `${data.basics?.name || '简历'}-历史版本`,
-    onAfterPrint: () => {
-      setExporting(false)
-      // 不在这里显示成功提示，因为取消也会触发
-    },
+    documentTitle: `${data.basics?.name || '简历'}-历史版本-${new Date(data.timestamp).toLocaleString()}`,
+    onAfterPrint: () => setExporting(false),
     onPrintError: (error) => {
       setExporting(false)
       console.error('导出失败', error)
@@ -58,82 +89,98 @@ export function VersionPreview({ data, onClose }: VersionPreviewProps) {
     `,
   })
 
-  // 保存原始表单数据
-  const [originalFormState] = useState(() => {
-    const state = useResumeStore.getState()
-    return {
-      basics: state.basics,
-      jobIntent: state.jobIntent,
-      eduBackground: state.eduBackground,
-      workExperience: state.workExperience,
-      internshipExperience: state.internshipExperience,
-      projectExperience: state.projectExperience,
-      campusExperience: state.campusExperience,
-      skillSpecialty: state.skillSpecialty,
-      honorsCertificates: state.honorsCertificates,
-      selfEvaluation: state.selfEvaluation,
-      hobbies: state.hobbies,
-      order: state.order,
-      visibility: state.visibility,
-      type: state.type,
-    }
-  })
-
-  // 保存原始配置数据
-  const [originalConfigState] = useState(() => {
-    const state = useResumeConfigStore.getState()
-    return {
-      theme: state.theme,
-      font: state.font,
-      spacing: state.spacing,
-    }
-  })
-
   useEffect(() => {
-    // 注入配置数据
-    if (data.config) {
-      useResumeConfigStore.setState({
-        theme: data.config.theme ?? originalConfigState.theme,
-        font: data.config.font ?? originalConfigState.font,
-        spacing: data.config.spacing ?? originalConfigState.spacing,
-      })
+    // 保存原始状态
+    const originalFormState = useResumeStore.getState()
+    const originalConfigState = useResumeConfigStore.getState()
+
+    // 转换数组格式：直接数组 -> {items: []}
+    const normalize = (field: any, fallback: any) => {
+      if (!field)
+        return fallback ?? { items: [] }
+      if (Array.isArray(field))
+        return { items: field }
+      if (field.items)
+        return field
+      return fallback ?? { items: [] }
+    }
+
+    // 规范化 selfEvaluation
+    const normalizeSelfEvaluation = (value: any) => {
+      if (value && typeof value === 'object' && 'content' in value) {
+        return { content: String(value.content || '') }
+      }
+      if (typeof value === 'string') {
+        return { content: value }
+      }
+      return { content: '' }
+    }
+
+    // 规范化 hobbies
+    const normalizeHobbies = (value: any) => {
+      if (value && typeof value === 'object' && 'description' in value) {
+        return {
+          description: String(value.description || ''),
+          hobbies: Array.isArray(value.hobbies) ? value.hobbies : [],
+        }
+      }
+      if (typeof value === 'string') {
+        return {
+          description: value,
+          hobbies: [],
+        }
+      }
+      return {
+        description: '',
+        hobbies: [],
+      }
     }
 
     // 注入表单数据
     useResumeStore.setState({
-      basics: data.basics ?? originalFormState.basics,
-      jobIntent: data.jobIntent ?? originalFormState.jobIntent,
-      eduBackground: data.eduBackground ?? originalFormState.eduBackground,
-      workExperience: data.workExperience ?? originalFormState.workExperience,
-      internshipExperience: data.internshipExperience ?? originalFormState.internshipExperience,
-      projectExperience: data.projectExperience ?? originalFormState.projectExperience,
-      campusExperience: data.campusExperience ?? originalFormState.campusExperience,
-      skillSpecialty: data.skillSpecialty ?? originalFormState.skillSpecialty,
-      honorsCertificates: data.honorsCertificates ?? originalFormState.honorsCertificates,
-      selfEvaluation: data.selfEvaluation ?? originalFormState.selfEvaluation,
-      hobbies: data.hobbies ?? originalFormState.hobbies,
-      order: data.order ?? originalFormState.order,
-      visibility: data.visibility ?? originalFormState.visibility,
-      type: data.type ?? originalFormState.type,
+      basics: data.basics ?? {},
+      jobIntent: data.jobIntent ?? {},
+      eduBackground: normalize(data.eduBackground, { items: [] }),
+      workExperience: normalize(data.workExperience, { items: [] }),
+      internshipExperience: normalize(data.internshipExperience, { items: [] }),
+      projectExperience: normalize(data.projectExperience, { items: [] }),
+      campusExperience: normalize(data.campusExperience, { items: [] }),
+      skillSpecialty: data.skillSpecialty ?? {},
+      honorsCertificates: normalize(data.honorsCertificates, { items: [] }),
+      selfEvaluation: normalizeSelfEvaluation(data.selfEvaluation),
+      hobbies: normalizeHobbies(data.hobbies),
+      order: data.order ?? [],
+      visibility: data.visibility ?? {},
+      type: data.type ?? 'basic',
     })
 
-    requestAnimationFrame(() => {
+    // 🔧 新增：注入版本的配置（如果存在）
+    if (data.config) {
+      useResumeConfigStore.setState({
+        font: data.config.font ?? originalConfigState.font,
+        spacing: data.config.spacing ?? originalConfigState.spacing,
+        theme: data.config.theme ?? originalConfigState.theme,
+      })
+    }
+
+    // 延迟设置 ready
+    const timer = setTimeout(() => {
       setReady(true)
-    })
+    }, 50)
 
+    // 卸载时恢复原始状态
     return () => {
+      clearTimeout(timer)
       useResumeStore.setState(originalFormState)
       useResumeConfigStore.setState(originalConfigState)
     }
-  }, [data, originalFormState, originalConfigState])
+  }, [])
 
-  // 导出 PDF
   const handleExport = () => {
     if (!ready || !resumeRef.current) {
       toast.warning('简历加载中')
       return
     }
-
     setExporting(true)
     handlePrint()
   }
@@ -153,7 +200,14 @@ export function VersionPreview({ data, onClose }: VersionPreviewProps) {
       >
         <DialogHeader className="px-4 py-3 border-b shrink-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-base font-medium">版本预览</DialogTitle>
+            <DialogTitle className="text-base font-medium">
+              版本预览 -
+              {' '}
+              {new Date(data.timestamp).toLocaleString()}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              预览历史版本的简历内容
+            </DialogDescription>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -184,13 +238,15 @@ export function VersionPreview({ data, onClose }: VersionPreviewProps) {
                 </div>
               )
             : (
-                ResumeComponent && (
-                  <div className="print-container">
-                    <ResumeWrapper ref={resumeRef}>
-                      <ResumeComponent font={font} spacing={spacing} theme={theme} />
-                    </ResumeWrapper>
-                  </div>
-                )
+                <div className="print-container">
+                  <ResumeWrapper ref={resumeRef}>
+                    <ResumeComponent
+                      font={versionStyles.font}
+                      spacing={versionStyles.spacing}
+                      theme={versionStyles.theme}
+                    />
+                  </ResumeWrapper>
+                </div>
               )}
         </div>
       </DialogContent>
