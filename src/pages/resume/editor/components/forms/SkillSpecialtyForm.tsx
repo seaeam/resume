@@ -195,7 +195,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                         variant="ghost"
                         size="sm"
                         onClick={() => remove(index)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
