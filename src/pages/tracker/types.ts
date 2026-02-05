@@ -13,6 +13,7 @@ export interface StageDetail {
 export interface JobApplication {
   id: string
   created_at: string
+  updated_at: string
   resume_id: string | null
   user_id: string
   company: string
@@ -23,6 +24,4 @@ export interface JobApplication {
   job_url: string | null
   status: ApplicationStatus
   stage_details: StageDetail[]
-  applied_date: string | null
-  notes: string | null
 }

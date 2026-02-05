@@ -43,9 +43,9 @@ export function BoardView({ jobs, onJobClick, onStatusChange, isSelectMode, sele
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      {/* 添加 max-w-full 限制最大宽度 */}
-      <div className="max-w-full overflow-x-auto">
-        <div className="flex gap-4 pb-4 min-h-[400px]">
+      {/* 限制自身宽度，内部横向滚动 */}
+      <div className="w-full min-w-0 max-w-full overflow-x-auto">
+        <div className="flex w-max gap-4 pb-4 min-h-[400px]">
           {BOARD_COLUMNS.map((column) => {
             const columnJobs = getJobsByStatus(column.status)
             return (

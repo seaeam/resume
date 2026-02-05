@@ -1,5 +1,5 @@
 import type { ApplicationStatus, JobApplication } from '../../types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,12 +12,20 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { getAllResumesFromUser } from '@/lib/supabase/resume'
 import { APPLICATION_STATUS_ORDER } from '../../const'
+
+interface ResumeOption {
+  id: string
+  resume_id: string
+  display_name: string
+  type: string
+}
 
 interface AddJobDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onAdd: (job: Omit<JobApplication, 'id' | 'created_at'>) => void
+  onAdd: (job: Omit<JobApplication, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => void
 }
 
 export function AddJobDrawer({ open, onOpenChange, onAdd }: AddJobDrawerProps) {
@@ -30,6 +38,26 @@ export function AddJobDrawer({ open, onOpenChange, onAdd }: AddJobDrawerProps) {
     salary: '',
     resume_id: null as string | null,
   })
+
+  const [resumes, setResumes] = useState<ResumeOption[]>([])
+  const [loadingResumes, setLoadingResumes] = useState(false)
+
+  // 加载用户简历列表
+  useEffect(() => {
+    if (open) {
+      setLoadingResumes(true)
+      getAllResumesFromUser()
+        .then((data) => {
+          setResumes(data as ResumeOption[])
+        })
+        .catch((error) => {
+          console.error('Failed to load resumes:', error)
+        })
+        .finally(() => {
+          setLoadingResumes(false)
+        })
+    }
+  }, [open])
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -49,8 +77,7 @@ export function AddJobDrawer({ open, onOpenChange, onAdd }: AddJobDrawerProps) {
       return
     }
 
-    const jobData: Omit<JobApplication, 'id' | 'created_at'> = {
-      user_id: 'mock-user',
+    const jobData: Omit<JobApplication, 'id' | 'created_at' | 'updated_at' | 'user_id'> = {
       resume_id: formData.resume_id,
       company: formData.company,
       company_logo: null,
@@ -60,11 +87,10 @@ export function AddJobDrawer({ open, onOpenChange, onAdd }: AddJobDrawerProps) {
       job_url: formData.job_url || null,
       status: formData.status,
       stage_details: [{ stage: formData.status, status: '待处理', start_date: null, notes: '' }],
-      applied_date: formData.status === 'applied' ? new Date().toISOString().split('T')[0] : null,
-      notes: null,
     }
 
     onAdd(jobData)
+    onOpenChange(false)
 
     // 重置表单
     setFormData({
@@ -173,14 +199,22 @@ export function AddJobDrawer({ open, onOpenChange, onAdd }: AddJobDrawerProps) {
             <Label>Resume Uploaded</Label>
             <Select
               value={formData.resume_id || ''}
-              onValueChange={v => handleChange('resume_id', v)}
+              onValueChange={v => setFormData(prev => ({ ...prev, resume_id: v || null }))}
+              disabled={loadingResumes}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a resume" />
+                <SelectValue placeholder={loadingResumes ? '加载中...' : 'Select a resume'} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="default">my first job (Default)</SelectItem>
-                <SelectItem value="resume-1">Resume 1</SelectItem>
+                {resumes.map(r => (
+                  <SelectItem key={r.resume_id} value={r.resume_id}>
+                    {r.display_name}
+                    {r.type === 'default' && ' (Default)'}
+                  </SelectItem>
+                ))}
+                {resumes.length === 0 && !loadingResumes && (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">暂无简历</div>
+                )}
               </SelectContent>
             </Select>
           </div>
