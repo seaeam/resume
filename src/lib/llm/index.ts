@@ -1,8 +1,7 @@
-import type { ChatCompletionChunk } from 'openai/resources/chat/completions'
+import type { ChatCompletionCreateParamsBase } from 'openai/resources/chat/completions'
 import type { ResumeSchema } from '../schema'
 import { throttle } from 'lodash'
-import { Stream } from 'openai/streaming'
-import supabase from '../supabase/client'
+import { callLLM } from './call'
 import prompt from './prompt'
 
 export async function runAtsStructured(
@@ -14,7 +13,6 @@ export async function runAtsStructured(
 
   const promptText = prompt.replace('<<<RESUME_JSON>>>', JSON.stringify(resumeConfig, null, 2))
   const req = {
-    model: 'deepseek-reasoner',
     messages: [
       {
         role: 'system',
@@ -25,28 +23,9 @@ export async function runAtsStructured(
     response_format: {
       type: 'json_object',
     },
-    temperature: 0,
-    stream: true,
-  }
+  } as ChatCompletionCreateParamsBase
 
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/llm-proxy`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(req),
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`LLM request failed: ${response.status} ${errorText}`)
-  }
-
-  const stream = Stream.fromSSEResponse<ChatCompletionChunk>(response, new AbortController())
+  const stream = await callLLM(req)
 
   let fullContent = ''
   let fullReasoning = ''
