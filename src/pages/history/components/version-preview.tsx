@@ -3,13 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
 import ResumeWrapper from '@/pages/resume/editor/components/preview/ResumeWrapper'
 import resumeComponents from '@/pages/template/components'

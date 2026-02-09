@@ -1,26 +1,11 @@
 import type { NodeProps } from '@xyflow/react'
+import type React from 'react'
 import type { VersionNodeData } from '../../types'
 import { Handle, Position } from '@xyflow/react'
-import {
-  Clock,
-  Eye,
-  Flag,
-  GitBranch,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Trash2,
-} from 'lucide-react'
+import { Clock, Eye, Flag, GitBranch, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import {
   Tooltip,
   TooltipContent,
@@ -184,7 +169,10 @@ export function VersionNode({ data }: NodeProps) {
                 variant="outline"
                 size="icon"
                 className="h-6 w-6"
-                onClick={(e) => { stop(e); onPreview(entry) }}
+                onClick={(e) => {
+                  stop(e)
+                  onPreview(entry)
+                }}
               >
                 <Eye className="h-3 w-3" />
               </Button>
@@ -197,7 +185,10 @@ export function VersionNode({ data }: NodeProps) {
                 variant="outline"
                 size="icon"
                 className="h-6 w-6"
-                onClick={(e) => { stop(e); onDiff(entry) }}
+                onClick={(e) => {
+                  stop(e)
+                  onDiff(entry)
+                }}
               >
                 <GitBranch className="h-3 w-3" />
               </Button>
@@ -211,7 +202,10 @@ export function VersionNode({ data }: NodeProps) {
                   variant="outline"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={(e) => { stop(e); onRestore(entry) }}
+                  onClick={(e) => {
+                    stop(e)
+                    onRestore(entry)
+                  }}
                 >
                   <RotateCcw className="h-3 w-3" />
                 </Button>

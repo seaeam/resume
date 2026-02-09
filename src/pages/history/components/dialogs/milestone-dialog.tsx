@@ -2,16 +2,10 @@ import type { HistoryEntry } from '../../types'
 import dayjs from 'dayjs'
 import { Flag, Sparkles } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import {
-  ResponsiveDialog,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-} from '@/components/ui/responsive-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ResponsiveDialog, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog'
 import useHistoryStore from '../../store'
 
 /** 快捷里程碑模板 */

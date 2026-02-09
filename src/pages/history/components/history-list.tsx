@@ -1,39 +1,12 @@
 import type { HistoryEntry } from '../type'
 import { Clock, Eye, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { formatTime } from '../utils'
 
 interface HistoryListProps {
   entries: HistoryEntry[]
   onPreview: (entry: HistoryEntry) => void
   onRestore: (entry: HistoryEntry) => void
-}
-
-function formatTime(date: Date | null): string {
-  if (!date)
-    return '未知时间'
-
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  if (diff < 60 * 1000) {
-    return '刚刚'
-  }
-  if (diff < 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 1000))} 分钟前`
-  }
-  if (diff < 24 * 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 60 * 1000))} 小时前`
-  }
-  if (diff < 7 * 24 * 60 * 60 * 1000) {
-    return `${Math.floor(diff / (24 * 60 * 60 * 1000))} 天前`
-  }
-
-  return date.toLocaleDateString('zh-CN', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 export function HistoryList({ entries, onPreview, onRestore }: HistoryListProps) {

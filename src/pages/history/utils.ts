@@ -1,4 +1,5 @@
 import type { DiffResult, HistoryEdge, HistoryEntry, HistoryNode } from './types'
+import dayjs from 'dayjs'
 import useResumeConfigStore from '@/store/resume/config'
 import { DIFF_FIELD_LABELS, FLOW_LAYOUT } from './const'
 
@@ -151,24 +152,20 @@ export function formatTime(date: Date | null): string {
   if (!date)
     return '未知时间'
 
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
+  const now = dayjs()
+  const target = dayjs(date)
+  const diffMs = now.diff(target)
 
-  if (diff < 60 * 1000)
+  if (diffMs < 60 * 1000)
     return '刚刚'
-  if (diff < 60 * 60 * 1000)
-    return `${Math.floor(diff / (60 * 1000))} 分钟前`
-  if (diff < 24 * 60 * 60 * 1000)
-    return `${Math.floor(diff / (60 * 60 * 1000))} 小时前`
-  if (diff < 7 * 24 * 60 * 60 * 1000)
-    return `${Math.floor(diff / (24 * 60 * 60 * 1000))} 天前`
+  if (diffMs < 60 * 60 * 1000)
+    return `${Math.floor(diffMs / (60 * 1000))} 分钟前`
+  if (diffMs < 24 * 60 * 60 * 1000)
+    return `${Math.floor(diffMs / (60 * 60 * 1000))} 小时前`
+  if (diffMs < 7 * 24 * 60 * 60 * 1000)
+    return `${Math.floor(diffMs / (24 * 60 * 60 * 1000))} 天前`
 
-  return date.toLocaleDateString('zh-CN', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return target.format('M月D日 HH:mm')
 }
 
 /**
