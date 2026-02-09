@@ -16,7 +16,7 @@ function Optimize() {
 
   return (
     <div className="pt-10 relative">
-      <div className="fixed left-0 right-0 top-13 z-1">
+      <div className="fixed left-0 right-0 top-13 z-1 backdrop-blur-sm">
         <ProTips />
       </div>
       <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
@@ -26,11 +26,11 @@ function Optimize() {
         <div className="grid gap-8 lg:grid-cols-12 items-start">
           <div className="lg:col-span-8 space-y-8">
             <IssueAnalysis />
-            <AdvancedTools />
           </div>
 
           <div className="lg:col-span-4 space-y-8">
             <RepairChecklist />
+            <AdvancedTools />
           </div>
         </div>
       </div>

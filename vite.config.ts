@@ -80,7 +80,7 @@ export default defineConfig({
           // Supabase
           'supabase': ['@supabase/supabase-js'],
           // 其他工具库
-          'utils': ['clsx', 'tailwind-merge', 'date-fns', 'zod', 'zustand'],
+          'utils': ['clsx', 'tailwind-merge', 'date-fns', 'zod', 'zustand', 'shiki'],
         },
       },
     },

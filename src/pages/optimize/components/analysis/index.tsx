@@ -28,7 +28,7 @@ export default function IssueAnalysis() {
 
   return (
     <Card className="overflow-hidden shadow-sm border-primary/10">
-      <CardHeader className="pb-4 border-b border-border/50 bg-muted/20">
+      <CardHeader className="pb-4 border-b">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <div className="p-2 rounded-md bg-primary/10 text-primary">
