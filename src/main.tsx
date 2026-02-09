@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import ErrorFallback from './components/ErrorBoundary'
 import { SidebarProvider } from './components/ui/sidebar'
+import '@xyflow/react/dist/style.css'
 import './index.css'
 
 const app = createRoot(document.getElementById('root')!)
