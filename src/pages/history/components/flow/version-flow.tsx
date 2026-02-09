@@ -1,14 +1,6 @@
 import type { NodeTypes } from '@xyflow/react'
 import type { HistoryEntry } from '../../types'
-import {
-  Background,
-  BackgroundVariant,
-  Controls,
-  MarkerType,
-  ReactFlow,
-  useEdgesState,
-  useNodesState,
-} from '@xyflow/react'
+import { Background, BackgroundVariant, Controls, MarkerType, ReactFlow, useEdgesState, useNodesState } from '@xyflow/react'
 import { useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import useHistoryStore from '../../store'
@@ -152,7 +144,10 @@ export function VersionFlow({ entries }: VersionFlowProps) {
 
       {/* Diff 选择提示 */}
       {diffSourceEntry && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-primary text-primary-foreground px-4 py-2.5 rounded-2xl shadow-lg text-sm flex items-center justify-between gap-3 z-50">
+        <div
+          className="absolute left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-primary text-primary-foreground px-4 py-2.5 rounded-2xl shadow-lg text-sm flex items-center justify-between gap-3 z-50"
+          style={{ bottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}
+        >
           <span className="leading-snug">
             🔍 已选择版本
             {historyList.findIndex(e => e.id === diffSourceEntry.id) + 1}

@@ -1,37 +1,28 @@
-import type { HistoryEntry } from '../../types'
 import { Download, Loader2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { toast } from 'sonner'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
 import ResumeWrapper from '@/pages/resume/editor/components/preview/ResumeWrapper'
 import resumeComponents from '@/pages/template/components'
 import BasicResume from '@/pages/template/components/basic/Basic'
 import useResumeConfigStore from '@/store/resume/config'
 import useResumeStore from '@/store/resume/form'
-import { formatTime } from '../../utils'
 
-interface VersionPreviewDialogProps {
-  entry: HistoryEntry | null
+interface VersionPreviewProps {
   data: any
-  open: boolean
   onClose: () => void
 }
 
-export function VersionPreviewDialog({ entry, data, open, onClose }: VersionPreviewDialogProps) {
-  const isMobile = useIsMobile()
+export function VersionPreview({ data, onClose }: VersionPreviewProps) {
   const resumeRef = useRef<HTMLDivElement>(null)
   const [ready, setReady] = useState(false)
   const [exporting, setExporting] = useState(false)
 
+  // 计算此版本的独立样式
   const versionStyles = useMemo(() => {
-    if (!data)
-      return null
     const currentConfig = useResumeConfigStore.getState()
     const versionConfig = data.config || currentConfig
 
@@ -63,11 +54,11 @@ export function VersionPreviewDialog({ entry, data, open, onClose }: VersionPrev
       },
       theme: themeColorMap[themeKey],
     }
-  }, [data])
+  }, [data.config])
 
   const handlePrint = useReactToPrint({
     contentRef: resumeRef,
-    documentTitle: `${data?.basics?.name || '简历'}-历史版本`,
+    documentTitle: `${data.basics?.name || '简历'}-历史版本-${new Date(data.timestamp).toLocaleString()}`,
     onAfterPrint: () => setExporting(false),
     onPrintError: (error) => {
       setExporting(false)
@@ -93,12 +84,11 @@ export function VersionPreviewDialog({ entry, data, open, onClose }: VersionPrev
   })
 
   useEffect(() => {
-    if (!data || !open)
-      return
-
+    // 保存原始状态
     const originalFormState = useResumeStore.getState()
     const originalConfigState = useResumeConfigStore.getState()
 
+    // 转换数组格式：直接数组 -> {items: []}
     const normalize = (field: any, fallback: any) => {
       if (!field)
         return fallback ?? { items: [] }
@@ -109,23 +99,38 @@ export function VersionPreviewDialog({ entry, data, open, onClose }: VersionPrev
       return fallback ?? { items: [] }
     }
 
+    // 规范化 selfEvaluation
     const normalizeSelfEvaluation = (value: any) => {
-      if (value && typeof value === 'object' && 'content' in value)
+      if (value && typeof value === 'object' && 'content' in value) {
         return { content: String(value.content || '') }
-      if (typeof value === 'string')
+      }
+      if (typeof value === 'string') {
         return { content: value }
+      }
       return { content: '' }
     }
 
+    // 规范化 hobbies
     const normalizeHobbies = (value: any) => {
       if (value && typeof value === 'object' && 'description' in value) {
-        return { description: String(value.description || ''), hobbies: Array.isArray(value.hobbies) ? value.hobbies : [] }
+        return {
+          description: String(value.description || ''),
+          hobbies: Array.isArray(value.hobbies) ? value.hobbies : [],
+        }
       }
-      if (typeof value === 'string')
-        return { description: value, hobbies: [] }
-      return { description: '', hobbies: [] }
+      if (typeof value === 'string') {
+        return {
+          description: value,
+          hobbies: [],
+        }
+      }
+      return {
+        description: '',
+        hobbies: [],
+      }
     }
 
+    // 注入表单数据
     useResumeStore.setState({
       basics: data.basics ?? {},
       jobIntent: data.jobIntent ?? {},
@@ -143,6 +148,7 @@ export function VersionPreviewDialog({ entry, data, open, onClose }: VersionPrev
       type: data.type ?? 'basic',
     })
 
+    // 🔧 新增：注入版本的配置（如果存在）
     if (data.config) {
       useResumeConfigStore.setState({
         font: data.config.font ?? originalConfigState.font,
@@ -151,14 +157,18 @@ export function VersionPreviewDialog({ entry, data, open, onClose }: VersionPrev
       })
     }
 
-    const timer = setTimeout(() => setReady(true), 50)
+    // 延迟设置 ready
+    const timer = setTimeout(() => {
+      setReady(true)
+    }, 50)
 
+    // 卸载时恢复原始状态
     return () => {
       clearTimeout(timer)
       useResumeStore.setState(originalFormState)
       useResumeConfigStore.setState(originalConfigState)
     }
-  }, [data, open])
+  }, [])
 
   const handleExport = () => {
     if (!ready || !resumeRef.current) {
@@ -169,118 +179,70 @@ export function VersionPreviewDialog({ entry, data, open, onClose }: VersionPrev
     handlePrint()
   }
 
-  if (!data || !versionStyles || !entry)
-    return null
-
   const templateType = (data.type || 'basic') as keyof typeof resumeComponents
   const ResumeComponent = resumeComponents[templateType] || BasicResume
 
-  const headerContent = (
-    <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <span className="text-base font-medium shrink-0">版本预览</span>
-        {entry.isMilestone && entry.milestoneLabel && (
-          <Badge
-            variant="outline"
-            className="text-xs bg-amber-100/80 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 shrink-0"
-          >
-            🏁
-            {' '}
-            {entry.milestoneLabel}
-          </Badge>
-        )}
-        <span className="text-sm text-muted-foreground truncate">
-          {entry.label || `版本`}
-          {' '}
-          ·
-          {formatTime(entry.time)}
-        </span>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExport}
-          disabled={!ready || exporting}
-        >
-          {exporting
-            ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            : <Download className="h-4 w-4 mr-1" />}
-          {!isMobile && '导出 PDF'}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-
-  const bodyContent = (
-    <div
-      className="flex-1 overflow-auto p-4 md:p-8 bg-gray-100 dark:bg-gray-900"
-      style={{ maxHeight: isMobile ? 'calc(85vh - 60px)' : 'calc(95vh - 60px)' }}
-    >
-      {!ready
-        ? (
-            <div className="flex items-center justify-center h-96" style={{ width: isMobile ? '100%' : '210mm' }}>
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          )
-        : (
-            <div className="print-container">
-              {isMobile
-                ? (
-                    <div className="transform scale-[0.5] origin-top-left w-[200%]">
-                      <ResumeWrapper ref={resumeRef}>
-                        <ResumeComponent
-                          font={versionStyles.font}
-                          spacing={versionStyles.spacing}
-                          theme={versionStyles.theme}
-                        />
-                      </ResumeWrapper>
-                    </div>
-                  )
-                : (
-                    <ResumeWrapper ref={resumeRef}>
-                      <ResumeComponent
-                        font={versionStyles.font}
-                        spacing={versionStyles.spacing}
-                        theme={versionStyles.theme}
-                      />
-                    </ResumeWrapper>
-                  )}
-            </div>
-          )}
-    </div>
-  )
-
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={v => !v && onClose()}>
-        <DrawerContent className="max-h-[90vh] flex flex-col">
-          <DrawerHeader className="sr-only">
-            <DrawerTitle>版本预览</DrawerTitle>
-            <DrawerDescription>预览历史版本的简历内容</DrawerDescription>
-          </DrawerHeader>
-          {headerContent}
-          {bodyContent}
-        </DrawerContent>
-      </Drawer>
-    )
-  }
-
   return (
-    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+    <Dialog open onOpenChange={open => !open && onClose()}>
       <DialogContent
         className="p-0 flex flex-col [&>button]:hidden"
-        style={{ width: 'auto', maxWidth: '95vw', maxHeight: '95vh' }}
+        style={{
+          width: 'auto',
+          maxWidth: '95vw',
+          maxHeight: '95vh',
+        }}
       >
-        <DialogHeader className="sr-only">
-          <DialogTitle>版本预览</DialogTitle>
-          <DialogDescription>预览历史版本的简历内容</DialogDescription>
+        <DialogHeader className="px-4 py-3 border-b shrink-0">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-base font-medium">
+              版本预览 -
+              {' '}
+              {new Date(data.timestamp).toLocaleString()}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              预览历史版本的简历内容
+            </DialogDescription>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExport}
+                disabled={!ready || exporting}
+              >
+                {exporting
+                  ? <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  : <Download className="h-4 w-4 mr-1" />}
+                导出 PDF
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </DialogHeader>
-        {headerContent}
-        {bodyContent}
+
+        <div
+          className="flex-1 overflow-auto p-4 md:p-8 bg-gray-100 dark:bg-gray-900"
+          style={{ maxHeight: 'calc(95vh - 60px)' }}
+        >
+          {!ready
+            ? (
+                <div className="flex items-center justify-center h-96 w-[210mm]">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              )
+            : (
+                <div className="print-container">
+                  <ResumeWrapper ref={resumeRef}>
+                    <ResumeComponent
+                      font={versionStyles.font}
+                      spacing={versionStyles.spacing}
+                      theme={versionStyles.theme}
+                    />
+                  </ResumeWrapper>
+                </div>
+              )}
+        </div>
       </DialogContent>
     </Dialog>
   )
