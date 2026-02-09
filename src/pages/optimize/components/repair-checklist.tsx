@@ -12,7 +12,7 @@ export default function RepairChecklist() {
 
   return (
     <Card className="border-primary/10 shadow-sm flex flex-col h-full">
-      <CardHeader className="bg-muted/30 pb-4 border-b border-border/50">
+      <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center gap-2 mb-1">
           <div className="p-2 rounded-md bg-primary/10 text-primary">
             <Wand2 className="w-4 h-4" />
