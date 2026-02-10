@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 
 function HonorsCertificatesForm({ className }: { className?: string }) {
-  const honorsCertificates = useResumeStore(state => state.honorsCertificates)
+  const honorsCertificates = useResumeStore(state => state.honors_certificates)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
   const [customCertificateInput, setCustomCertificateInput] = useState('')
@@ -39,7 +39,7 @@ function HonorsCertificatesForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('honorsCertificates', value as ShallowPartial<HonorsCertificatesFormType>)
+      updateForm('honors_certificates', value as ShallowPartial<HonorsCertificatesFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

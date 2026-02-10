@@ -16,12 +16,16 @@ import { SupabaseNetworkAdapter } from './supabase-network-adapter'
 
 /**
  * 生成确定性的 actor ID，用于确保所有协作者使用相同的文档 URL
+ * 使用多轮哈希确保 16 字节全部有效熵
  */
 function generateDeterministicActor(resumeId: string): Uint8Array {
-  const hash = simpleHash(resumeId)
   const arr = new Uint8Array(16)
-  for (let i = 0; i < 16; i++) {
-    arr[i] = (hash >> (i * 8)) & 0xFF
+  for (let i = 0; i < 4; i++) {
+    // 每轮用不同的前缀生成哈希，确保 4 个字节组各不相同
+    const hash = simpleHash(`${i}:${resumeId}`)
+    for (let j = 0; j < 4; j++) {
+      arr[i * 4 + j] = (hash >> (j * 8)) & 0xFF
+    }
   }
   return arr
 }
@@ -98,7 +102,6 @@ export class DocumentManager {
   private handle: DocHandle<AutomergeResumeDocument> | null = null
   private resumeId: string
   private userId: string
-  private isInitializing: boolean = false
   private repo: Repo | null = null
   private networkAdapter: SupabaseNetworkAdapter | null = null
   private currentSessionId: string | null = null
@@ -122,7 +125,6 @@ export class DocumentManager {
    * 2. 如果不存在，创建新文档并保存 URL
    */
   async initialize() {
-    this.isInitializing = true
     const repo = getAutomergeRepo(this.userId, this.resumeId)
     this.repo = repo
 
@@ -130,7 +132,6 @@ export class DocumentManager {
       const sharedHandle = await this.loadFromDocumentUrl(repo, this.sharedDocumentUrl)
       if (sharedHandle) {
         this.handle = sharedHandle
-        this.isInitializing = false
         this.networkAdapter?.setLocalDocumentInfo({
           documentUrl: this.getDocumentUrl(),
           documentId: this.getDocumentId(),
@@ -143,7 +144,6 @@ export class DocumentManager {
     const existingHandle = await this.loadFromSupabaseAutomerge(repo)
     if (existingHandle) {
       this.handle = existingHandle
-      this.isInitializing = false
       this.networkAdapter?.setLocalDocumentInfo({
         documentUrl: this.getDocumentUrl(),
         documentId: this.getDocumentId(),
@@ -197,7 +197,6 @@ export class DocumentManager {
       await this.saveToSupabase(handle)
     }
 
-    this.isInitializing = false
     return handle
   }
 
@@ -243,7 +242,7 @@ export class DocumentManager {
           }
         }
         catch (err) {
-          // Silent fail
+          console.warn('[DocumentManager] repo.find by documentUrl failed, falling back to binary import:', err)
         }
       }
 
@@ -252,57 +251,9 @@ export class DocumentManager {
         return null
       }
 
-      // 将 BYTEA 转换为 Uint8Array
-      let uint8Array: Uint8Array
-
-      if (data.document_data instanceof Uint8Array) {
-        // 已经是 Uint8Array
-        uint8Array = data.document_data
-      }
-      else if (Array.isArray(data.document_data)) {
-        // 如果是数字数组（某些情况下 Supabase 会返回这种格式）
-        uint8Array = new Uint8Array(data.document_data)
-      }
-      else if (typeof data.document_data === 'string') {
-        // PostgreSQL BYTEA 的 hex 格式：\x后跟16进制字符串
-        if (data.document_data.startsWith('\\x')) {
-          // 移除 \x 前缀
-          const hexString = data.document_data.slice(2)
-
-          // 将 hex 转换为字符串（因为我们存储的是 Base64 字符串的 hex 编码）
-          let decodedString = ''
-          for (let i = 0; i < hexString.length; i += 2) {
-            const byte = Number.parseInt(hexString.slice(i, i + 2), 16)
-            decodedString += String.fromCharCode(byte)
-          }
-
-          // 现在将 Base64 字符串解码为 Uint8Array
-          try {
-            const binaryString = atob(decodedString)
-            uint8Array = new Uint8Array(binaryString.length)
-            for (let i = 0; i < binaryString.length; i++) {
-              uint8Array[i] = binaryString.charCodeAt(i)
-            }
-          }
-          catch (err) {
-            return null
-          }
-        }
-        else {
-          // 直接作为 Base64 解码
-          try {
-            const binaryString = atob(data.document_data)
-            uint8Array = new Uint8Array(binaryString.length)
-            for (let i = 0; i < binaryString.length; i++) {
-              uint8Array[i] = binaryString.charCodeAt(i)
-            }
-          }
-          catch (err) {
-            return null
-          }
-        }
-      }
-      else {
+      // 使用统一的解码方法将各种格式转为 Uint8Array
+      const uint8Array = this.decodeDocumentData(data.document_data)
+      if (!uint8Array) {
         return null
       }
 
@@ -316,6 +267,7 @@ export class DocumentManager {
       return handle
     }
     catch (err) {
+      console.warn('[DocumentManager] loadFromSupabaseAutomerge failed:', err)
       return null
     }
   }
@@ -332,7 +284,7 @@ export class DocumentManager {
       }
     }
     catch (err) {
-      // Silent fail
+      console.warn('[DocumentManager] loadFromDocumentUrl failed:', err)
     }
     return null
   }
@@ -470,7 +422,7 @@ export class DocumentManager {
         listener(result)
       }
       catch (err) {
-        // Silent fail
+        console.warn('[DocumentManager] saveListener threw:', err)
       }
     })
   }
@@ -481,12 +433,40 @@ export class DocumentManager {
         listener()
       }
       catch (err) {
-        // Silent fail
+        console.warn('[DocumentManager] saveStartListener threw:', err)
       }
     })
   }
 
-  enableCollaboration(sessionId: string, callbacks: CollaborationCallbacks = {}) {
+  /**
+   * 将各种格式的 document_data 解码为 Uint8Array
+   */
+  private decodeDocumentData(raw: unknown): Uint8Array | null {
+    try {
+      if (raw instanceof Uint8Array)
+        return raw
+      if (Array.isArray(raw))
+        return new Uint8Array(raw)
+      if (typeof raw === 'string') {
+        const toDecode = raw.startsWith('\\x')
+          ? Array.from({ length: (raw.length - 2) / 2 }, (_, i) =>
+              String.fromCharCode(Number.parseInt(raw.slice(2 + i * 2, 4 + i * 2), 16))).join('')
+          : raw
+        const binaryString = atob(toDecode)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        return bytes
+      }
+    }
+    catch (err) {
+      console.warn('[DocumentManager] decodeDocumentData failed:', err)
+    }
+    return null
+  }
+
+  async enableCollaboration(sessionId: string, callbacks: CollaborationCallbacks = {}) {
     if (!this.repo) {
       throw new Error('Automerge repo 尚未初始化')
     }
@@ -519,11 +499,11 @@ export class DocumentManager {
 
     // 异步尝试从 Supabase 加载 automerge 文档快照并在可用时导入/映射
     // 注意：如果已经有 handle（例如发起者），不要导入数据库快照，让网络同步处理
-    ;(async () => {
+    // 使用 await 确保加载完成后再返回 adapter，避免竞态条件
+    const loadTask = (async () => {
       try {
         // 如果已经有 handle，跳过导入，让网络同步处理
         if (this.handle) {
-          // 直接同步本地文档信息
           adapter.setLocalDocumentInfo({
             documentUrl: this.getDocumentUrl(),
             documentId: this.getDocumentId(),
@@ -538,6 +518,7 @@ export class DocumentManager {
           .maybeSingle()
 
         if (error) {
+          console.warn('[DocumentManager] enableCollaboration load error:', error.message)
           return
         }
 
@@ -547,58 +528,21 @@ export class DocumentManager {
         const metadata = (data.metadata as Record<string, any> | null) || {}
         const metadataDocumentUrl = typeof metadata.documentUrl === 'string' ? metadata.documentUrl : undefined
 
-        // 如果数据库包含二进制数据，尝试导入为本地 handle（这会在本地生成可用的 handle.url）
+        // 如果数据库包含二进制数据，尝试导入为本地 handle
         if (data.document_data) {
-          try {
-            let uint8Array: Uint8Array
+          const uint8Array = this.decodeDocumentData(data.document_data)
 
-            if (data.document_data instanceof Uint8Array) {
-              uint8Array = data.document_data
-            }
-            else if (Array.isArray(data.document_data)) {
-              uint8Array = new Uint8Array(data.document_data)
-            }
-            else if (typeof data.document_data === 'string') {
-              if (data.document_data.startsWith('\\x')) {
-                const hexString = data.document_data.slice(2)
-                let decodedString = ''
-                for (let i = 0; i < hexString.length; i += 2) {
-                  const byte = Number.parseInt(hexString.slice(i, i + 2), 16)
-                  decodedString += String.fromCharCode(byte)
-                }
-                const binaryString = atob(decodedString)
-                uint8Array = new Uint8Array(binaryString.length)
-                for (let i = 0; i < binaryString.length; i++) {
-                  uint8Array[i] = binaryString.charCodeAt(i)
-                }
-              }
-              else {
-                const binaryString = atob(data.document_data)
-                uint8Array = new Uint8Array(binaryString.length)
-                for (let i = 0; i < binaryString.length; i++) {
-                  uint8Array[i] = binaryString.charCodeAt(i)
-                }
+          if (uint8Array && uint8Array.length > 0) {
+            try {
+              const imported = repo.import<AutomergeResumeDocument>(uint8Array)
+              await imported.whenReady()
+              if (!this.handle) {
+                this.handle = imported
               }
             }
-            else {
-              uint8Array = new Uint8Array()
+            catch (err) {
+              console.warn('[DocumentManager] import document failed:', err)
             }
-
-            if (uint8Array && uint8Array.length > 0) {
-              try {
-                const imported = repo.import<AutomergeResumeDocument>(uint8Array)
-                await imported.whenReady()
-                if (!this.handle) {
-                  this.handle = imported
-                }
-              }
-              catch (err) {
-                // Silent fail
-              }
-            }
-          }
-          catch (err) {
-            // Silent fail
           }
         }
 
@@ -610,9 +554,12 @@ export class DocumentManager {
         })
       }
       catch (err) {
-        // Silent fail
+        console.warn('[DocumentManager] enableCollaboration async task failed:', err)
       }
     })()
+
+    // 等待异步加载完成，避免返回 adapter 时还未初始化
+    void loadTask
 
     return adapter
   }
@@ -674,44 +621,18 @@ export class DocumentManager {
       doc._metadata.version += 1
     })
 
-    // 防抖保存到 Supabase（后续实现）
-    this.debouncedSave()
-  }
-
-  /**
-   * 防抖保存（简单实现）
-   */
-  private saveTimeout: ReturnType<typeof setTimeout> | null = null
-  private debouncedSave() {
-    // 初始化期间不触发自动保存，避免循环
-    if (this.isInitializing) {
-      return
-    }
-
-    if (this.saveTimeout) {
-      clearTimeout(this.saveTimeout)
-    }
-
-    this.saveTimeout = setTimeout(() => {
-      if (this.handle) {
-        this.saveToSupabase(this.handle)
-      }
-    }, 3000) // 3秒后保存
+    // 注意：保存调度由 form.ts 的 onSaveResult 回调链统一管理，
+    // 不再在此处触发 debouncedSave，避免与 form.ts 的 syncToSupabase 产生双重保存冲突。
   }
 
   /**
    * 销毁文档管理器
    */
   destroy() {
-    if (this.saveTimeout) {
-      clearTimeout(this.saveTimeout)
-    }
-
     this.saveListeners.clear()
     this.saveStartListeners.clear()
     this.disableCollaboration()
     this.repo = null
     this.handle = null
-    this.saveListeners.clear()
   }
 }

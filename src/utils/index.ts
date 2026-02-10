@@ -1,2 +1,2 @@
-export * from './confetii'
+export * from './confetti'
 export * from './date'

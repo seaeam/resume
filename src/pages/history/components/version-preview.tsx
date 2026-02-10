@@ -4,7 +4,7 @@ import { useReactToPrint } from 'react-to-print'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
+import { getFontFamilyCSS, migrateOrder, migrateVisibility, themeColorMap } from '@/lib/schema'
 import ResumeWrapper from '@/pages/resume/editor/components/preview/ResumeWrapper'
 import resumeComponents from '@/pages/template/components'
 import BasicResume from '@/pages/template/components/basic/Basic'
@@ -133,18 +133,19 @@ export function VersionPreview({ data, onClose }: VersionPreviewProps) {
     // 注入表单数据
     useResumeStore.setState({
       basics: data.basics ?? {},
-      jobIntent: data.jobIntent ?? {},
-      eduBackground: normalize(data.eduBackground, { items: [] }),
-      workExperience: normalize(data.workExperience, { items: [] }),
-      internshipExperience: normalize(data.internshipExperience, { items: [] }),
-      projectExperience: normalize(data.projectExperience, { items: [] }),
-      campusExperience: normalize(data.campusExperience, { items: [] }),
-      skillSpecialty: data.skillSpecialty ?? {},
-      honorsCertificates: normalize(data.honorsCertificates, { items: [] }),
-      selfEvaluation: normalizeSelfEvaluation(data.selfEvaluation),
+      job_intent: data.job_intent ?? data.jobIntent ?? {},
+      application_info: data.application_info ?? data.applicationInfo ?? {},
+      edu_background: normalize(data.edu_background ?? data.eduBackground, { items: [] }),
+      work_experience: normalize(data.work_experience ?? data.workExperience, { items: [] }),
+      internship_experience: normalize(data.internship_experience ?? data.internshipExperience, { items: [] }),
+      project_experience: normalize(data.project_experience ?? data.projectExperience, { items: [] }),
+      campus_experience: normalize(data.campus_experience ?? data.campusExperience, { items: [] }),
+      skill_specialty: data.skill_specialty ?? data.skillSpecialty ?? {},
+      honors_certificates: normalize(data.honors_certificates ?? data.honorsCertificates, { items: [] }),
+      self_evaluation: normalizeSelfEvaluation(data.self_evaluation ?? data.selfEvaluation),
       hobbies: normalizeHobbies(data.hobbies),
-      order: data.order ?? [],
-      visibility: data.visibility ?? {},
+      order: migrateOrder(data.order ?? []),
+      visibility: migrateVisibility(data.visibility ?? {}),
       type: data.type ?? 'basic',
     })
 

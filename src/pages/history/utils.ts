@@ -1,14 +1,15 @@
 import type { DiffResult, HistoryEdge, HistoryEntry, HistoryNode } from './types'
 import dayjs from 'dayjs'
-import useResumeConfigStore from '@/store/resume/config'
 import { DIFF_FIELD_LABELS, FLOW_LAYOUT } from './const'
 
 /**
  * 构建指定版本的快照
+ * @param fallbackConfig 当快照自身不包含 config 时使用的回退配置（消除对外部 store 的隐式耦合）
  */
 export async function buildSnapshot(
   allChanges: Uint8Array[],
   targetIndex: number,
+  fallbackConfig?: Record<string, unknown>,
 ): Promise<any> {
   if (allChanges.length === 0 || targetIndex < 0)
     return null
@@ -22,13 +23,8 @@ export async function buildSnapshot(
 
     const snapshot = JSON.parse(JSON.stringify(historicalDoc))
 
-    if (!snapshot.config) {
-      const currentConfig = useResumeConfigStore.getState()
-      snapshot.config = {
-        theme: currentConfig.theme,
-        font: currentConfig.font,
-        spacing: currentConfig.spacing,
-      }
+    if (!snapshot.config && fallbackConfig) {
+      snapshot.config = fallbackConfig
     }
 
     return snapshot
@@ -47,15 +43,15 @@ export function computeDiff(before: any, after: any): DiffResult {
 
   const compareKeys = [
     'basics',
-    'jobIntent',
-    'eduBackground',
-    'workExperience',
-    'internshipExperience',
-    'projectExperience',
-    'campusExperience',
-    'skillSpecialty',
-    'honorsCertificates',
-    'selfEvaluation',
+    'job_intent',
+    'edu_background',
+    'work_experience',
+    'internship_experience',
+    'project_experience',
+    'campus_experience',
+    'skill_specialty',
+    'honors_certificates',
+    'self_evaluation',
     'hobbies',
     'order',
     'visibility',

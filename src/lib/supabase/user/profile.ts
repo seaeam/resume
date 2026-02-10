@@ -33,6 +33,22 @@ export async function changeAvatar(file: File) {
   if (!user)
     throw new Error('未登陆用户')
 
+  // 尝试删除旧头像文件（忽略错误，可能不存在）
+  const oldAvatarUrl = user.user_metadata?.avatar_url
+  if (oldAvatarUrl) {
+    try {
+      const url = new URL(oldAvatarUrl)
+      // 提取 storage 路径：/storage/v1/object/public/avatar/{path}
+      const match = url.pathname.match(/\/storage\/v1\/object\/public\/avatar\/(.+)/)
+      if (match?.[1]) {
+        await supabase.storage.from('avatar').remove([decodeURIComponent(match[1])])
+      }
+    }
+    catch {
+      // 旧头像清理失败不影响新头像上传
+    }
+  }
+
   const path = `${user.id}/${Date.now()}-${file.name}`
 
   const { error: upErr } = await supabase.storage.from('avatar').upload(path, file, {

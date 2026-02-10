@@ -100,6 +100,18 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
     [files, setFiles],
   )
 
+  // 清理 Object URL 防止内存泄漏
+  useEffect(() => {
+    return () => {
+      files.forEach((file) => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview)
+        }
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // 仅在卸载时清理
+
   const dropzoneProps = useDropzone({
     onDrop,
     noClick: true,
@@ -114,13 +126,11 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
 
     // [Joshen] This is to support handling partial successes
     // If any files didn't upload for any reason, hitting "Upload" again will only upload the files that had errors
-    const filesWithErrors = errors.map(x => x.name)
+    const filesWithErrors = new Set(errors.map(x => x.name))
+    const successSet = new Set(successes)
     const filesToUpload
-      = filesWithErrors.length > 0
-        ? [
-            ...files.filter(f => filesWithErrors.includes(f.name)),
-            ...files.filter(f => !successes.includes(f.name)),
-          ]
+      = filesWithErrors.size > 0
+        ? files.filter(f => filesWithErrors.has(f.name) || !successSet.has(f.name))
         : files
 
     const responses = await Promise.all(

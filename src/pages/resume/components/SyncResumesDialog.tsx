@@ -4,14 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatDate } from '@/utils/date'
 
@@ -39,15 +32,12 @@ export function SyncResumesDialog({
   isSyncing = false,
 }: SyncResumesDialogProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [initialIds, setInitialIds] = useState<string[]>([])
 
   useEffect(() => {
     if (open) {
-      setInitialIds(prev => (prev.length ? prev : offlineResumes.map(r => r.resume_id)))
       setSelectedIds(prev => (prev.length ? prev : offlineResumes.map(r => r.resume_id)))
     }
     else {
-      setInitialIds([])
       setSelectedIds([])
     }
   }, [open, offlineResumes])

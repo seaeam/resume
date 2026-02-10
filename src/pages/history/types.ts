@@ -1,9 +1,5 @@
 import type { Edge, Node } from '@xyflow/react'
 
-// =====================
-// Version History Types
-// =====================
-
 /** 历史条目（从 automerge 解析） */
 export interface HistoryEntry {
   id: string

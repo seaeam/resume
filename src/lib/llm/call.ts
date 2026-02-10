@@ -2,7 +2,7 @@ import type { ChatCompletionChunk, ChatCompletionCreateParams } from 'openai/res
 import { Stream } from 'openai/streaming'
 import supabase from '../supabase/client'
 
-export async function callLLM(req: ChatCompletionCreateParams) {
+export async function callLLM(req: ChatCompletionCreateParams, abortController?: AbortController) {
   const {
     model = 'deepseek-reasoner',
     messages = [],
@@ -14,6 +14,12 @@ export async function callLLM(req: ChatCompletionCreateParams) {
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token
 
+  if (!token) {
+    throw new Error('用户未登录，无法调用 LLM 服务')
+  }
+
+  const controller = abortController ?? new AbortController()
+
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/llm-proxy`, {
     method: 'POST',
     headers: {
@@ -21,6 +27,7 @@ export async function callLLM(req: ChatCompletionCreateParams) {
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({ model, messages, temperature, stream, ...rest }),
+    signal: controller.signal,
   })
 
   if (!response.ok) {
@@ -28,7 +35,7 @@ export async function callLLM(req: ChatCompletionCreateParams) {
     throw new Error(`LLM request failed: ${response.status} ${errorText}`)
   }
 
-  const streamData = Stream.fromSSEResponse<ChatCompletionChunk>(response, new AbortController())
+  const streamData = Stream.fromSSEResponse<ChatCompletionChunk>(response, controller)
 
   return streamData
 }

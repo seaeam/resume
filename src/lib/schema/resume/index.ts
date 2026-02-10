@@ -16,16 +16,16 @@ import {
 
 export const resumeSchema = z.object({
   basics: basicsSchema,
-  jobIntent: jobIntentFormSchema,
-  applicationInfo: applicationInfoForm,
-  eduBackground: eduBackgroundFormSchema,
-  workExperience: workExperienceFormSchema,
-  internshipExperience: internshipExperienceFormSchema,
-  campusExperience: campusExperienceFormSchema,
-  projectExperience: projectExperienceFormSchema,
-  skillSpecialty: skillSpecialtyFormSchema,
-  honorsCertificates: honorsCertificatesFormSchema,
-  selfEvaluation: selfEvaluationFormSchema,
+  job_intent: jobIntentFormSchema,
+  application_info: applicationInfoForm,
+  edu_background: eduBackgroundFormSchema,
+  work_experience: workExperienceFormSchema,
+  internship_experience: internshipExperienceFormSchema,
+  campus_experience: campusExperienceFormSchema,
+  project_experience: projectExperienceFormSchema,
+  skill_specialty: skillSpecialtyFormSchema,
+  honors_certificates: honorsCertificatesFormSchema,
+  self_evaluation: selfEvaluationFormSchema,
   hobbies: hobbiesFormSchema,
 })
 
@@ -34,16 +34,16 @@ export type ResumeSchema = z.infer<typeof resumeSchema>
 export type ORDERType = keyof ResumeSchema
 export const DEFAULT_ORDER: ORDERType[] = [
   'basics',
-  'jobIntent',
-  'applicationInfo',
-  'eduBackground',
-  'workExperience',
-  'internshipExperience',
-  'campusExperience',
-  'projectExperience',
-  'skillSpecialty',
-  'honorsCertificates',
-  'selfEvaluation',
+  'job_intent',
+  'application_info',
+  'edu_background',
+  'work_experience',
+  'internship_experience',
+  'campus_experience',
+  'project_experience',
+  'skill_specialty',
+  'honors_certificates',
+  'self_evaluation',
   'hobbies',
 ]
 

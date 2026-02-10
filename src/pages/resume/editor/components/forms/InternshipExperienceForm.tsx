@@ -17,16 +17,12 @@ import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { useIsMobile } from '@/hooks/use-mobile'
-import {
-  DEFAULT_INTERNSHIP_EXPERIENCE,
-  internshipExperienceFormSchema,
-
-} from '@/lib/schema'
+import { DEFAULT_INTERNSHIP_EXPERIENCE, internshipExperienceFormSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 
 function InternshipExperienceForm({ className }: { className?: string }) {
-  const internshipExperience = useResumeStore(state => state.internshipExperience)
+  const internshipExperience = useResumeStore(state => state.internship_experience)
   const [isUptoNow, setIsUptoNow] = useState(() => internshipExperience.items?.some(item => item.internshipDuration?.[1] === '至今') || false)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
@@ -47,7 +43,7 @@ function InternshipExperienceForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('internshipExperience', value as ShallowPartial<InternshipExperienceFormType>)
+      updateForm('internship_experience', value as ShallowPartial<InternshipExperienceFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

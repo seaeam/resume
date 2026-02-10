@@ -1,7 +1,6 @@
-/* eslint-disable no-console */
 import type { ResumeType } from '@/store/resume/current'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -35,6 +34,7 @@ export default function ResumePage() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncingIds, setSyncingIds] = useState<Set<string>>(() => new Set())
   const [localDeletingIds, setLocalDeletingIds] = useState<Set<string>>(() => new Set()) // 本地正在删除的简历ID
+  const localDeletingIdsRef = useRef<Set<string>>(localDeletingIds) // 用 ref 避免订阅重建
   const navigate = useNavigate()
   const { setCurrentResume } = useCurrentResumeStore()
 
@@ -63,35 +63,23 @@ export default function ResumePage() {
         }
 
         // 加载离线简历
-        let formattedOfflineResumes: Resume[] = []
-        try {
-          const localResumes = await getAllOfflineResumes()
-          formattedOfflineResumes = localResumes.map(r => ({
-            resume_id: r.resume_id,
-            created_at: r.created_at,
-            type: r.type as ResumeType,
-            display_name: r.display_name,
-            description: r.description,
-            isOffline: true,
-          }))
-          allResumes = [...allResumes, ...formattedOfflineResumes]
-        }
-        catch {
-          // 忽略离线简历加载错误
-        }
+        const localResumes = await getAllOfflineResumes()
+        const formattedOfflineResumes: Resume[] = localResumes.map(r => ({
+          ...r,
+          isOffline: true,
+        }))
+
+        allResumes = [...allResumes, ...formattedOfflineResumes]
 
         setResumes(allResumes)
 
         // 如果已登录且有本地简历，只提示用户（不自动弹出对话框）
         if (user && formattedOfflineResumes.length > 0) {
           setOfflineResumes(formattedOfflineResumes)
-          toast.info(`检测到 ${formattedOfflineResumes.length} 个本地简历，点击右上角按钮可同步到云端`, {
-            duration: 5000,
-          })
+          toast.info(`检测到 ${formattedOfflineResumes.length} 个本地简历，点击右上角按钮可同步到云端`)
         }
       }
       catch {
-        // 错误处理
         toast.error('加载简历失败')
       }
       finally {
@@ -100,14 +88,22 @@ export default function ResumePage() {
     }
   }, [navigate])
 
+  // 保持 ref 与 state 同步
+  useEffect(() => {
+    localDeletingIdsRef.current = localDeletingIds
+  }, [localDeletingIds])
+
   useEffect(() => {
     // 只有在线模式才订阅在线简历更新
     if (!isOnline)
       return
 
-    let unSubscribe: () => void | undefined
+    let cancelled = false
+    let unSubscribe: (() => void) | undefined
 
     subscribeToResumeConfigUpdates((payload) => {
+      if (cancelled) return
+
       switch (payload.eventType) {
         case 'INSERT': {
           const resume = {
@@ -144,15 +140,14 @@ export default function ResumePage() {
         case 'DELETE': {
           const deletedResumeId = payload.old.resume_id
 
-          // 检查是否是本地操作触发的删除
-          if (localDeletingIds.has(deletedResumeId)) {
+          // 检查是否是本地操作触发的删除（使用 ref 避免依赖变化）
+          if (localDeletingIdsRef.current.has(deletedResumeId)) {
             // 是本地删除，清除标记，不显示远程删除提示
             setLocalDeletingIds((prev) => {
               const newSet = new Set(prev)
               newSet.delete(deletedResumeId)
               return newSet
             })
-            console.log('本地删除操作，跳过远程同步提示:', deletedResumeId)
             break
           }
 
@@ -170,7 +165,7 @@ export default function ResumePage() {
           }
 
           toast.promise(syncPromise, {
-            loading: `检测到远端删除了简历，正在同步...`,
+            loading: `检测到简历变动，正在同步...`,
             success: '简历已同步删除',
             error: '同步失败，请重试',
           })
@@ -179,16 +174,21 @@ export default function ResumePage() {
       }
     })
       .then((unsub) => {
-        unSubscribe = unsub
+        if (cancelled) {
+          unsub?.()
+        } else {
+          unSubscribe = unsub
+        }
       })
       .catch((error) => {
         console.error(error.message)
       })
 
     return () => {
+      cancelled = true
       unSubscribe?.()
     }
-  }, [isOnline, localDeletingIds])
+  }, [isOnline])
 
   function handleEditResume(resume: Resume) {
     setCurrentResume(resume.resume_id, resume.type)

@@ -12,7 +12,6 @@ export async function getAllResumesFromUser() {
     .select('id,resume_id,created_at,updated_at,type,display_name,description')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .range(0, 10)
 
   if (error) {
     throw error
@@ -42,7 +41,7 @@ export async function getResumeById<T extends string>(id: string, selector = '*'
 }
 
 export async function uploadOfflineResumeToCloud(
-  resumeData: any,
+  resumeData: Record<string, unknown>,
   info: { display_name: string, description?: string },
   type: string = 'default',
 ) {
@@ -51,13 +50,27 @@ export async function uploadOfflineResumeToCloud(
   if (!user)
     throw new Error('用户未登陆')
 
+  // 安全字段白名单，避免覆盖 user_id 等安全字段
+  const ALLOWED_FIELDS = [
+    'basics', 'job_intent', 'application_info', 'edu_background',
+    'work_experience', 'internship_experience', 'campus_experience',
+    'project_experience', 'skill_specialty', 'honors_certificates',
+    'self_evaluation', 'hobbies', 'order', 'visibility',
+  ]
+  const safeData: Record<string, unknown> = {}
+  for (const key of ALLOWED_FIELDS) {
+    if (key in resumeData) {
+      safeData[key] = resumeData[key]
+    }
+  }
+
   const { data, error } = await supabase
     .from('resume_config')
     .insert({
       user_id: user.id,
       type,
       ...info,
-      ...resumeData, // 将简历数据展开插入
+      ...safeData,
     })
     .select()
     .single()
@@ -98,13 +111,18 @@ export async function createNewResume(
   return data
 }
 
-export async function deleteResume(id: string) {
+/**
+ * 删除简历
+ * @param id 标识值
+ * @param by 按哪个列删除，默认 'resume_id'
+ */
+export async function deleteResume(id: string, by: 'resume_id' | 'id' = 'resume_id') {
   const user = await getCurrentUser()
 
   if (!user)
     throw new Error('用户未登陆')
 
-  const { error } = await supabase.from('resume_config').delete().eq('resume_id', id).eq('user_id', user.id)
+  const { error } = await supabase.from('resume_config').delete().eq(by, id).eq('user_id', user.id)
 
   if (error) {
     throw error
@@ -113,17 +131,5 @@ export async function deleteResume(id: string) {
   return true
 }
 
-export async function deleteResumeFromId(id: string) {
-  const user = await getCurrentUser()
-
-  if (!user)
-    throw new Error('用户未登陆')
-
-  const { error } = await supabase.from('resume_config').delete().eq('id', id).eq('user_id', user.id)
-
-  if (error) {
-    throw error
-  }
-
-  return true
-}
+/** @deprecated 使用 deleteResume(id, 'id') 替代 */
+export const deleteResumeFromId = (id: string) => deleteResume(id, 'id')

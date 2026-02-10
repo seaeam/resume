@@ -1,8 +1,8 @@
 /*
  * @Author: lll 347552878@qq.com
  * @Date: 2025-10-27 17:57:54
- * @LastEditors: lll 347552878@qq.com
- * @LastEditTime: 2025-11-08 12:36:52
+ * @LastEditors: shemingcong shemingcong@dcarlife.com
+ * @LastEditTime: 2026-02-10 14:45:14
  * @FilePath: /resume/src/lib/resume-sync-service.ts
  * @Description: 简历同步服务,处理登录后本地简历与云端的合并
  */
@@ -66,7 +66,7 @@ export async function syncOfflineResumesToCloud(selectedIds?: string[]) {
  * 在登录后自动执行同步
  * 可以在登录成功的回调中调用此函数
  */
-export async function autoSyncOnLogin(): Promise<void> {
+export async function autoSyncOnLogin() {
   try {
     const hasOfflineResumes = await hasOfflineResumesToSync()
 

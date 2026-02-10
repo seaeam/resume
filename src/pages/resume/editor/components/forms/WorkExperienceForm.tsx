@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 
 function WorkExperienceForm({ className }: { className?: string }) {
-  const workExperience = useResumeStore(state => state.workExperience)
+  const workExperience = useResumeStore(state => state.work_experience)
   const [isUptoNow, setIsUptoNow] = useState(() => workExperience.items?.some(item => item.workDuration?.[1] === '至今') || false)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
@@ -43,7 +43,7 @@ function WorkExperienceForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('workExperience', value as ShallowPartial<WorkExperienceFormType>)
+      updateForm('work_experience', value as ShallowPartial<WorkExperienceFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

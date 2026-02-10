@@ -67,6 +67,9 @@ export default function DashboardPage() {
 
         setResumes([...onlineResumes, ...offlineResumes])
       }
+      catch (error) {
+        console.error('加载简历列表失败:', error)
+      }
       finally {
         setResumesLoading(false)
       }
