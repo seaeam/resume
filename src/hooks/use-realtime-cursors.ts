@@ -2,39 +2,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import supabase from '@/lib/supabase/client'
-
-/**
- * Throttle a callback to a certain delay, It will only call the callback if the delay has passed, with the arguments
- * from the last call
- */
-function useThrottleCallback<Params extends unknown[], Return>(callback: (...args: Params) => Return, delay: number) {
-  const lastCall = useRef(0)
-  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  return useCallback(
-    (...args: Params) => {
-      const now = Date.now()
-      const remainingTime = delay - (now - lastCall.current)
-
-      if (remainingTime <= 0) {
-        if (timeout.current) {
-          clearTimeout(timeout.current)
-          timeout.current = null
-        }
-        lastCall.current = now
-        callback(...args)
-      }
-      else if (!timeout.current) {
-        timeout.current = setTimeout(() => {
-          lastCall.current = Date.now()
-          timeout.current = null
-          callback(...args)
-        }, remainingTime)
-      }
-    },
-    [callback, delay],
-  )
-}
+import { useThrottledCallback } from '@/hooks/use-throttled-callback'
 
 const generateRandomColor = () => `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)`
 
@@ -99,7 +67,7 @@ export function useRealtimeCursors({
     [color, userId, username],
   )
 
-  const handleMouseMove = useThrottleCallback(callback, throttleMs)
+  const handleMouseMove = useThrottledCallback(callback, throttleMs, [callback])
 
   useEffect(() => {
     const channel = supabase.channel(roomName)

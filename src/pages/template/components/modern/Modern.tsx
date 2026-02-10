@@ -5,7 +5,7 @@ import parser from 'html-react-parser'
 import { BookOpen, Briefcase, GraduationCap, Medal, Rocket, Sparkles, Target, Trophy, Users } from 'lucide-react'
 import { createContext, use, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
-import useAge from '@/hooks/useAge'
+import useAge from '@/hooks/use-age'
 import useResumeStore from '@/store/resume/form'
 
 // 创建简历上下文

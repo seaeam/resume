@@ -44,7 +44,11 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
   isSelectMode: false,
 
   init: () => {
-    set({ jobs: mockApplications })
+    // 仅在没有数据时加载初始 mock 数据，避免覆盖用户已添加的记录
+    const { jobs } = get()
+    if (jobs.length === 0) {
+      set({ jobs: mockApplications })
+    }
   },
 
   setViewMode: mode => set({ viewMode: mode }),

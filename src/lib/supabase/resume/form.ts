@@ -111,13 +111,18 @@ export async function createNewResume(
   return data
 }
 
-export async function deleteResume(id: string) {
+/**
+ * 删除简历
+ * @param id 标识值
+ * @param by 按哪个列删除，默认 'resume_id'
+ */
+export async function deleteResume(id: string, by: 'resume_id' | 'id' = 'resume_id') {
   const user = await getCurrentUser()
 
   if (!user)
     throw new Error('用户未登陆')
 
-  const { error } = await supabase.from('resume_config').delete().eq('resume_id', id).eq('user_id', user.id)
+  const { error } = await supabase.from('resume_config').delete().eq(by, id).eq('user_id', user.id)
 
   if (error) {
     throw error
@@ -126,17 +131,5 @@ export async function deleteResume(id: string) {
   return true
 }
 
-export async function deleteResumeFromId(id: string) {
-  const user = await getCurrentUser()
-
-  if (!user)
-    throw new Error('用户未登陆')
-
-  const { error } = await supabase.from('resume_config').delete().eq('id', id).eq('user_id', user.id)
-
-  if (error) {
-    throw error
-  }
-
-  return true
-}
+/** @deprecated 使用 deleteResume(id, 'id') 替代 */
+export const deleteResumeFromId = (id: string) => deleteResume(id, 'id')

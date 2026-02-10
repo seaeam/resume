@@ -58,20 +58,7 @@ function generateParticipantColor() {
  * 生成会话ID
  */
 function createSessionId() {
-  try {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-      return crypto.randomUUID().replace(/-/g, '').slice(0, 16)
-    }
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-      const buffer = new Uint8Array(12)
-      crypto.getRandomValues(buffer)
-      return Array.from(buffer, byte => byte.toString(36)[0]).join('').slice(0, 16)
-    }
-  }
-  catch {
-    // ignore
-  }
-  return Math.random().toString(36).slice(2, 18)
+  return crypto.randomUUID().replace(/-/g, '').slice(0, 16)
 }
 
 /**

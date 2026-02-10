@@ -28,3 +28,20 @@ export default function useCurrentUser() {
 
   return auth
 }
+
+/**
+ * 从 useCurrentUser 派生的便捷 hooks，避免重复创建 auth 订阅。
+ * 组件同时需要 user 对象时，直接使用 useCurrentUser() 获取完整 User。
+ */
+
+/** 获取当前用户头像 URL */
+export function useCurrentUserImage() {
+  const user = useCurrentUser()
+  return user?.user_metadata?.avatar_url as string | undefined
+}
+
+/** 获取当前用户显示名称 */
+export function useCurrentUserName() {
+  const user = useCurrentUser()
+  return user?.user_metadata?.full_name ?? '?'
+}

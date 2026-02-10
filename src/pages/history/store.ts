@@ -30,7 +30,7 @@ interface HistoryState {
 
   // UI 状态
   previewEntry: HistoryEntry | null
-  previewData: any
+  previewData: Record<string, unknown> | null
   restoreEntry: HistoryEntry | null
   restoring: boolean
   diffSourceEntry: HistoryEntry | null
@@ -235,7 +235,9 @@ const useHistoryStore = create<HistoryState>()((set, get) => ({
       return
     }
     const { allChanges } = get()
-    const snapshot = await buildSnapshot(allChanges, entry.index)
+    const configState = useResumeConfigStore.getState()
+    const fallbackConfig = { theme: configState.theme, font: configState.font, spacing: configState.spacing }
+    const snapshot = await buildSnapshot(allChanges, entry.index, fallbackConfig)
     if (snapshot) {
       set({ previewEntry: entry, previewData: snapshot })
     }
@@ -253,7 +255,11 @@ const useHistoryStore = create<HistoryState>()((set, get) => ({
 
     set({ restoring: true })
     try {
-      const snapshot = await buildSnapshot(allChanges, restoreEntry.index)
+      const snapshot = await buildSnapshot(allChanges, restoreEntry.index, {
+        theme: useResumeConfigStore.getState().theme,
+        font: useResumeConfigStore.getState().font,
+        spacing: useResumeConfigStore.getState().spacing,
+      })
       if (!snapshot) {
         toast.error('无法恢复此版本')
         set({ restoring: false })
@@ -396,9 +402,14 @@ const useHistoryStore = create<HistoryState>()((set, get) => ({
 
   openDiff: async (source, target) => {
     const { allChanges } = get()
+    const configFallback = {
+      theme: useResumeConfigStore.getState().theme,
+      font: useResumeConfigStore.getState().font,
+      spacing: useResumeConfigStore.getState().spacing,
+    }
     const [sourceSnapshot, targetSnapshot] = await Promise.all([
-      buildSnapshot(allChanges, source.index),
-      buildSnapshot(allChanges, target.index),
+      buildSnapshot(allChanges, source.index, configFallback),
+      buildSnapshot(allChanges, target.index, configFallback),
     ])
 
     if (!sourceSnapshot || !targetSnapshot) {

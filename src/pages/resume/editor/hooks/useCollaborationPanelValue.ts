@@ -1,6 +1,5 @@
-import type { CollaborationPanelContextValue } from './../components/collaboration/collaboration-types'
-import type { SupabaseUser } from './../types'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { CollaborationPanelContextValue, SupabaseUser } from './../types'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -141,6 +140,14 @@ export function useCollaborationPanelValue({
     }
   }, [collabSessionParam, joinedSessionId])
 
+  // 使用 ref 持有不稳定的函数引用，减少 useEffect 依赖数量
+  const joinSessionRef = useRef(joinSession)
+  const resumeHostingRef = useRef(resumeHosting)
+  useEffect(() => {
+    joinSessionRef.current = joinSession
+    resumeHostingRef.current = resumeHosting
+  })
+
   useEffect(() => {
     if (!collabSessionParam || !activeResumeId)
       return
@@ -160,7 +167,7 @@ export function useCollaborationPanelValue({
       userName: userDisplayName || `用户-${currentUser.id.slice(0, 6)}`,
     }
 
-    const action = sessionRoleHint === 'host' ? resumeHosting : joinSession
+    const action = sessionRoleHint === 'host' ? resumeHostingRef.current : joinSessionRef.current
     action(payload)
       .then(() => setJoinedSessionId(collabSessionParam))
       .catch(() => setJoinedSessionId(collabSessionParam))
@@ -175,8 +182,6 @@ export function useCollaborationPanelValue({
     currentUser,
     userDisplayName,
     sessionRoleHint,
-    joinSession,
-    resumeHosting,
   ])
 
   useEffect(() => {

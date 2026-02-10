@@ -2,7 +2,7 @@
  * @Author: lll 347552878@qq.com
  * @Date: 2025-10-24 21:56:16
  * @LastEditors: shemingcong shemingcong@dcarlife.com
- * @LastEditTime: 2026-02-10 14:44:28
+ * @LastEditTime: 2026-02-10 20:41:13
  * @FilePath: /resume/src/lib/offline-resume-manager.ts
  * @Description: 离线简历管理器,使用 IndexedDB 存储本地简历
  */
@@ -54,6 +54,17 @@ async function getDB(): Promise<IDBPDatabase<ResumeDB>> {
       }
     },
   })
+
+  // 当其他标签页升级数据库版本时，关闭当前连接以避免阻塞
+  dbInstance.onversionchange = () => {
+    dbInstance?.close()
+    dbInstance = null
+  }
+
+  // 异常关闭时清除缓存引用，下次访问会重新打开
+  dbInstance.onclose = () => {
+    dbInstance = null
+  }
 
   return dbInstance
 }

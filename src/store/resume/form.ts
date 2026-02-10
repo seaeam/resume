@@ -110,9 +110,6 @@ function applyResumeChange(
   stateUpdate: ((prev: ResumeState) => Partial<ResumeState>) | Partial<ResumeState>,
   docUpdate?: (doc: AutomergeResumeDocument) => void,
 ) {
-  const state = get()
-  const resumeId = state.currentResumeId ?? useCurrentResumeStore.getState().resumeId
-
   // 1. 应用本地状态更新 (Optimistic UI)
   set((prev: ResumeState) => {
     try {
@@ -127,24 +124,26 @@ function applyResumeChange(
     }
   })
 
+  // set() 之后重新读取最新状态，避免使用过期快照
+  const freshState = get()
+  const resumeId = freshState.currentResumeId ?? useCurrentResumeStore.getState().resumeId
+
   // 2. 离线模式：触发延时保存
-  if (!resumeId || state.mode === 'offline' || isOfflineResumeId(resumeId)) {
+  if (!resumeId || freshState.mode === 'offline' || isOfflineResumeId(resumeId)) {
     scheduleOfflinePersist(() => get().syncToSupabase())
     return
   }
 
   // 3. 在线模式：更新 Automerge 文档
-  // 可以在此处统一添加节流、审计日志或更复杂的错误恢复策略
   if (docUpdate) {
     try {
-      state.docManager?.change((doc) => {
+      freshState.docManager?.change((doc) => {
         docUpdate(doc)
       })
     }
     catch (error) {
       console.error('Document update failed:', error)
       set({ syncError: '文档同步失败，请刷新重试' })
-      // TODO: 考虑是否需要回滚本地状态或重新初始化文档
     }
   }
 }
@@ -289,6 +288,12 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     try {
       await state.docManager.saveToSupabase(state.docHandle)
       await updateResumeConfig(resumeId, get().getResumeFormData())
+      set({
+        isSyncing: false,
+        pendingChanges: false,
+        syncError: null,
+        lastSyncTime: getTimestamp(),
+      })
     }
     catch (error) {
       set({
@@ -306,7 +311,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     await get().syncToSupabase()
   },
 
-  loadResumeData: async (resumeId: string) => {
+  loadResumeData: async (resumeId: string, _options?: { documentUrl?: string }) => {
     const { docManager, cleanupFns } = get()
 
     if (cleanupFns.length > 0) {

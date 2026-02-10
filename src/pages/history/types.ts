@@ -1,15 +1,5 @@
 import type { Edge, Node } from '@xyflow/react'
 
-export interface HistoryEntry {
-  id: string
-  snapshot: any
-  time: Date | null
-  message: string | null
-  index: number
-  change: Uint8Array
-  changeCount?: number
-}
-
 /** 历史条目（从 automerge 解析） */
 export interface HistoryEntry {
   id: string

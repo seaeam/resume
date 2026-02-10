@@ -29,8 +29,10 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
   private localDocumentUrl: string | null = null
   private localDocumentId: string | null = null
   // 收到但尚未分派到本地文档的消息缓存（当本地文档信息未知时使用）
-  private pendingMessages: Array<{ senderId: any, targetId: any, messageType: any, documentId: any, message: string }>
+  private pendingMessages: Array<{ senderId: any, targetId: any, messageType: any, documentId: any, message: string, timestamp: number }>
     = []
+  /** 待处理消息的过期时间（30秒），防止长期积压陈旧消息 */
+  private static readonly PENDING_MESSAGE_TTL = 30_000
 
   /**
    * note: 使用 resumeId 而不是文档本地 URL 来生成频道名，resumeId 在不同浏览器/设备上是稳定的
@@ -130,9 +132,13 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
 
       // 如果本地文档信息还未就绪，则缓存消息，等待 setLocalDocumentInfo 时冲刷
       if (!this.localDocumentId) {
-        // 限制队列长度
+        // 限制队列长度，并清理过期消息
+        const now = Date.now()
+        this.pendingMessages = this.pendingMessages.filter(
+          m => now - m.timestamp < SupabaseNetworkAdapter.PENDING_MESSAGE_TTL,
+        )
         if (this.pendingMessages.length < 1000) {
-          this.pendingMessages.push({ senderId, targetId, messageType, documentId, message })
+          this.pendingMessages.push({ senderId, targetId, messageType, documentId, message, timestamp: now })
         }
 
         return
@@ -201,9 +207,9 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
     // 订阅频道
     this.channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        // 使用 key 字段作为 presence 的唯一标识，这与 useRealtimeCursors 的 track 调用一致
+        // 使用 peerId 字段标识当前 peer，避免与 Supabase 内部的 key 字段冲突
         await this.channel!.track({
-          key: String(this.peerId),
+          peerId: String(this.peerId),
           metadata: { ...(peerMetadata || {}), ...this.presenceMetadata, peerId: String(this.peerId) },
           online_at: new Date().toISOString(),
           sessionId: this.sessionId,
