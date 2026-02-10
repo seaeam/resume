@@ -15,7 +15,7 @@ import useResumeStore from '@/store/resume/form'
 const dateEntryOptions: DateEntry[] = ['不填', '随时到岗', '15天内', '1个月内', '2个月内', '3个月内', '到岗时间另行商议']
 
 function JobIntentForm({ className }: { className?: string }) {
-  const jobIntent = useResumeStore(state => state.jobIntent)
+  const jobIntent = useResumeStore(state => state.job_intent)
   const updateForm = useResumeStore(state => state.updateForm)
 
   const form = useForm({
@@ -27,7 +27,7 @@ function JobIntentForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('jobIntent', value)
+      updateForm('job_intent', value)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

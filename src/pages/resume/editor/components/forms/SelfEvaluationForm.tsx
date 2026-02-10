@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 
 function SelfEvaluationForm({ className }: { className?: string }) {
-  const selfEvaluation = useResumeStore(state => state.selfEvaluation)
+  const selfEvaluation = useResumeStore(state => state.self_evaluation)
   const updateForm = useResumeStore(state => state.updateForm)
 
   const form = useForm({
@@ -24,7 +24,7 @@ function SelfEvaluationForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('selfEvaluation', value as ShallowPartial<SelfEvaluationFormType>)
+      updateForm('self_evaluation', value as ShallowPartial<SelfEvaluationFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

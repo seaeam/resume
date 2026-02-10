@@ -25,7 +25,7 @@ import useResumeStore from '@/store/resume/form'
 const degreeOptions: Degree[] = ['不填', '初中', '高中', '中专', '大专', '本科', '学士', '硕士', '博士', 'MBA', 'EMBA', '其他']
 
 function EduBackgroundForm({ className }: { className?: string }) {
-  const eduBackground = useResumeStore(state => state.eduBackground)
+  const eduBackground = useResumeStore(state => state.edu_background)
   const [isUptoNow, setIsUptoNow] = useState(() => eduBackground.items?.some(item => item.duration?.[1] === '至今') || false)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
@@ -46,7 +46,7 @@ function EduBackgroundForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('eduBackground', value as ShallowPartial<EduBackgroundFormType>)
+      updateForm('edu_background', value as ShallowPartial<EduBackgroundFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

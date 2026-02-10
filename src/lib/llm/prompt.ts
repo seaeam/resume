@@ -16,9 +16,9 @@ const prompt = `
    - fixChecklist[*].id 也必须是 UUIDv4。
 7) 建议可落地规则（解决你“after 全是 null”的问题）：
    - 只有当“必须用户提供真实值且无法从输入推断/给模板”时，才允许用 fill_field，并且 after 必须为 null。
-   - 对于可改写的文本字段（eduInfo/workInfo/projectInfo/selfEvaluation/honorsCertificates.description），必须优先使用 replace_text，并给出 after（html_string，不得为 null）。
+   - 对于可改写的文本字段（eduInfo/workInfo/projectInfo/selfEvaluation/honors_certificates.description），必须优先使用 replace_text，并给出 after（html_string，不得为 null）。
    - 对于日期格式问题，必须优先使用 normalize_date，并给出 after（string_array，不得为 null）。
-   - 对于技能列表，如果输入为空但 jobIntent.jobIntent 存在，允许给出“候选技能模板”作为 after（object_array，不得为 null），并在 reason 中明确“请按真实掌握情况删改”，不得假装这些技能已被用户掌握。
+   - 对于技能列表，如果输入为空但 job_intent.jobIntent 存在，允许给出"候选技能模板"作为 after（object_array，不得为 null），并在 reason 中明确"请按真实掌握情况删改"，不得假装这些技能已被用户掌握。
 
 ========================
 1. locate.path 白名单（必须严格使用；不得输出白名单之外的 path）
@@ -32,52 +32,52 @@ locate.path 必须是以下之一（必须精确匹配，区分大小写）：
 - "basics.birthMonth"
 
 【求职意向】
-- "jobIntent.jobIntent"
-- "jobIntent.intentionalCity"
-- "jobIntent.expectedSalary"
-- "jobIntent.dateEntry"
+- "job_intent.jobIntent"
+- "job_intent.intentionalCity"
+- "job_intent.expectedSalary"
+- "job_intent.dateEntry"
 
 【教育背景】
-- "eduBackground.items[0].duration"
-- "eduBackground.items[0].eduInfo"
-- "eduBackground.items[0].schoolName"
-- "eduBackground.items[0].professional"
-- "eduBackground.items[0].degree"
+- "edu_background.items[0].duration"
+- "edu_background.items[0].eduInfo"
+- "edu_background.items[0].schoolName"
+- "edu_background.items[0].professional"
+- "edu_background.items[0].degree"
 
 【工作经历】
-- "workExperience.items[0].workDuration"
-- "workExperience.items[0].workInfo"
-- "workExperience.items[0].companyName"
-- "workExperience.items[0].position"
+- "work_experience.items[0].workDuration"
+- "work_experience.items[0].workInfo"
+- "work_experience.items[0].companyName"
+- "work_experience.items[0].position"
 
 【实习经历】
-- "internshipExperience.items[0].internshipDuration"
-- "internshipExperience.items[0].internshipInfo"
-- "internshipExperience.items[0].companyName"
-- "internshipExperience.items[0].position"
+- "internship_experience.items[0].internshipDuration"
+- "internship_experience.items[0].internshipInfo"
+- "internship_experience.items[0].companyName"
+- "internship_experience.items[0].position"
 
 【校园经历】
-- "campusExperience.items[0].duration"
-- "campusExperience.items[0].campusInfo"
-- "campusExperience.items[0].experienceName"
-- "campusExperience.items[0].role"
+- "campus_experience.items[0].duration"
+- "campus_experience.items[0].campusInfo"
+- "campus_experience.items[0].experienceName"
+- "campus_experience.items[0].role"
 
 【项目经历】
-- "projectExperience.items[0].projectDuration"
-- "projectExperience.items[0].projectInfo"
-- "projectExperience.items[0].projectName"
-- "projectExperience.items[0].participantRole"
+- "project_experience.items[0].projectDuration"
+- "project_experience.items[0].projectInfo"
+- "project_experience.items[0].projectName"
+- "project_experience.items[0].participantRole"
 
 【技能特长】
-- "skillSpecialty.skills"
-- "skillSpecialty.description"
+- "skill_specialty.skills"
+- "skill_specialty.description"
 
 【荣誉证书】
-- "honorsCertificates.description"
-- "honorsCertificates.certificates"
+- "honors_certificates.description"
+- "honors_certificates.certificates"
 
 【自我评价】
-- "selfEvaluation.content"
+- "self_evaluation.content"
 
 【兴趣爱好】
 - "hobbies.hobbies"
@@ -106,22 +106,22 @@ A) replace_text（valueType 必须为 html_string，after 不得为 null）
 - workInfo：输出 <ul><li>…</li></ul>，2~4 条；每条=动词 + 技术关键词 + 结果；
   若无数字，必须用“待补充占位符”，不得编造百分比/提升值。
 - projectInfo：必须按【背景/职责/技术/结果】结构输出；结果若无数据用占位符。
-- honorsCertificates.description / selfEvaluation.content：去重、突出与 jobIntent 匹配的能力点，不能空泛。
+- honorsCertificates.description / selfEvaluation.content：去重、突出与 job_intent 匹配的能力点，不能空泛。
 
 B) normalize_date（valueType 必须为 string_array，after 不得为 null）
 - after 形如 ["2024-07","至今"] 或 ["2020-03","2021-08"]
 
-C) replace_value（常用于 skillSpecialty.skills，valueType 必须为 object_array，after 不得为 null）
-- 若输入 skills 为空但 jobIntent.jobIntent 存在：给出“候选技能模板”，并在 reason 写明“按实际掌握删改”。
+C) replace_value（常用于 skill_specialty.skills，valueType 必须为 object_array，after 不得为 null）
+- 若输入 skills 为空但 job_intent.jobIntent 存在：给出"候选技能模板"，并在 reason 写明"按实际掌握删改"。
 
 D) fill_field（valueType 可为 string 或 string_array 或 object_array，但 after 必须为 null）
 - 只能用于必须用户提供真实值的字段（例如真实邮箱/电话/出生日期/缺失的起止时间）。
 - reason 必须具体说明需要补充什么。
 
 ========================
-【技能特长（skillSpecialty.skills）生成硬规则】（必须严格遵守）
+【技能特长（skill_specialty.skills）生成硬规则】（必须严格遵守）
 ========================
-当你需要对技能列表给出建议时（locate.path 必须为 "skillSpecialty.skills"），只能使用：
+当你需要对技能列表给出建议时（locate.path 必须为 "skill_specialty.skills"），只能使用：
 - kind = "replace_value"
 - valueType = "object_array"
 - after 必须是数组，且数组中每一项都必须严格为：
@@ -130,8 +130,8 @@ D) fill_field（valueType 可为 string 或 string_array 或 object_array，但 
 
 1) label 规则（必须）
 - label 必须是“具体技能关键词/技能组合”，不得为空，不得泛化为“个人信息/教育经历”等模块名。
-- label 应优先与求职意向 jobIntent.jobIntent 匹配：
-  - 若 jobIntent.jobIntent 包含“前端”，优先输出：JavaScript/TypeScript/React/工程化/性能优化/测试 等相关技能。
+- label 应优先与求职意向 job_intent.jobIntent 匹配：
+  - 若 job_intent.jobIntent 包含"前端"，优先输出：JavaScript/TypeScript/React/工程化/性能优化/测试 等相关技能。
 - label 尽量避免同义重复（例如 JS 与 JavaScript 视为重复，不要同时输出）。
 - 技能项数量：建议 5~8 项（必须能直接用于展示）。
 
@@ -139,18 +139,18 @@ D) fill_field（valueType 可为 string 或 string_array 或 object_array，但 
 - proficiencyLevel 必须且只能从以下枚举中选择其一（严格按字面输出，不得输出其它词）：
   ['一般', '良好', '熟练', '擅长', '精通']
 - 分配策略（必须遵守，避免乱给）：
-  - 若输入简历的 skillSpecialty.skills 中已存在该技能或同类技能，则沿用该技能的熟练度；
+  - 若输入简历的 skill_specialty.skills 中已存在该技能或同类技能，则沿用该技能的熟练度；
   - 若输入无法提供依据，默认只能使用 '一般' 或 '良好'（禁止凭空输出 '擅长'/'精通'）。
 
 3) displayType 规则（必须为下拉可选值）
 - displayType 必须且只能从以下枚举中选择其一（严格按字面输出）：
   ['text', 'percentage']
 - 默认策略（必须）：
-  - 若输入简历的 skillSpecialty.skills 中已存在 displayType，则对同类技能沿用该 displayType；
+  - 若输入简历的 skill_specialty.skills 中已存在 displayType，则对同类技能沿用该 displayType；
   - 若输入没有任何依据，统一输出 'percentage'（保证 UI 一致且可展示）。
 
 4) after 不能为空（关键）
-- 当 locate.path = "skillSpecialty.skills" 时，after 绝对不允许为 null；
+- 当 locate.path = "skill_specialty.skills" 时，after 绝对不允许为 null；
 - 即使输入 skills 为空，你也必须输出一组“可直接用”的技能对象数组（5~8 项），并让每项都包含合法的 proficiencyLevel 与 displayType。
 
 5) 输出示例（仅示例；实际内容必须结合输入，不得编造用户不会的技能）
@@ -163,7 +163,7 @@ after: [
 ]
 
 补充约束：
-- 如果你输出了 skillSpecialty.skills 的 replace_value 建议，那么对应 suggestion 的 before 必须来自输入的原始值（输入缺失则 before=null），after 必须按上述规则生成，不得为 null。
+- 如果你输出了 skill_specialty.skills 的 replace_value 建议，那么对应 suggestion 的 before 必须来自输入的原始值（输入缺失则 before=null），after 必须按上述规则生成，不得为 null。
 
 ========================
 【Evidence.locate 完整性硬规则】（必须严格遵守）
@@ -195,53 +195,53 @@ after: [
 - "basics.phone"       => sectionLabel="基本信息", fieldLabel="电话",     itemLabel=null
 - "basics.birthMonth"  => sectionLabel="基本信息", fieldLabel="出生日期", itemLabel=null
 
-2) jobIntent
-- "jobIntent.jobIntent"        => sectionLabel="求职意向", fieldLabel="意向岗位", itemLabel=null
-- "jobIntent.intentionalCity"  => sectionLabel="求职意向", fieldLabel="意向城市", itemLabel=null
-- "jobIntent.expectedSalary"   => sectionLabel="求职意向", fieldLabel="期望薪资", itemLabel=null
-- "jobIntent.dateEntry"        => sectionLabel="求职意向", fieldLabel="到岗时间", itemLabel=null
+2) job_intent
+- "job_intent.jobIntent"        => sectionLabel="求职意向", fieldLabel="意向岗位", itemLabel=null
+- "job_intent.intentionalCity"  => sectionLabel="求职意向", fieldLabel="意向城市", itemLabel=null
+- "job_intent.expectedSalary"   => sectionLabel="求职意向", fieldLabel="期望薪资", itemLabel=null
+- "job_intent.dateEntry"        => sectionLabel="求职意向", fieldLabel="到岗时间", itemLabel=null
 
-3) eduBackground.items[0].*
-- "eduBackground.items[0].schoolName"   => sectionLabel="教育背景", fieldLabel="学校",     itemLabel="教育 1"
-- "eduBackground.items[0].professional" => sectionLabel="教育背景", fieldLabel="专业",     itemLabel="教育 1"
-- "eduBackground.items[0].degree"       => sectionLabel="教育背景", fieldLabel="学历",     itemLabel="教育 1"
-- "eduBackground.items[0].duration"     => sectionLabel="教育背景", fieldLabel="时间",     itemLabel="教育 1"
-- "eduBackground.items[0].eduInfo"      => sectionLabel="教育背景", fieldLabel="教育描述", itemLabel="教育 1"
+3) edu_background.items[0].*
+- "edu_background.items[0].schoolName"   => sectionLabel="教育背景", fieldLabel="学校",     itemLabel="教育 1"
+- "edu_background.items[0].professional" => sectionLabel="教育背景", fieldLabel="专业",     itemLabel="教育 1"
+- "edu_background.items[0].degree"       => sectionLabel="教育背景", fieldLabel="学历",     itemLabel="教育 1"
+- "edu_background.items[0].duration"     => sectionLabel="教育背景", fieldLabel="时间",     itemLabel="教育 1"
+- "edu_background.items[0].eduInfo"      => sectionLabel="教育背景", fieldLabel="教育描述", itemLabel="教育 1"
 
-4) workExperience.items[0].*
-- "workExperience.items[0].companyName" => sectionLabel="工作经历", fieldLabel="公司",     itemLabel="工作 1"
-- "workExperience.items[0].position"    => sectionLabel="工作经历", fieldLabel="岗位",     itemLabel="工作 1"
-- "workExperience.items[0].workDuration"=> sectionLabel="工作经历", fieldLabel="时间",     itemLabel="工作 1"
-- "workExperience.items[0].workInfo"    => sectionLabel="工作经历", fieldLabel="工作描述", itemLabel="工作 1"
+4) work_experience.items[0].*
+- "work_experience.items[0].companyName" => sectionLabel="工作经历", fieldLabel="公司",     itemLabel="工作 1"
+- "work_experience.items[0].position"    => sectionLabel="工作经历", fieldLabel="岗位",     itemLabel="工作 1"
+- "work_experience.items[0].workDuration"=> sectionLabel="工作经历", fieldLabel="时间",     itemLabel="工作 1"
+- "work_experience.items[0].workInfo"    => sectionLabel="工作经历", fieldLabel="工作描述", itemLabel="工作 1"
 
-5) internshipExperience.items[0].*
-- "internshipExperience.items[0].companyName"       => sectionLabel="实习经历", fieldLabel="公司",     itemLabel="实习 1"
-- "internshipExperience.items[0].position"          => sectionLabel="实习经历", fieldLabel="岗位",     itemLabel="实习 1"
-- "internshipExperience.items[0].internshipDuration"=> sectionLabel="实习经历", fieldLabel="时间",     itemLabel="实习 1"
-- "internshipExperience.items[0].internshipInfo"    => sectionLabel="实习经历", fieldLabel="实习描述", itemLabel="实习 1"
+5) internship_experience.items[0].*
+- "internship_experience.items[0].companyName"       => sectionLabel="实习经历", fieldLabel="公司",     itemLabel="实习 1"
+- "internship_experience.items[0].position"          => sectionLabel="实习经历", fieldLabel="岗位",     itemLabel="实习 1"
+- "internship_experience.items[0].internshipDuration"=> sectionLabel="实习经历", fieldLabel="时间",     itemLabel="实习 1"
+- "internship_experience.items[0].internshipInfo"    => sectionLabel="实习经历", fieldLabel="实习描述", itemLabel="实习 1"
 
-6) campusExperience.items[0].*
-- "campusExperience.items[0].experienceName" => sectionLabel="校园经历", fieldLabel="经历名称", itemLabel="校园 1"
-- "campusExperience.items[0].role"           => sectionLabel="校园经历", fieldLabel="角色",     itemLabel="校园 1"
-- "campusExperience.items[0].duration"       => sectionLabel="校园经历", fieldLabel="时间",     itemLabel="校园 1"
-- "campusExperience.items[0].campusInfo"     => sectionLabel="校园经历", fieldLabel="经历描述", itemLabel="校园 1"
+6) campus_experience.items[0].*
+- "campus_experience.items[0].experienceName" => sectionLabel="校园经历", fieldLabel="经历名称", itemLabel="校园 1"
+- "campus_experience.items[0].role"           => sectionLabel="校园经历", fieldLabel="角色",     itemLabel="校园 1"
+- "campus_experience.items[0].duration"       => sectionLabel="校园经历", fieldLabel="时间",     itemLabel="校园 1"
+- "campus_experience.items[0].campusInfo"     => sectionLabel="校园经历", fieldLabel="经历描述", itemLabel="校园 1"
 
-7) projectExperience.items[0].*
-- "projectExperience.items[0].projectName"      => sectionLabel="项目经历", fieldLabel="项目名称", itemLabel="项目 1"
-- "projectExperience.items[0].participantRole"  => sectionLabel="项目经历", fieldLabel="角色",     itemLabel="项目 1"
-- "projectExperience.items[0].projectDuration"  => sectionLabel="项目经历", fieldLabel="时间",     itemLabel="项目 1"
-- "projectExperience.items[0].projectInfo"      => sectionLabel="项目经历", fieldLabel="项目描述", itemLabel="项目 1"
+7) project_experience.items[0].*
+- "project_experience.items[0].projectName"      => sectionLabel="项目经历", fieldLabel="项目名称", itemLabel="项目 1"
+- "project_experience.items[0].participantRole"  => sectionLabel="项目经历", fieldLabel="角色",     itemLabel="项目 1"
+- "project_experience.items[0].projectDuration"  => sectionLabel="项目经历", fieldLabel="时间",     itemLabel="项目 1"
+- "project_experience.items[0].projectInfo"      => sectionLabel="项目经历", fieldLabel="项目描述", itemLabel="项目 1"
 
-8) skillSpecialty
-- "skillSpecialty.skills"       => sectionLabel="技能特长", fieldLabel="技能列表", itemLabel=null
-- "skillSpecialty.description"  => sectionLabel="技能特长", fieldLabel="技能说明", itemLabel=null
+8) skill_specialty
+- "skill_specialty.skills"       => sectionLabel="技能特长", fieldLabel="技能列表", itemLabel=null
+- "skill_specialty.description"  => sectionLabel="技能特长", fieldLabel="技能说明", itemLabel=null
 
-9) honorsCertificates
-- "honorsCertificates.certificates" => sectionLabel="荣誉证书", fieldLabel="证书列表", itemLabel=null
-- "honorsCertificates.description"  => sectionLabel="荣誉证书", fieldLabel="证书描述", itemLabel=null
+9) honors_certificates
+- "honors_certificates.certificates" => sectionLabel="荣誉证书", fieldLabel="证书列表", itemLabel=null
+- "honors_certificates.description"  => sectionLabel="荣誉证书", fieldLabel="证书描述", itemLabel=null
 
-10) selfEvaluation
-- "selfEvaluation.content" => sectionLabel="自我评价", fieldLabel="自我评价", itemLabel=null
+10) self_evaluation
+- "self_evaluation.content" => sectionLabel="自我评价", fieldLabel="自我评价", itemLabel=null
 
 11) hobbies
 - "hobbies.hobbies"      => sectionLabel="兴趣爱好", fieldLabel="爱好列表", itemLabel=null
@@ -288,7 +288,7 @@ after: [
   - 面试追问风险（没有职责边界/没有技术细节/没有结果证据）
 
 4) 项目建议必须从面试官/HR 视角出发（强制、可面试可追问）
-当 locate.path = "projectExperience.items[0].projectInfo" 或涉及项目字段时：
+当 locate.path = "project_experience.items[0].projectInfo" 或涉及项目字段时：
 - replace_text 的 after 必须按固定结构输出（不得省略）：
   【背景/目标】→【职责/范围】→【技术/难点/决策】→【结果/影响/证据】
 - 每个部分的硬性要求：
@@ -307,7 +307,7 @@ after: [
 
 硬性禁止：
 - 禁止在任何用户可读文案中出现 JSON/代码路径或索引表达，例如：
-  "eduBackground.items[0]"、"workExperience.items[0]"、"skillSpecialty.skills"、"basics.email"、"items[0]"、"path:" 等。
+  "edu_background.items[0]"、"work_experience.items[0]"、"skill_specialty.skills"、"basics.email"、"items[0]"、"path:" 等。
 - 禁止用“字段名/变量名”直接描述问题（如 schoolName/professional/degree），除非同时给出清晰中文含义。
 
 必须改用自然语言 + UI 位置描述：
@@ -317,7 +317,7 @@ after: [
   ✅ 正确写法：
   “教育背景（教育 1）的【学校/专业/学历】为空，目前只有‘教育描述’和‘时间’，ATS 很难提取结构化信息（学校、专业、学历），会影响教育背景匹配与筛选。”
   ❌ 错误写法：
-  “eduBackground.items[0] 中缺少 schoolName、professional、degree 字段……”
+  "edu_background.items[0] 中缺少 schoolName、professional、degree 字段……"
 
 生成规则（强制）：
 - 当你需要指向具体条目时，用 itemLabel（如“教育 1 / 工作 1 / 项目 1”），不要用 items[0]。

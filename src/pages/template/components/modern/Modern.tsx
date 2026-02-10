@@ -144,7 +144,7 @@ function Entry({ title, subtitle, duration, content }: {
 
 function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number }) {
   const { theme, font, spacing } = useResumeContext()
-  const { basics, jobIntent } = data
+  const { basics, job_intent } = data
   const infoFields = [
     age && { icon: '年龄', value: `${age}岁` },
     basics.gender !== '不填' && { icon: '性别', value: basics.gender },
@@ -175,34 +175,34 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
             {basics.name || '姓名'}
           </h1>
 
-          {jobIntent && (
+          {job_intent && (
             <div
               className="flex flex-wrap items-center gap-3 mb-4 pb-4 border-b border-white/30"
               style={{ fontSize: font.jobIntentSize, fontWeight: font.mediumWeight }}
             >
               <div className="flex items-center gap-2">
                 <span>求职意向:</span>
-                <span>{jobIntent.jobIntent}</span>
+                <span>{job_intent.jobIntent}</span>
               </div>
-              {jobIntent.intentionalCity && (
+              {job_intent.intentionalCity && (
                 <>
                   <span>|</span>
-                  <span>{jobIntent.intentionalCity}</span>
+                  <span>{job_intent.intentionalCity}</span>
                 </>
               )}
-              {jobIntent.expectedSalary && (
+              {job_intent.expectedSalary && (
                 <>
                   <span>|</span>
                   <span>
-                    {jobIntent.expectedSalary}
+                    {job_intent.expectedSalary}
                     /月
                   </span>
                 </>
               )}
-              {jobIntent.dateEntry && jobIntent.dateEntry !== '不填' && (
+              {job_intent.dateEntry && job_intent.dateEntry !== '不填' && (
                 <>
                   <span>|</span>
-                  <span>{jobIntent.dateEntry}</span>
+                  <span>{job_intent.dateEntry}</span>
                 </>
               )}
             </div>
@@ -249,21 +249,21 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
 
 function ApplicationInfoModule() {
   const { theme, font, spacing } = useResumeContext()
-  const { applicationInfo } = useResumeStore()
+  const { application_info } = useResumeStore()
 
   return (
     <Section title="报考信息" icon={<Target size={20} />}>
       <div className="modern-card" style={{ padding: spacing.itemSpacing }}>
-        {applicationInfo.applicationSchool && (
+        {application_info.applicationSchool && (
           <div className="modern-info-row" style={{ fontSize: font.contentSize, lineHeight: spacing.lineHeight }}>
             <span className="modern-info-label" style={{ color: theme.textSecondary }}>报考院校：</span>
-            <span style={{ fontWeight: font.mediumWeight, color: theme.textPrimary }}>{applicationInfo.applicationSchool}</span>
+            <span style={{ fontWeight: font.mediumWeight, color: theme.textPrimary }}>{application_info.applicationSchool}</span>
           </div>
         )}
-        {applicationInfo.applicationMajor && (
+        {application_info.applicationMajor && (
           <div className="modern-info-row" style={{ fontSize: font.contentSize, lineHeight: spacing.lineHeight }}>
             <span className="modern-info-label" style={{ color: theme.textSecondary }}>报考专业：</span>
-            <span style={{ fontWeight: font.mediumWeight, color: theme.textPrimary }}>{applicationInfo.applicationMajor}</span>
+            <span style={{ fontWeight: font.mediumWeight, color: theme.textPrimary }}>{application_info.applicationMajor}</span>
           </div>
         )}
       </div>
@@ -272,10 +272,10 @@ function ApplicationInfoModule() {
 }
 
 function EduBackgroundModule() {
-  const { eduBackground } = useResumeStore()
+  const { edu_background } = useResumeStore()
   return (
     <Section title="教育背景" icon={<GraduationCap size={20} />}>
-      {eduBackground.items.map(item => (
+      {edu_background.items.map(item => (
         <Entry
           key={`${item.schoolName}-${item.professional}`}
           title={item.schoolName}
@@ -289,10 +289,10 @@ function EduBackgroundModule() {
 }
 
 function WorkExperienceModule() {
-  const { workExperience } = useResumeStore()
+  const { work_experience } = useResumeStore()
   return (
     <Section title="工作经历" icon={<Briefcase size={20} />}>
-      {workExperience.items.map(item => (
+      {work_experience.items.map(item => (
         <Entry
           key={`${item.companyName}-${item.position}`}
           title={item.companyName}
@@ -306,10 +306,10 @@ function WorkExperienceModule() {
 }
 
 function InternshipExperienceModule() {
-  const { internshipExperience } = useResumeStore()
+  const { internship_experience } = useResumeStore()
   return (
     <Section title="实习经验" icon={<Rocket size={20} />}>
-      {internshipExperience.items.map(item => (
+      {internship_experience.items.map(item => (
         <Entry
           key={`${item.companyName}-${item.position}`}
           title={item.companyName}
@@ -323,10 +323,10 @@ function InternshipExperienceModule() {
 }
 
 function ProjectExperienceModule() {
-  const { projectExperience } = useResumeStore()
+  const { project_experience } = useResumeStore()
   return (
     <Section title="项目经验" icon={<BookOpen size={20} />}>
-      {projectExperience.items.map(item => (
+      {project_experience.items.map(item => (
         <Entry
           key={`${item.projectName}-${item.participantRole}`}
           title={item.projectName}
@@ -340,10 +340,10 @@ function ProjectExperienceModule() {
 }
 
 function CampusExperienceModule() {
-  const { campusExperience } = useResumeStore()
+  const { campus_experience } = useResumeStore()
   return (
     <Section title="校园经历" icon={<Users size={20} />}>
-      {campusExperience.items.map(item => (
+      {campus_experience.items.map(item => (
         <Entry
           key={`${item.experienceName}-${item.role}`}
           title={item.experienceName}
@@ -358,18 +358,18 @@ function CampusExperienceModule() {
 
 function SkillSpecialtyModule() {
   const { theme, font, spacing } = useResumeContext()
-  const { skillSpecialty } = useResumeStore()
+  const { skill_specialty } = useResumeStore()
 
   return (
     <Section title="技能特长" icon={<Medal size={20} />}>
-      {skillSpecialty.description && (
+      {skill_specialty.description && (
         <div className="prose" style={{ padding: spacing.itemSpacing }}>
-          {parser(skillSpecialty.description)}
+          {parser(skill_specialty.description)}
         </div>
       )}
-      {skillSpecialty.skills?.length > 0 && (
+      {skill_specialty.skills?.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
-          {skillSpecialty.skills.map((skill) => {
+          {skill_specialty.skills.map((skill) => {
             const percentage = skillProficiencyMap[skill.proficiencyLevel] || 50
             return (
               <div key={skill.label} className="flex flex-col gap-2">
@@ -406,18 +406,18 @@ function SkillSpecialtyModule() {
 
 function HonorsCertificatesModule() {
   const { theme, font, spacing } = useResumeContext()
-  const { honorsCertificates } = useResumeStore()
+  const { honors_certificates } = useResumeStore()
 
   return (
     <Section title="荣誉证书" icon={<Trophy size={20} />}>
-      {honorsCertificates.description && (
+      {honors_certificates.description && (
         <div className="prose" style={{ padding: spacing.itemSpacing }}>
-          {parser(honorsCertificates.description)}
+          {parser(honors_certificates.description)}
         </div>
       )}
-      {honorsCertificates.certificates?.length > 0 && (
+      {honors_certificates.certificates?.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {honorsCertificates.certificates.map(cert => (
+          {honors_certificates.certificates.map(cert => (
             <Badge
               key={cert.name}
               variant="outline"
@@ -438,11 +438,11 @@ function HonorsCertificatesModule() {
 
 function SelfEvaluationModule() {
   const { spacing } = useResumeContext()
-  const { selfEvaluation } = useResumeStore()
+  const { self_evaluation } = useResumeStore()
   return (
     <Section title="自我评价" icon={<Sparkles size={20} />}>
       <div className="prose" style={{ padding: spacing.itemSpacing }}>
-        {parser(selfEvaluation.content)}
+        {parser(self_evaluation.content)}
       </div>
     </Section>
   )
@@ -482,17 +482,17 @@ function HobbiesModule() {
 
 const MODULE_COMPONENTS: Record<ORDERType, React.ComponentType<any>> = {
   basics: BasicsModule,
-  applicationInfo: ApplicationInfoModule,
-  eduBackground: EduBackgroundModule,
-  workExperience: WorkExperienceModule,
-  internshipExperience: InternshipExperienceModule,
-  projectExperience: ProjectExperienceModule,
-  campusExperience: CampusExperienceModule,
-  skillSpecialty: SkillSpecialtyModule,
-  honorsCertificates: HonorsCertificatesModule,
-  selfEvaluation: SelfEvaluationModule,
+  application_info: ApplicationInfoModule,
+  edu_background: EduBackgroundModule,
+  work_experience: WorkExperienceModule,
+  internship_experience: InternshipExperienceModule,
+  project_experience: ProjectExperienceModule,
+  campus_experience: CampusExperienceModule,
+  skill_specialty: SkillSpecialtyModule,
+  honors_certificates: HonorsCertificatesModule,
+  self_evaluation: SelfEvaluationModule,
   hobbies: HobbiesModule,
-  jobIntent: () => null,
+  job_intent: () => null,
 } as const
 
 interface ModernResumeContentProps {

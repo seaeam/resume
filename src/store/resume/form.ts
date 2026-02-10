@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import { create } from 'zustand'
 import { DocumentManager } from '@/lib/automerge/document-manager'
 import { getOfflineResumeById, isOfflineResumeId, updateOfflineResume } from '@/lib/offline-resume-manager'
-import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE } from '@/lib/schema'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility } from '@/lib/schema'
 import { updateResumeConfig } from '@/lib/supabase/resume'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { getTimestamp } from '@/utils/date'
@@ -15,16 +15,16 @@ import useCurrentResumeStore from './current'
 // 表单数据映射
 interface FormDataMap {
   basics: BasicFormType
-  jobIntent: JobIntentFormType
-  applicationInfo: ApplicationInfoFormType
-  eduBackground: EduBackgroundFormType
-  workExperience: WorkExperienceFormType
-  internshipExperience: InternshipExperienceFormType
-  campusExperience: CampusExperienceFormType
-  projectExperience: ProjectExperienceFormType
-  skillSpecialty: SkillSpecialtyFormType
-  honorsCertificates: HonorsCertificatesFormType
-  selfEvaluation: SelfEvaluationFormType
+  job_intent: JobIntentFormType
+  application_info: ApplicationInfoFormType
+  edu_background: EduBackgroundFormType
+  work_experience: WorkExperienceFormType
+  internship_experience: InternshipExperienceFormType
+  campus_experience: CampusExperienceFormType
+  project_experience: ProjectExperienceFormType
+  skill_specialty: SkillSpecialtyFormType
+  honors_certificates: HonorsCertificatesFormType
+  self_evaluation: SelfEvaluationFormType
   hobbies: HobbiesFormType
 }
 
@@ -129,18 +129,18 @@ function applyResumeChange(
 
 const useResumeStore = create<ResumeState>()((set, get) => ({
   basics: DEFAULT_BASICS,
-  jobIntent: DEFAULT_JOB_INTENT,
+  job_intent: DEFAULT_JOB_INTENT,
   order: DEFAULT_ORDER,
   activeTabId: 'basics',
-  applicationInfo: DEFAULT_APPLICATION_INFO,
-  eduBackground: DEFAULT_EDU_BACKGROUND,
-  workExperience: DEFAULT_WORK_EXPERIENCE,
-  internshipExperience: DEFAULT_INTERNSHIP_EXPERIENCE,
-  campusExperience: DEFAULT_CAMPUS_EXPERIENCE,
-  projectExperience: DEFAULT_PROJECT_EXPERIENCE,
-  skillSpecialty: DEFAULT_SKILL_SPECIALTY,
-  honorsCertificates: DEFAULT_HONORS_CERTIFICATES,
-  selfEvaluation: DEFAULT_SELF_EVALUATION,
+  application_info: DEFAULT_APPLICATION_INFO,
+  edu_background: DEFAULT_EDU_BACKGROUND,
+  work_experience: DEFAULT_WORK_EXPERIENCE,
+  internship_experience: DEFAULT_INTERNSHIP_EXPERIENCE,
+  campus_experience: DEFAULT_CAMPUS_EXPERIENCE,
+  project_experience: DEFAULT_PROJECT_EXPERIENCE,
+  skill_specialty: DEFAULT_SKILL_SPECIALTY,
+  honors_certificates: DEFAULT_HONORS_CERTIFICATES,
+  self_evaluation: DEFAULT_SELF_EVALUATION,
   hobbies: DEFAULT_HOBBIES,
   visibility: DEFAULT_VISIBILITY,
   type: 'basic',
@@ -159,16 +159,16 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
 
   getResumeFormData: () => ({
     basics: get().basics,
-    jobIntent: get().jobIntent,
-    applicationInfo: get().applicationInfo,
-    eduBackground: get().eduBackground,
-    workExperience: get().workExperience,
-    internshipExperience: get().internshipExperience,
-    campusExperience: get().campusExperience,
-    projectExperience: get().projectExperience,
-    skillSpecialty: get().skillSpecialty,
-    honorsCertificates: get().honorsCertificates,
-    selfEvaluation: get().selfEvaluation,
+    job_intent: get().job_intent,
+    application_info: get().application_info,
+    edu_background: get().edu_background,
+    work_experience: get().work_experience,
+    internship_experience: get().internship_experience,
+    campus_experience: get().campus_experience,
+    project_experience: get().project_experience,
+    skill_specialty: get().skill_specialty,
+    honors_certificates: get().honors_certificates,
+    self_evaluation: get().self_evaluation,
     hobbies: get().hobbies,
   }),
 
@@ -402,16 +402,16 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   resetToDefaults: () => {
     const defaultState = {
       basics: DEFAULT_BASICS,
-      jobIntent: DEFAULT_JOB_INTENT,
-      applicationInfo: DEFAULT_APPLICATION_INFO,
-      eduBackground: DEFAULT_EDU_BACKGROUND,
-      workExperience: DEFAULT_WORK_EXPERIENCE,
-      internshipExperience: DEFAULT_INTERNSHIP_EXPERIENCE,
-      campusExperience: DEFAULT_CAMPUS_EXPERIENCE,
-      projectExperience: DEFAULT_PROJECT_EXPERIENCE,
-      skillSpecialty: DEFAULT_SKILL_SPECIALTY,
-      honorsCertificates: DEFAULT_HONORS_CERTIFICATES,
-      selfEvaluation: DEFAULT_SELF_EVALUATION,
+      job_intent: DEFAULT_JOB_INTENT,
+      application_info: DEFAULT_APPLICATION_INFO,
+      edu_background: DEFAULT_EDU_BACKGROUND,
+      work_experience: DEFAULT_WORK_EXPERIENCE,
+      internship_experience: DEFAULT_INTERNSHIP_EXPERIENCE,
+      campus_experience: DEFAULT_CAMPUS_EXPERIENCE,
+      project_experience: DEFAULT_PROJECT_EXPERIENCE,
+      skill_specialty: DEFAULT_SKILL_SPECIALTY,
+      honors_certificates: DEFAULT_HONORS_CERTIFICATES,
+      self_evaluation: DEFAULT_SELF_EVALUATION,
       hobbies: DEFAULT_HOBBIES,
       order: DEFAULT_ORDER,
       visibility: DEFAULT_VISIBILITY,
@@ -480,19 +480,19 @@ function mapDocToState(doc: Partial<AutomergeResumeDocument> | null | undefined)
 
   return {
     basics: getVal('basics', DEFAULT_BASICS),
-    jobIntent: getVal('jobIntent', DEFAULT_JOB_INTENT, 'job_intent'),
-    applicationInfo: getVal('applicationInfo', DEFAULT_APPLICATION_INFO, 'application_info'),
-    eduBackground: getVal('eduBackground', DEFAULT_EDU_BACKGROUND, 'edu_background'),
-    workExperience: getVal('workExperience', DEFAULT_WORK_EXPERIENCE, 'work_experience'),
-    internshipExperience: getVal('internshipExperience', DEFAULT_INTERNSHIP_EXPERIENCE, 'internship_experience'),
-    campusExperience: getVal('campusExperience', DEFAULT_CAMPUS_EXPERIENCE, 'campus_experience'),
-    projectExperience: getVal('projectExperience', DEFAULT_PROJECT_EXPERIENCE, 'project_experience'),
-    skillSpecialty: getVal('skillSpecialty', DEFAULT_SKILL_SPECIALTY, 'skill_specialty'),
-    honorsCertificates: getVal('honorsCertificates', DEFAULT_HONORS_CERTIFICATES, 'honors_certificates'),
-    selfEvaluation: getVal('selfEvaluation', DEFAULT_SELF_EVALUATION, 'self_evaluation'),
+    job_intent: getVal('job_intent', DEFAULT_JOB_INTENT, 'jobIntent'),
+    application_info: getVal('application_info', DEFAULT_APPLICATION_INFO, 'applicationInfo'),
+    edu_background: getVal('edu_background', DEFAULT_EDU_BACKGROUND, 'eduBackground'),
+    work_experience: getVal('work_experience', DEFAULT_WORK_EXPERIENCE, 'workExperience'),
+    internship_experience: getVal('internship_experience', DEFAULT_INTERNSHIP_EXPERIENCE, 'internshipExperience'),
+    campus_experience: getVal('campus_experience', DEFAULT_CAMPUS_EXPERIENCE, 'campusExperience'),
+    project_experience: getVal('project_experience', DEFAULT_PROJECT_EXPERIENCE, 'projectExperience'),
+    skill_specialty: getVal('skill_specialty', DEFAULT_SKILL_SPECIALTY, 'skillSpecialty'),
+    honors_certificates: getVal('honors_certificates', DEFAULT_HONORS_CERTIFICATES, 'honorsCertificates'),
+    self_evaluation: getVal('self_evaluation', DEFAULT_SELF_EVALUATION, 'selfEvaluation'),
     hobbies: getVal('hobbies', DEFAULT_HOBBIES),
-    order: getVal('order', DEFAULT_ORDER),
-    visibility: getVal('visibility', DEFAULT_VISIBILITY),
+    order: migrateOrder(getVal('order', DEFAULT_ORDER)),
+    visibility: migrateVisibility(getVal('visibility', DEFAULT_VISIBILITY)),
     type: source?.type || 'basic',
   }
 }
@@ -500,16 +500,16 @@ function mapDocToState(doc: Partial<AutomergeResumeDocument> | null | undefined)
 function buildOfflinePayload(state: ResumeState) {
   return {
     basics: state.basics,
-    jobIntent: state.jobIntent,
-    applicationInfo: state.applicationInfo,
-    eduBackground: state.eduBackground,
-    workExperience: state.workExperience,
-    internshipExperience: state.internshipExperience,
-    campusExperience: state.campusExperience,
-    projectExperience: state.projectExperience,
-    skillSpecialty: state.skillSpecialty,
-    honorsCertificates: state.honorsCertificates,
-    selfEvaluation: state.selfEvaluation,
+    job_intent: state.job_intent,
+    application_info: state.application_info,
+    edu_background: state.edu_background,
+    work_experience: state.work_experience,
+    internship_experience: state.internship_experience,
+    campus_experience: state.campus_experience,
+    project_experience: state.project_experience,
+    skill_specialty: state.skill_specialty,
+    honors_certificates: state.honors_certificates,
+    self_evaluation: state.self_evaluation,
     hobbies: state.hobbies,
     order: state.order,
     visibility: state.visibility,

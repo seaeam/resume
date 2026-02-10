@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
+import { getFontFamilyCSS, migrateOrder, migrateVisibility, themeColorMap } from '@/lib/schema'
 import ResumeWrapper from '@/pages/resume/editor/components/preview/ResumeWrapper'
 import resumeComponents from '@/pages/template/components'
 import BasicResume from '@/pages/template/components/basic/Basic'
@@ -265,22 +265,23 @@ function ResumePreviewCard({
 
     useResumeStore.setState({
       basics: data.basics ?? {},
-      jobIntent: data.jobIntent ?? {},
-      eduBackground: normalize(data.eduBackground),
-      workExperience: normalize(data.workExperience),
-      internshipExperience: normalize(data.internshipExperience),
-      projectExperience: normalize(data.projectExperience),
-      campusExperience: normalize(data.campusExperience),
-      skillSpecialty: data.skillSpecialty ?? {},
-      honorsCertificates: normalize(data.honorsCertificates),
-      selfEvaluation: data.selfEvaluation && typeof data.selfEvaluation === 'object' && 'content' in data.selfEvaluation
-        ? data.selfEvaluation
-        : { content: String(data.selfEvaluation ?? '') },
+      job_intent: data.job_intent ?? data.jobIntent ?? {},
+      application_info: data.application_info ?? data.applicationInfo ?? {},
+      edu_background: normalize(data.edu_background ?? data.eduBackground),
+      work_experience: normalize(data.work_experience ?? data.workExperience),
+      internship_experience: normalize(data.internship_experience ?? data.internshipExperience),
+      project_experience: normalize(data.project_experience ?? data.projectExperience),
+      campus_experience: normalize(data.campus_experience ?? data.campusExperience),
+      skill_specialty: data.skill_specialty ?? data.skillSpecialty ?? {},
+      honors_certificates: normalize(data.honors_certificates ?? data.honorsCertificates),
+      self_evaluation: (data.self_evaluation ?? data.selfEvaluation) && typeof (data.self_evaluation ?? data.selfEvaluation) === 'object' && 'content' in (data.self_evaluation ?? data.selfEvaluation)
+        ? (data.self_evaluation ?? data.selfEvaluation)
+        : { content: String(data.self_evaluation ?? data.selfEvaluation ?? '') },
       hobbies: data.hobbies && typeof data.hobbies === 'object' && 'description' in data.hobbies
         ? data.hobbies
         : { description: '', hobbies: [] },
-      order: data.order ?? [],
-      visibility: data.visibility ?? {},
+      order: migrateOrder(data.order ?? []),
+      visibility: migrateVisibility(data.visibility ?? {}),
       type: data.type ?? 'basic',
     })
     if (data.config) {

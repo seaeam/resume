@@ -29,7 +29,7 @@ const displayTypes: { value: DisplayType, label: string }[] = [
 ]
 
 function SkillSpecialtyForm({ className }: { className?: string }) {
-  const skillSpecialty = useResumeStore(state => state.skillSpecialty)
+  const skillSpecialty = useResumeStore(state => state.skill_specialty)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
   const [customSkillInput, setCustomSkillInput] = useState('')
@@ -51,7 +51,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('skillSpecialty', value as ShallowPartial<SkillSpecialtyFormType>)
+      updateForm('skill_specialty', value as ShallowPartial<SkillSpecialtyFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

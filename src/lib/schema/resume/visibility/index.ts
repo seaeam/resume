@@ -10,31 +10,31 @@ type VisibilityForms = Omit<
 >
 
 export const visibilityFormsSchema = z.object<VisibilityForms>({
-  jobIntent: z.boolean(),
-  applicationInfo: z.boolean(),
-  eduBackground: z.boolean(),
-  workExperience: z.boolean(),
-  internshipExperience: z.boolean(),
-  campusExperience: z.boolean(),
-  projectExperience: z.boolean(),
-  skillSpecialty: z.boolean(),
-  honorsCertificates: z.boolean(),
-  selfEvaluation: z.boolean(),
+  job_intent: z.boolean(),
+  application_info: z.boolean(),
+  edu_background: z.boolean(),
+  work_experience: z.boolean(),
+  internship_experience: z.boolean(),
+  campus_experience: z.boolean(),
+  project_experience: z.boolean(),
+  skill_specialty: z.boolean(),
+  honors_certificates: z.boolean(),
+  self_evaluation: z.boolean(),
   hobbies: z.boolean(),
 })
 
 export type VisibilityFormType = z.infer<typeof visibilityFormsSchema>
 
 export const DEFAULT_VISIBILITY: VisibilityFormType = {
-  jobIntent: false,
-  applicationInfo: true,
-  eduBackground: false,
-  workExperience: false,
-  internshipExperience: false,
-  campusExperience: false,
-  projectExperience: false,
-  skillSpecialty: false,
-  honorsCertificates: false,
-  selfEvaluation: false,
+  job_intent: false,
+  application_info: true,
+  edu_background: false,
+  work_experience: false,
+  internship_experience: false,
+  campus_experience: false,
+  project_experience: false,
+  skill_specialty: false,
+  honors_certificates: false,
+  self_evaluation: false,
   hobbies: false,
 }

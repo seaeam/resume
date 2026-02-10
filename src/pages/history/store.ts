@@ -2,6 +2,7 @@ import type { DiffResult, HistoryEntry, MilestoneInfo, ResumeInfo } from './type
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { getAllOfflineResumes } from '@/lib/offline-resume-manager'
+import { migrateOrder, migrateVisibility } from '@/lib/schema'
 import { getAllResumesFromUser } from '@/lib/supabase/resume/form'
 import { getCurrentUser } from '@/lib/supabase/user'
 import useResumeConfigStore from '@/store/resume/config'
@@ -262,18 +263,18 @@ const useHistoryStore = create<HistoryState>()((set, get) => ({
       const currentFormState = useResumeStore.getState()
       useResumeStore.setState({
         basics: snapshot.basics ?? currentFormState.basics,
-        jobIntent: snapshot.jobIntent ?? currentFormState.jobIntent,
-        eduBackground: snapshot.eduBackground ?? currentFormState.eduBackground,
-        workExperience: snapshot.workExperience ?? currentFormState.workExperience,
-        internshipExperience: snapshot.internshipExperience ?? currentFormState.internshipExperience,
-        projectExperience: snapshot.projectExperience ?? currentFormState.projectExperience,
-        campusExperience: snapshot.campusExperience ?? currentFormState.campusExperience,
-        skillSpecialty: snapshot.skillSpecialty ?? currentFormState.skillSpecialty,
-        honorsCertificates: snapshot.honorsCertificates ?? currentFormState.honorsCertificates,
-        selfEvaluation: snapshot.selfEvaluation ?? currentFormState.selfEvaluation,
+        job_intent: snapshot.job_intent ?? snapshot.jobIntent ?? currentFormState.job_intent,
+        edu_background: snapshot.edu_background ?? snapshot.eduBackground ?? currentFormState.edu_background,
+        work_experience: snapshot.work_experience ?? snapshot.workExperience ?? currentFormState.work_experience,
+        internship_experience: snapshot.internship_experience ?? snapshot.internshipExperience ?? currentFormState.internship_experience,
+        project_experience: snapshot.project_experience ?? snapshot.projectExperience ?? currentFormState.project_experience,
+        campus_experience: snapshot.campus_experience ?? snapshot.campusExperience ?? currentFormState.campus_experience,
+        skill_specialty: snapshot.skill_specialty ?? snapshot.skillSpecialty ?? currentFormState.skill_specialty,
+        honors_certificates: snapshot.honors_certificates ?? snapshot.honorsCertificates ?? currentFormState.honors_certificates,
+        self_evaluation: snapshot.self_evaluation ?? snapshot.selfEvaluation ?? currentFormState.self_evaluation,
         hobbies: snapshot.hobbies ?? currentFormState.hobbies,
-        order: snapshot.order ?? currentFormState.order,
-        visibility: snapshot.visibility ?? currentFormState.visibility,
+        order: migrateOrder(snapshot.order ?? currentFormState.order),
+        visibility: migrateVisibility(snapshot.visibility ?? currentFormState.visibility),
         type: snapshot.type ?? currentFormState.type,
       })
 

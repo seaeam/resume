@@ -32,16 +32,16 @@ function mapDocToResumeSchema(doc: Partial<AutomergeResumeDocument> | null | und
 
   return {
     basics: getVal('basics', DEFAULT_BASICS),
-    jobIntent: getVal('jobIntent', DEFAULT_JOB_INTENT, 'job_intent'),
-    applicationInfo: getVal('applicationInfo', DEFAULT_APPLICATION_INFO, 'application_info'),
-    eduBackground: getVal('eduBackground', DEFAULT_EDU_BACKGROUND, 'edu_background'),
-    workExperience: getVal('workExperience', DEFAULT_WORK_EXPERIENCE, 'work_experience'),
-    internshipExperience: getVal('internshipExperience', DEFAULT_INTERNSHIP_EXPERIENCE, 'internship_experience'),
-    campusExperience: getVal('campusExperience', DEFAULT_CAMPUS_EXPERIENCE, 'campus_experience'),
-    projectExperience: getVal('projectExperience', DEFAULT_PROJECT_EXPERIENCE, 'project_experience'),
-    skillSpecialty: getVal('skillSpecialty', DEFAULT_SKILL_SPECIALTY, 'skill_specialty'),
-    honorsCertificates: getVal('honorsCertificates', DEFAULT_HONORS_CERTIFICATES, 'honors_certificates'),
-    selfEvaluation: getVal('selfEvaluation', DEFAULT_SELF_EVALUATION, 'self_evaluation'),
+    job_intent: getVal('job_intent', DEFAULT_JOB_INTENT, 'jobIntent'),
+    application_info: getVal('application_info', DEFAULT_APPLICATION_INFO, 'applicationInfo'),
+    edu_background: getVal('edu_background', DEFAULT_EDU_BACKGROUND, 'eduBackground'),
+    work_experience: getVal('work_experience', DEFAULT_WORK_EXPERIENCE, 'workExperience'),
+    internship_experience: getVal('internship_experience', DEFAULT_INTERNSHIP_EXPERIENCE, 'internshipExperience'),
+    campus_experience: getVal('campus_experience', DEFAULT_CAMPUS_EXPERIENCE, 'campusExperience'),
+    project_experience: getVal('project_experience', DEFAULT_PROJECT_EXPERIENCE, 'projectExperience'),
+    skill_specialty: getVal('skill_specialty', DEFAULT_SKILL_SPECIALTY, 'skillSpecialty'),
+    honors_certificates: getVal('honors_certificates', DEFAULT_HONORS_CERTIFICATES, 'honorsCertificates'),
+    self_evaluation: getVal('self_evaluation', DEFAULT_SELF_EVALUATION, 'selfEvaluation'),
     hobbies: getVal('hobbies', DEFAULT_HOBBIES),
   } as ResumeSchema
 }
