@@ -145,7 +145,7 @@ export async function updateOfflineResumeMeta(resumeId: string, meta: { display_
     resume.display_name = meta.display_name
   if (meta.description !== undefined)
     resume.description = meta.description
-  resume.updated_at = new Date().toISOString()
+  resume.updated_at = dayjs().toISOString()
 
   await db.put('resumes', resume)
 }

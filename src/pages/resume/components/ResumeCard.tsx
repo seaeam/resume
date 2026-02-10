@@ -72,7 +72,7 @@ export function ResumeCard({ resume, onEdit, onDelete, onUpdate }: ResumeCardPro
           onClick={handleDeleteClick}
           size="icon"
           className={cn(
-            'absolute -top-2 -right-2 z-10 h-6 w-6 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg hover:cursor-pointer',
+            'absolute -top-2 -right-2 z-10 h-6 w-6 rounded-full bg-linear-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg hover:cursor-pointer',
             isMobile
               ? 'opacity-100 scale-100 rotate-0'
               : isHovered

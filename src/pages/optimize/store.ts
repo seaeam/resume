@@ -45,7 +45,7 @@ const useAtsStore = create<AtsStore>()(
         }
       }
       catch (error: any) {
-        toast.error(error.message)
+        toast.error(error instanceof Error ? error.message : '加载失败')
         set({ atsConfigs: null })
         set({ currentAtsConfig: null })
       }
@@ -120,7 +120,7 @@ const useAtsStore = create<AtsStore>()(
         await updateFixChecklist(updatedFixCheckList, currentAtsConfig?.id || '')
       }
       catch (error: any) {
-        toast.error(error.message)
+        toast.error(error instanceof Error ? error.message : '操作失败')
         set(() => ({ currentAtsConfig }))
       }
     }

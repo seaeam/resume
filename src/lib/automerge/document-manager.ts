@@ -16,12 +16,16 @@ import { SupabaseNetworkAdapter } from './supabase-network-adapter'
 
 /**
  * 生成确定性的 actor ID，用于确保所有协作者使用相同的文档 URL
+ * 使用多轮哈希确保 16 字节全部有效熵
  */
 function generateDeterministicActor(resumeId: string): Uint8Array {
-  const hash = simpleHash(resumeId)
   const arr = new Uint8Array(16)
-  for (let i = 0; i < 16; i++) {
-    arr[i] = (hash >> (i * 8)) & 0xFF
+  for (let i = 0; i < 4; i++) {
+    // 每轮用不同的前缀生成哈希，确保 4 个字节组各不相同
+    const hash = simpleHash(`${i}:${resumeId}`)
+    for (let j = 0; j < 4; j++) {
+      arr[i * 4 + j] = (hash >> (j * 8)) & 0xFF
+    }
   }
   return arr
 }
@@ -712,6 +716,5 @@ export class DocumentManager {
     this.disableCollaboration()
     this.repo = null
     this.handle = null
-    this.saveListeners.clear()
   }
 }

@@ -281,9 +281,16 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
 
   /**
    * Uint8Array 转 Base64
+   * 使用分块处理避免大数组导致栈溢出
    */
   private uint8ArrayToBase64(uint8Array: Uint8Array): string {
-    return btoa(String.fromCharCode(...Array.from(uint8Array)))
+    const CHUNK_SIZE = 0x8000 // 32KB chunks
+    let binary = ''
+    for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
+      const chunk = uint8Array.subarray(i, i + CHUNK_SIZE)
+      binary += String.fromCharCode.apply(null, chunk as unknown as number[])
+    }
+    return btoa(binary)
   }
 
   /**

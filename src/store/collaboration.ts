@@ -330,7 +330,7 @@ const useCollaborationStore = create<CollaborationState>()((set, get) => ({
       docManager?.disableCollaboration()
     }
     catch (error: any) {
-      toast.error('关闭协作时出错，请重试', error.message)
+      toast.error(`关闭协作时出错，请重试: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     if (state.sessionId && state.resumeId && state.selfUserId) {

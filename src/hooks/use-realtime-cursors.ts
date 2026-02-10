@@ -109,11 +109,9 @@ export function useRealtimeCursors({
         leftPresences.forEach((element) => {
           // Remove cursor when user leaves
           setCursors((prev) => {
-            if (prev[element.key]) {
-              delete prev[element.key]
-            }
-
-            return { ...prev }
+            const next = { ...prev }
+            delete next[element.key]
+            return next
           })
         })
       })
@@ -135,12 +133,10 @@ export function useRealtimeCursors({
           return
 
         setCursors((prev) => {
-          if (prev[userId]) {
-            delete prev[userId]
-          }
-
+          const next = { ...prev }
+          delete next[userId]
           return {
-            ...prev,
+            ...next,
             [user.id]: data.payload,
           }
         })
@@ -160,7 +156,7 @@ export function useRealtimeCursors({
       channel.unsubscribe()
       channelRef.current = null
     }
-  }, [])
+  }, [roomName, username, userId, color])
 
   useEffect(() => {
     // Add event listener for mousemove

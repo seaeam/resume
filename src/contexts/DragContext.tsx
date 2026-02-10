@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { createContext, use, useCallback, useRef, useState } from 'react'
+import { createContext, use, useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 interface DragItem {
@@ -32,11 +32,22 @@ const DragContext = createContext<DragContextValue | null>(null)
 export function DragProvider({ children }: { children: ReactNode }) {
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null) // 被拖拽的元素
   const [overIndex, setOverIndex] = useState<number | null>(null) // 当前悬停的索引
+  const overIndexRef = useRef<number | null>(null) // 用 ref 跟踪 overIndex 避免频繁重建回调
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 }) // 预览位置
   const [initialRect, setInitialRect] = useState<DOMRect | null>(null) // 初始位置
   const itemsRef = useRef<Map<string, { index: number, element: HTMLElement }>>(new Map()) // 注册的可拖拽元素
   const positionsRef = useRef<ItemPosition[]>([]) // 元素位置数据
   const startPosRef = useRef({ x: 0, y: 0 }) // 拖拽起始位置
+  const previewContentRef = useRef<HTMLDivElement>(null) // 预览内容容器
+
+  // 当 draggedItem 变化时，克隆内容到预览容器
+  useEffect(() => {
+    const node = previewContentRef.current
+    if (node && draggedItem?.element) {
+      node.innerHTML = ''
+      node.appendChild(draggedItem.element.cloneNode(true))
+    }
+  }, [draggedItem])
 
   const registerItem = useCallback((index: number, id: string, element: HTMLElement) => {
     itemsRef.current.set(id, { index, element })
@@ -109,7 +120,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
       })
 
       const firstPos = positionsRef.current[0]
-      const lastPos = positionsRef.current[positionsRef.current.length]
+      const lastPos = positionsRef.current[positionsRef.current.length - 1]
 
       if (firstPos && clientX < firstPos.left) {
         newOverIndex = 0
@@ -118,11 +129,12 @@ export function DragProvider({ children }: { children: ReactNode }) {
         newOverIndex = positionsRef.current.length - 1
       }
 
-      if (newOverIndex !== overIndex) {
+      if (newOverIndex !== overIndexRef.current) {
+        overIndexRef.current = newOverIndex
         setOverIndex(newOverIndex)
       }
     },
-    [draggedItem, overIndex, initialRect],
+    [draggedItem, initialRect],
   )
 
   const endDrag = useCallback(() => {
@@ -155,14 +167,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
           transition: 'transform 0.1s ease',
         }}
       >
-        <div className="h-full w-full">
-          {/* 克隆原始内容 */}
-          <div
-            dangerouslySetInnerHTML={{
-              __html: draggedItem.element.innerHTML,
-            }}
-          />
-        </div>
+        <div className="h-full w-full" ref={previewContentRef} />
       </div>,
       document.body,
     )

@@ -281,6 +281,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     }
 
     if (!state.docManager || !state.docHandle) {
+      set({ isSyncing: false })
       return
     }
 

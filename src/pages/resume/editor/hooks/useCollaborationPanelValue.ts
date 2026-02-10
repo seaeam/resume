@@ -91,7 +91,7 @@ export function useCollaborationPanelValue({
       }
     }
     catch (error: any) {
-      toast.error('开启实时协作失败，请稍后重试', error?.message)
+      toast.error(`开启实时协作失败，请稍后重试${error?.message ? `: ${error.message}` : ''}`)
     }
   }, [activeResumeId, currentUser, setSearchParams, startSharing, userDisplayName])
 

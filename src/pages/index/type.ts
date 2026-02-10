@@ -5,7 +5,7 @@ export interface ResumeStats {
   online: number
   offline: number
   recentCount: number
-  latestResume: Resume
+  latestResume: Resume | undefined
 }
 
 export interface Resume {

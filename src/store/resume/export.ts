@@ -241,7 +241,7 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
       handlePrint()
     }
     catch (error) {
-      toast.error(`导出 PDF 失败,请稍后重试${error}`)
+      toast.error(`导出 PDF 失败,请稍后重试${error instanceof Error ? `: ${error.message}` : ''}`)
     }
   },
 
@@ -283,7 +283,7 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
       toast.success('导出成功!')
     }
     catch (error) {
-      toast.error(`导出 Word 失败,请稍后重试${error}`)
+      toast.error(`导出 Word 失败,请稍后重试${error instanceof Error ? `: ${error.message}` : ''}`)
     }
   },
 }))

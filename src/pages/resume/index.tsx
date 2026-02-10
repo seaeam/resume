@@ -1,6 +1,6 @@
 import type { ResumeType } from '@/store/resume/current'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -34,6 +34,7 @@ export default function ResumePage() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncingIds, setSyncingIds] = useState<Set<string>>(() => new Set())
   const [localDeletingIds, setLocalDeletingIds] = useState<Set<string>>(() => new Set()) // 本地正在删除的简历ID
+  const localDeletingIdsRef = useRef<Set<string>>(localDeletingIds) // 用 ref 避免订阅重建
   const navigate = useNavigate()
   const { setCurrentResume } = useCurrentResumeStore()
 
@@ -87,14 +88,22 @@ export default function ResumePage() {
     }
   }, [navigate])
 
+  // 保持 ref 与 state 同步
+  useEffect(() => {
+    localDeletingIdsRef.current = localDeletingIds
+  }, [localDeletingIds])
+
   useEffect(() => {
     // 只有在线模式才订阅在线简历更新
     if (!isOnline)
       return
 
-    let unSubscribe: () => void | undefined
+    let cancelled = false
+    let unSubscribe: (() => void) | undefined
 
     subscribeToResumeConfigUpdates((payload) => {
+      if (cancelled) return
+
       switch (payload.eventType) {
         case 'INSERT': {
           const resume = {
@@ -131,8 +140,8 @@ export default function ResumePage() {
         case 'DELETE': {
           const deletedResumeId = payload.old.resume_id
 
-          // 检查是否是本地操作触发的删除
-          if (localDeletingIds.has(deletedResumeId)) {
+          // 检查是否是本地操作触发的删除（使用 ref 避免依赖变化）
+          if (localDeletingIdsRef.current.has(deletedResumeId)) {
             // 是本地删除，清除标记，不显示远程删除提示
             setLocalDeletingIds((prev) => {
               const newSet = new Set(prev)
@@ -165,16 +174,21 @@ export default function ResumePage() {
       }
     })
       .then((unsub) => {
-        unSubscribe = unsub
+        if (cancelled) {
+          unsub?.()
+        } else {
+          unSubscribe = unsub
+        }
       })
       .catch((error) => {
         console.error(error.message)
       })
 
     return () => {
+      cancelled = true
       unSubscribe?.()
     }
-  }, [isOnline, localDeletingIds])
+  }, [isOnline])
 
   function handleEditResume(resume: Resume) {
     setCurrentResume(resume.resume_id, resume.type)
