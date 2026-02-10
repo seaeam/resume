@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { ResumeType } from '@/store/resume/current'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState } from 'react'
@@ -63,35 +62,23 @@ export default function ResumePage() {
         }
 
         // 加载离线简历
-        let formattedOfflineResumes: Resume[] = []
-        try {
-          const localResumes = await getAllOfflineResumes()
-          formattedOfflineResumes = localResumes.map(r => ({
-            resume_id: r.resume_id,
-            created_at: r.created_at,
-            type: r.type as ResumeType,
-            display_name: r.display_name,
-            description: r.description,
-            isOffline: true,
-          }))
-          allResumes = [...allResumes, ...formattedOfflineResumes]
-        }
-        catch {
-          // 忽略离线简历加载错误
-        }
+        const localResumes = await getAllOfflineResumes()
+        const formattedOfflineResumes: Resume[] = localResumes.map(r => ({
+          ...r,
+          isOffline: true,
+        }))
+
+        allResumes = [...allResumes, ...formattedOfflineResumes]
 
         setResumes(allResumes)
 
         // 如果已登录且有本地简历，只提示用户（不自动弹出对话框）
         if (user && formattedOfflineResumes.length > 0) {
           setOfflineResumes(formattedOfflineResumes)
-          toast.info(`检测到 ${formattedOfflineResumes.length} 个本地简历，点击右上角按钮可同步到云端`, {
-            duration: 5000,
-          })
+          toast.info(`检测到 ${formattedOfflineResumes.length} 个本地简历，点击右上角按钮可同步到云端`)
         }
       }
       catch {
-        // 错误处理
         toast.error('加载简历失败')
       }
       finally {
@@ -152,7 +139,6 @@ export default function ResumePage() {
               newSet.delete(deletedResumeId)
               return newSet
             })
-            console.log('本地删除操作，跳过远程同步提示:', deletedResumeId)
             break
           }
 
@@ -170,7 +156,7 @@ export default function ResumePage() {
           }
 
           toast.promise(syncPromise, {
-            loading: `检测到远端删除了简历，正在同步...`,
+            loading: `检测到简历变动，正在同步...`,
             success: '简历已同步删除',
             error: '同步失败，请重试',
           })

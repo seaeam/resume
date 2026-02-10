@@ -17,11 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { useIsMobile } from '@/hooks/use-mobile'
-import {
-  DEFAULT_INTERNSHIP_EXPERIENCE,
-  internshipExperienceFormSchema,
-
-} from '@/lib/schema'
+import { DEFAULT_INTERNSHIP_EXPERIENCE, internshipExperienceFormSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 

@@ -1,13 +1,6 @@
 import { Copy, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-  DialogHeader as ModalHeader,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogHeader as ModalHeader } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useCollaborationPanel } from './CollaborationPanelProvider'
 

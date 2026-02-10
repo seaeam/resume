@@ -14,11 +14,7 @@ import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useIsMobile } from '@/hooks/use-mobile'
-import {
-  PRESET_SKILLS,
-  PROFICIENCY_PERCENTAGE_MAP,
-  skillSpecialtyFormSchema,
-} from '@/lib/schema/resume/form/skillSpecialty'
+import { PRESET_SKILLS, PROFICIENCY_PERCENTAGE_MAP, skillSpecialtyFormSchema } from '@/lib/schema/resume/form/skillSpecialty'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 

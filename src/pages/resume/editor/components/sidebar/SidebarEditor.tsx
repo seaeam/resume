@@ -3,7 +3,7 @@ import { DraggableList } from '@/components/DraggableList'
 import { SideTabs, SideTabsWrapper, Tab, ViewPort } from '@/components/SideTabs'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { ITEMS } from '../../data'
+import { ITEMS } from '../../const'
 import { DraggableItem } from './DraggableItem'
 
 interface SidebarEditorProps {

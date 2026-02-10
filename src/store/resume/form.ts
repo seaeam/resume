@@ -3,6 +3,7 @@ import type { StoreApi } from 'zustand'
 import type { AutomergeResumeDocument } from '@/lib/automerge/schema'
 import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import dayjs from 'dayjs'
+import { cloneDeepWith, get } from 'lodash'
 import { create } from 'zustand'
 import { DocumentManager } from '@/lib/automerge/document-manager'
 import { getOfflineResumeById, isOfflineResumeId, updateOfflineResume } from '@/lib/offline-resume-manager'
@@ -11,6 +12,27 @@ import { updateResumeConfig } from '@/lib/supabase/resume'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { getTimestamp } from '@/utils/date'
 import useCurrentResumeStore from './current'
+
+/**
+ * 表单数据 key 与默认值的映射，消除各处重复罗列所有 key 的冗余。
+ * legacyKey 用于兼容旧版 camelCase 格式的文档数据。
+ */
+const FORM_FIELD_DEFAULTS: Record<string, { default: unknown, legacyKey?: string }> = {
+  basics: { default: DEFAULT_BASICS },
+  job_intent: { default: DEFAULT_JOB_INTENT, legacyKey: 'jobIntent' },
+  application_info: { default: DEFAULT_APPLICATION_INFO, legacyKey: 'applicationInfo' },
+  edu_background: { default: DEFAULT_EDU_BACKGROUND, legacyKey: 'eduBackground' },
+  work_experience: { default: DEFAULT_WORK_EXPERIENCE, legacyKey: 'workExperience' },
+  internship_experience: { default: DEFAULT_INTERNSHIP_EXPERIENCE, legacyKey: 'internshipExperience' },
+  campus_experience: { default: DEFAULT_CAMPUS_EXPERIENCE, legacyKey: 'campusExperience' },
+  project_experience: { default: DEFAULT_PROJECT_EXPERIENCE, legacyKey: 'projectExperience' },
+  skill_specialty: { default: DEFAULT_SKILL_SPECIALTY, legacyKey: 'skillSpecialty' },
+  honors_certificates: { default: DEFAULT_HONORS_CERTIFICATES, legacyKey: 'honorsCertificates' },
+  self_evaluation: { default: DEFAULT_SELF_EVALUATION, legacyKey: 'selfEvaluation' },
+  hobbies: { default: DEFAULT_HOBBIES },
+}
+
+const FORM_DATA_KEYS = Object.keys(FORM_FIELD_DEFAULTS) as (keyof FormDataMap)[]
 
 // 表单数据映射
 interface FormDataMap {
@@ -157,20 +179,13 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   cleanupFns: [],
   isInitialized: false,
 
-  getResumeFormData: () => ({
-    basics: get().basics,
-    job_intent: get().job_intent,
-    application_info: get().application_info,
-    edu_background: get().edu_background,
-    work_experience: get().work_experience,
-    internship_experience: get().internship_experience,
-    campus_experience: get().campus_experience,
-    project_experience: get().project_experience,
-    skill_specialty: get().skill_specialty,
-    honors_certificates: get().honors_certificates,
-    self_evaluation: get().self_evaluation,
-    hobbies: get().hobbies,
-  }),
+  getResumeFormData: () => {
+    const state = get()
+    return FORM_DATA_KEYS.reduce((acc, key) => {
+      (acc as any)[key] = state[key]
+      return acc
+    }, {} as FormDataMap)
+  },
 
   updateActiveTabId: newActiveTab => set({ activeTabId: newActiveTab }),
 
@@ -248,7 +263,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
 
     if (state.mode === 'offline' || isOfflineResumeId(resumeId)) {
       try {
-        await updateOfflineResume(resumeId, buildOfflinePayload(state))
+        await updateOfflineResume(resumeId, getFormPayload(state))
         set({
           pendingChanges: false,
           isSyncing: false,
@@ -401,18 +416,9 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
 
   resetToDefaults: () => {
     const defaultState = {
-      basics: DEFAULT_BASICS,
-      job_intent: DEFAULT_JOB_INTENT,
-      application_info: DEFAULT_APPLICATION_INFO,
-      edu_background: DEFAULT_EDU_BACKGROUND,
-      work_experience: DEFAULT_WORK_EXPERIENCE,
-      internship_experience: DEFAULT_INTERNSHIP_EXPERIENCE,
-      campus_experience: DEFAULT_CAMPUS_EXPERIENCE,
-      project_experience: DEFAULT_PROJECT_EXPERIENCE,
-      skill_specialty: DEFAULT_SKILL_SPECIALTY,
-      honors_certificates: DEFAULT_HONORS_CERTIFICATES,
-      self_evaluation: DEFAULT_SELF_EVALUATION,
-      hobbies: DEFAULT_HOBBIES,
+      ...Object.fromEntries(
+        FORM_DATA_KEYS.map(key => [key, FORM_FIELD_DEFAULTS[key].default]),
+      ),
       order: DEFAULT_ORDER,
       visibility: DEFAULT_VISIBILITY,
     }
@@ -446,71 +452,61 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   },
 }))
 
+/** 深拷贝并过滤掉所有值为 undefined 的属性 */
 function sanitizeDeep<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map(item => sanitizeDeep(item)) as T
-  }
-  if (value && typeof value === 'object') {
-    const result: Record<string, unknown> = {}
-    Object.entries(value as Record<string, unknown>).forEach(([key, val]) => {
-      if (val === undefined)
-        return
-      result[key] = sanitizeDeep(val)
-    })
-    return result as T
-  }
-  return value
+  return cloneDeepWith(value, (val) => {
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      return Object.fromEntries(
+        Object.entries(val).filter(([, v]) => v !== undefined),
+      )
+    }
+  }) as T
 }
 
-function applyPatch(target: Record<string, any>, patch: Partial<Record<string, any>>) {
-  Object.entries(patch).forEach(([field, value]) => {
-    if (value === undefined)
-      return
-    target[field] = value
-  })
+function applyPatch(target: Record<string, any>, patch: Record<string, unknown>) {
+  for (const [field, value] of Object.entries(patch)) {
+    if (value !== undefined) {
+      target[field] = value
+    }
+  }
 }
 
+/**
+ * 将 Automerge 文档（或空值）映射为 Zustand store 状态。
+ *
+ * 数据库中可能存在 camelCase（旧格式）或 snake_case（新格式）的 key，
+ * 需要按优先级 snake_case > camelCase > 默认值 依次回退。
+ */
 function mapDocToState(doc: Partial<AutomergeResumeDocument> | null | undefined) {
   const source = doc as Record<string, any> | undefined
 
-  const getVal = <T>(key: string, defaultVal: T, legacyKey?: string) => {
-    const val = source?.[key] ?? (legacyKey ? source?.[legacyKey] : undefined) ?? defaultVal
-    return sanitizeDeep(val as T)
-  }
+  const formData = Object.fromEntries(
+    FORM_DATA_KEYS.map((key) => {
+      const { default: defaultVal, legacyKey } = FORM_FIELD_DEFAULTS[key]
+      const val = get(source, key)
+        ?? (legacyKey ? get(source, legacyKey) : undefined)
+        ?? defaultVal
+      return [key, sanitizeDeep(val)]
+    }),
+  )
 
   return {
-    basics: getVal('basics', DEFAULT_BASICS),
-    job_intent: getVal('job_intent', DEFAULT_JOB_INTENT, 'jobIntent'),
-    application_info: getVal('application_info', DEFAULT_APPLICATION_INFO, 'applicationInfo'),
-    edu_background: getVal('edu_background', DEFAULT_EDU_BACKGROUND, 'eduBackground'),
-    work_experience: getVal('work_experience', DEFAULT_WORK_EXPERIENCE, 'workExperience'),
-    internship_experience: getVal('internship_experience', DEFAULT_INTERNSHIP_EXPERIENCE, 'internshipExperience'),
-    campus_experience: getVal('campus_experience', DEFAULT_CAMPUS_EXPERIENCE, 'campusExperience'),
-    project_experience: getVal('project_experience', DEFAULT_PROJECT_EXPERIENCE, 'projectExperience'),
-    skill_specialty: getVal('skill_specialty', DEFAULT_SKILL_SPECIALTY, 'skillSpecialty'),
-    honors_certificates: getVal('honors_certificates', DEFAULT_HONORS_CERTIFICATES, 'honorsCertificates'),
-    self_evaluation: getVal('self_evaluation', DEFAULT_SELF_EVALUATION, 'selfEvaluation'),
-    hobbies: getVal('hobbies', DEFAULT_HOBBIES),
-    order: migrateOrder(getVal('order', DEFAULT_ORDER)),
-    visibility: migrateVisibility(getVal('visibility', DEFAULT_VISIBILITY)),
-    type: source?.type || 'basic',
+    ...formData,
+    order: migrateOrder(sanitizeDeep(get(source, 'order', DEFAULT_ORDER))),
+    visibility: migrateVisibility(sanitizeDeep(get(source, 'visibility', DEFAULT_VISIBILITY))),
+    type: get(source, 'type', 'basic') as 'basic' | 'modern' | 'simple',
   }
 }
 
-function buildOfflinePayload(state: ResumeState) {
+/**
+ * 从 state 中提取所有表单数据 + order/visibility/type 作为持久化载荷。
+ * 同时服务于离线保存和在线同步。
+ */
+function getFormPayload(state: ResumeState) {
   return {
-    basics: state.basics,
-    job_intent: state.job_intent,
-    application_info: state.application_info,
-    edu_background: state.edu_background,
-    work_experience: state.work_experience,
-    internship_experience: state.internship_experience,
-    campus_experience: state.campus_experience,
-    project_experience: state.project_experience,
-    skill_specialty: state.skill_specialty,
-    honors_certificates: state.honors_certificates,
-    self_evaluation: state.self_evaluation,
-    hobbies: state.hobbies,
+    ...Object.fromEntries(
+      FORM_DATA_KEYS.map(key => [key, state[key]]),
+    ),
     order: state.order,
     visibility: state.visibility,
     type: state.type,

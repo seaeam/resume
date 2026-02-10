@@ -1,12 +1,6 @@
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface DeleteResumeDialogProps {
   resumeName: string
@@ -23,12 +17,9 @@ export function DeleteResumeDialog({ resumeName, open, onOpenChange, onConfirm }
           <DialogTitle>确认删除简历?</DialogTitle>
           <DialogDescription>
             你确定要删除
-            {' '}
-            <span className="font-semibold text-foreground">{resumeName}</span>
-            {' '}
+            <Badge variant="secondary">{resumeName}</Badge>
             吗？
-            <br />
-            此操作无法撤销，简历的所有数据将被永久删除。
+            <span className="">此操作无法撤销，简历的所有数据将被永久删除。</span>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
