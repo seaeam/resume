@@ -14,6 +14,21 @@ import {
   workExperienceFormSchema,
 } from './form'
 
+// 模板类型
+export const resumeTypeEnum = z.enum(['default', 'simple', 'modern'])
+export type ResumeType = z.infer<typeof resumeTypeEnum>
+
+// 简历列表
+export interface ResumeListItem {
+  resume_id: string
+  created_at: string
+  updated_at?: string
+  type: ResumeType
+  display_name?: string
+  description?: string
+  isOffline?: boolean
+}
+
 export const resumeSchema = z.object({
   basics: basicsSchema,
   job_intent: jobIntentFormSchema,

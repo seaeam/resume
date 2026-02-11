@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import type { ResumeListItem } from '@/lib/schema'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -9,15 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { isOfflineResumeId, updateOfflineResumeMeta } from '@/lib/offline-resume-manager'
 import { updateResumeConfig } from '@/lib/supabase/resume'
 
-interface Resume {
-  resume_id: string
-  display_name?: string
-  description?: string
-  isOffline?: boolean
-}
-
 interface EditResumeDialogProps {
-  resume: Resume
+  resume: Pick<ResumeListItem, 'resume_id' | 'display_name' | 'description' | 'isOffline'>
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: (updatedResume: { display_name: string, description: string }) => void

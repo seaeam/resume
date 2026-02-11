@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { ResumeStats } from '../type'
+import type { ResumeStats } from '../types'
 import { Cloud, CloudOff, FileUser, TrendingUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { NumberTicker } from '@/components/ui/number-ticker'

@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react'
-import type { ResumeType } from '@/store/resume/current'
+import type { ResumeType } from '@/lib/schema'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -12,21 +12,11 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Textarea } from '@/components/ui/textarea'
 import { createOfflineResume } from '@/lib/offline-resume-manager'
 import { createNewResume } from '@/lib/supabase/resume/form'
+import useResumeListStore from '@/pages/resume/store'
 import useCurrentResumeStore from '@/store/resume/current'
 
-interface CreateResumeCardProps {
-  isOnline: boolean
-  onResumeCreated?: (resume: {
-    resume_id: string
-    created_at: string
-    type: ResumeType
-    display_name?: string
-    description?: string
-    isOffline?: boolean
-  }) => void
-}
-
-export function CreateResumeCard({ isOnline, onResumeCreated }: CreateResumeCardProps) {
+export function CreateResumeCard() {
+  const { isOnline, addResume } = useResumeListStore()
   const { setCurrentResume } = useCurrentResumeStore()
 
   const [isCreating, setIsCreating] = useState(false)
@@ -48,14 +38,7 @@ export function CreateResumeCard({ isOnline, onResumeCreated }: CreateResumeCard
         )
           .then((data) => {
             setCurrentResume(data.resume_id, data.type)
-            onResumeCreated?.({
-              resume_id: data.resume_id,
-              created_at: data.created_at,
-              type: data.type,
-              display_name: data.display_name,
-              description: data.description,
-              isOffline: false,
-            })
+            // 在线模式下，订阅会自动处理 INSERT 事件，无需手动添加
             return data
           })
           .finally(() => {
@@ -78,7 +61,7 @@ export function CreateResumeCard({ isOnline, onResumeCreated }: CreateResumeCard
         })
 
         setCurrentResume(resumeId, selectedType)
-        onResumeCreated?.({
+        addResume({
           resume_id: resumeId,
           created_at: new Date().toISOString(),
           type: selectedType,

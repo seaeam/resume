@@ -1,4 +1,4 @@
-import type { ResumeStats } from '../../type'
+import type { ResumeStats } from '../../types'
 import { Cloud, CloudOff } from 'lucide-react'
 import { useMemo } from 'react'
 import { Label, Pie, PieChart } from 'recharts'

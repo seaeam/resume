@@ -1,7 +1,6 @@
+import type { ResumeType } from '@/lib/schema'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-
-export type ResumeType = 'default' | 'simple' | 'modern'
 
 interface CurrentResumeState {
   resumeId: string | null
