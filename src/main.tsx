@@ -4,7 +4,6 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import ErrorFallback from './components/ErrorBoundary'
-import '@xyflow/react/dist/style.css'
 import './index.css'
 
 const app = createRoot(document.getElementById('root')!)
