@@ -1,4 +1,4 @@
-import type { Resume, ResumeStats } from '../../type'
+import type { Resume, ResumeStats } from '../../types'
 import { BarChart3 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Label, Pie, PieChart } from 'recharts'

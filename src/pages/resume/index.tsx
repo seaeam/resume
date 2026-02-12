@@ -1,325 +1,33 @@
-import type { ResumeType } from '@/store/resume/current'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { useEffect } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { deleteOfflineResume, getAllOfflineResumes, isOfflineResumeId } from '@/lib/offline-resume-manager'
-import { syncOfflineResumesToCloud } from '@/lib/resume-sync-service'
-import { subscribeToResumeConfigUpdates } from '@/lib/supabase/resume'
-import { deleteResume, getAllResumesFromUser } from '@/lib/supabase/resume/form'
-import { getCurrentUser } from '@/lib/supabase/user'
-import { SyncResumesDialog } from '@/pages/resume/components/SyncResumesDialog'
-import useCurrentResumeStore from '@/store/resume/current'
+import useResumeListStore from '@/pages/resume/store'
 import { CreateResumeCard } from './components/CreateResumeCard'
 import HeadBars from './components/HeadBars'
 import { ResumeCard } from './components/ResumeCard'
-
-interface Resume {
-  resume_id: string
-  created_at: string
-  type: ResumeType
-  display_name?: string
-  description?: string
-  isOffline?: boolean // 标记是否为离线简历
-}
+import { SyncResumesDialog } from './components/SyncResumesDialog'
 
 export default function ResumePage() {
-  const [resumes, setResumes] = useState<Resume[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isOnline, setIsOnline] = useState(false)
-  const [showSyncDialog, setShowSyncDialog] = useState(false)
-  const [offlineResumes, setOfflineResumes] = useState<Resume[]>([])
-  const [isSyncing, setIsSyncing] = useState(false)
-  const [syncingIds, setSyncingIds] = useState<Set<string>>(() => new Set())
-  const [localDeletingIds, setLocalDeletingIds] = useState<Set<string>>(() => new Set()) // 本地正在删除的简历ID
-  const localDeletingIdsRef = useRef<Set<string>>(localDeletingIds) // 用 ref 避免订阅重建
-  const navigate = useNavigate()
-  const { setCurrentResume } = useCurrentResumeStore()
+  const { resumes, loading, isOnline, syncingIds, loadResumes, setupRealtimeSubscription } = useResumeListStore()
 
   useEffect(() => {
     loadResumes()
-
-    async function loadResumes() {
-      try {
-        // 检查用户是否登录
-        const user = await getCurrentUser()
-        setIsOnline(!!user)
-
-        let allResumes: Resume[] = []
-
-        // 加载在线简历（如果已登录）
-        if (user) {
-          try {
-            const onlineResumes = await getAllResumesFromUser()
-            allResumes = onlineResumes.map(r => ({ ...r, isOffline: false }))
-          }
-          catch (error: any) {
-            if (error.message !== '用户未登陆') {
-              toast.error('加载在线简历失败')
-            }
-          }
-        }
-
-        // 加载离线简历
-        const localResumes = await getAllOfflineResumes()
-        const formattedOfflineResumes: Resume[] = localResumes.map(r => ({
-          ...r,
-          isOffline: true,
-        }))
-
-        allResumes = [...allResumes, ...formattedOfflineResumes]
-
-        setResumes(allResumes)
-
-        // 如果已登录且有本地简历，只提示用户（不自动弹出对话框）
-        if (user && formattedOfflineResumes.length > 0) {
-          setOfflineResumes(formattedOfflineResumes)
-          toast.info(`检测到 ${formattedOfflineResumes.length} 个本地简历，点击右上角按钮可同步到云端`)
-        }
-      }
-      catch {
-        toast.error('加载简历失败')
-      }
-      finally {
-        setLoading(false)
-      }
-    }
-  }, [navigate])
-
-  // 保持 ref 与 state 同步
-  useEffect(() => {
-    localDeletingIdsRef.current = localDeletingIds
-  }, [localDeletingIds])
+  }, [loadResumes])
 
   useEffect(() => {
-    // 只有在线模式才订阅在线简历更新
     if (!isOnline)
       return
 
-    let cancelled = false
-    let unSubscribe: (() => void) | undefined
-
-    subscribeToResumeConfigUpdates((payload) => {
-      if (cancelled) return
-
-      switch (payload.eventType) {
-        case 'INSERT': {
-          const resume = {
-            resume_id: payload.new.resume_id,
-            created_at: payload.new.created_at,
-            type: payload.new.type,
-            display_name: payload.new.display_name,
-            description: payload.new.description,
-            isOffline: false,
-          }
-          setResumes((prev) => {
-            // 防止重复添加
-            if (prev.some(r => r.resume_id === resume.resume_id)) {
-              return prev
-            }
-            return [resume, ...prev]
-          })
-          break
-        }
-        case 'UPDATE': {
-          setResumes(prev =>
-            prev.map(resume =>
-              resume.resume_id === payload.new.resume_id
-                ? {
-                    ...resume,
-                    display_name: payload.new.display_name,
-                    description: payload.new.description,
-                  }
-                : resume,
-            ),
-          )
-          break
-        }
-        case 'DELETE': {
-          const deletedResumeId = payload.old.resume_id
-
-          // 检查是否是本地操作触发的删除（使用 ref 避免依赖变化）
-          if (localDeletingIdsRef.current.has(deletedResumeId)) {
-            // 是本地删除，清除标记，不显示远程删除提示
-            setLocalDeletingIds((prev) => {
-              const newSet = new Set(prev)
-              newSet.delete(deletedResumeId)
-              return newSet
-            })
-            break
-          }
-
-          // 是远程删除，需要同步
-          const syncPromise = async () => {
-            // 重新加载在线简历
-            const onlineResumes = await getAllResumesFromUser()
-            const formattedOnlineResumes = onlineResumes.map(r => ({ ...r, isOffline: false }))
-
-            // 保留离线简历，只更新在线简历
-            setResumes((prev) => {
-              const offlineOnly = prev.filter(r => r.isOffline)
-              return [...formattedOnlineResumes, ...offlineOnly]
-            })
-          }
-
-          toast.promise(syncPromise, {
-            loading: `检测到简历变动，正在同步...`,
-            success: '简历已同步删除',
-            error: '同步失败，请重试',
-          })
-          break
-        }
-      }
-    })
-      .then((unsub) => {
-        if (cancelled) {
-          unsub?.()
-        } else {
-          unSubscribe = unsub
-        }
-      })
-      .catch((error) => {
-        console.error(error.message)
-      })
-
-    return () => {
-      cancelled = true
-      unSubscribe?.()
-    }
-  }, [isOnline])
-
-  function handleEditResume(resume: Resume) {
-    setCurrentResume(resume.resume_id, resume.type)
-    navigate('/resume/editor')
-  }
-
-  async function handleDeleteResume(id: string) {
-    // 判断是离线还是在线简历
-    const isOfflineResume = isOfflineResumeId(id)
-
-    // 如果是在线简历，标记为本地删除
-    if (!isOfflineResume) {
-      setLocalDeletingIds(prev => new Set(prev).add(id))
-    }
-
-    const deletePromise = isOfflineResume
-      ? deleteOfflineResume(id).then(() => {
-          setResumes(prev => prev.filter(resume => resume.resume_id !== id))
-          setOfflineResumes(prev => prev.filter(resume => resume.resume_id !== id))
-        })
-      : deleteResume(id).then(() => {
-          setResumes(prev => prev.filter(resume => resume.resume_id !== id))
-        })
-
-    toast.promise(deletePromise, {
-      loading: '正在删除简历...',
-      success: '简历已删除',
-      error: () => {
-        // 删除失败，清除本地删除标记
-        if (!isOfflineResume) {
-          setLocalDeletingIds((prev) => {
-            const newSet = new Set(prev)
-            newSet.delete(id)
-            return newSet
-          })
-        }
-        return '删除失败，请重试'
-      },
-    })
-  }
-
-  // 处理简历更新
-  function handleResumeUpdate(resumeId: string, updates: { display_name: string, description: string }) {
-    setResumes(prev =>
-      prev.map(resume =>
-        resume.resume_id === resumeId
-          ? {
-              ...resume,
-              display_name: updates.display_name,
-              description: updates.description,
-            }
-          : resume,
-      ),
-    )
-
-    if (resumeId.startsWith('local-')) {
-      setOfflineResumes(prev =>
-        prev.map(resume =>
-          resume.resume_id === resumeId
-            ? {
-                ...resume,
-                display_name: updates.display_name,
-                description: updates.description,
-              }
-            : resume,
-        ),
-      )
-    }
-  }
-
-  // 处理同步简历
-  async function handleSyncResumes(selectedIds: string[]) {
-    if (selectedIds.length === 0)
-      return
-
-    setIsSyncing(true)
-    setSyncingIds(new Set(selectedIds))
-
-    try {
-      const result = await syncOfflineResumesToCloud(selectedIds)
-
-      if (result.success > 0) {
-        // 从简历列表中移除已同步的本地简历，并重新加载在线简历
-        setResumes(prev => prev.filter(r => !selectedIds.includes(r.resume_id)))
-
-        // 重新加载在线简历
-        const onlineResumes = await getAllResumesFromUser()
-        const newOnlineResumes = onlineResumes.map(r => ({ ...r, isOffline: false }))
-        setResumes((prev) => {
-          // 合并并去重
-          const offline = prev.filter(r => r.isOffline)
-          return [...newOnlineResumes, ...offline]
-        })
-
-        // 更新离线简历列表
-        const remaining = offlineResumes.filter(r => !selectedIds.includes(r.resume_id))
-        setOfflineResumes(remaining)
-
-        if (remaining.length === 0) {
-          setShowSyncDialog(false)
-        }
-
-        toast.success(`成功同步 ${result.success} 个简历到云端`)
-      }
-
-      if (result.failed > 0) {
-        toast.error(`${result.failed} 个简历同步失败`)
-      }
-    }
-    catch {
-      toast.error('同步失败，请稍后重试')
-    }
-    finally {
-      setIsSyncing(false)
-      setSyncingIds(new Set())
-    }
-  }
+    return setupRealtimeSubscription()
+  }, [isOnline, setupRealtimeSubscription])
 
   if (loading)
     return <ResumePageSkeleton />
 
-  const hasOfflineResumesToSync = isOnline && offlineResumes.length > 0
-
   return (
     <div className="container mx-auto p-8">
-      <HeadBars
-        setShowSyncDialog={setShowSyncDialog}
-        hasOfflineResumesToSync={hasOfflineResumesToSync}
-        isOnline={isOnline}
-        offlineResumes={offlineResumes}
-      />
+      <HeadBars />
 
       <motion.div
         className="grid grid-cols-1 items-center md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
@@ -352,13 +60,7 @@ export default function ResumePage() {
                   layout: { duration: 0.3 },
                 }}
               >
-                <ResumeCard
-                  resume={resume}
-                  onEdit={handleEditResume}
-                  onDelete={handleDeleteResume}
-                  onUpdate={handleResumeUpdate}
-                  isOnline={isOnline}
-                />
+                <ResumeCard resume={resume} />
               </motion.div>
             )
           })}
@@ -374,32 +76,12 @@ export default function ResumePage() {
               layout: { duration: 0.3 },
             }}
           >
-            <CreateResumeCard
-              isOnline={isOnline}
-              onResumeCreated={(resume) => {
-                if (resume.isOffline) {
-                  setResumes(prev => [resume, ...prev])
-                }
-              }}
-            />
+            <CreateResumeCard />
           </motion.div>
         </AnimatePresence>
       </motion.div>
 
-      {/* 同步对话框 */}
-      <SyncResumesDialog
-        open={showSyncDialog}
-        onOpenChange={setShowSyncDialog}
-        offlineResumes={offlineResumes.map(r => ({
-          resume_id: r.resume_id,
-          display_name: r.display_name || '未命名简历',
-          description: r.description,
-          type: r.type,
-          created_at: r.created_at,
-        }))}
-        onSync={handleSyncResumes}
-        isSyncing={isSyncing}
-      />
+      <SyncResumesDialog />
     </div>
   )
 }

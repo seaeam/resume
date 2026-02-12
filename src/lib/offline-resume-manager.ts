@@ -8,8 +8,7 @@
  */
 
 import type { DBSchema, IDBPDatabase } from 'idb'
-import type { ResumeSchema } from '@/lib/schema'
-import type { ResumeType } from '@/store/resume/current'
+import type { ResumeSchema, ResumeType } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { openDB } from 'idb'
 

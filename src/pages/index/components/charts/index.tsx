@@ -1,4 +1,4 @@
-import type { Resume, ResumeStats } from '../../type'
+import type { Resume, ResumeStats } from '../../types'
 import { ChartsSkeleton } from '../Skeleton'
 import CreateTrend from './create-trend'
 import ResumeStorage from './resume-storage'
