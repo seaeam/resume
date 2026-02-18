@@ -87,7 +87,9 @@ interface ResumeState extends FormDataMap {
 }
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null
+let onlineSyncTimer: ReturnType<typeof setTimeout> | null = null
 const SYNC_DELAY = 3000
+const ONLINE_SYNC_DELAY = 3000
 
 function scheduleOfflinePersist(flushFn: () => Promise<void>) {
   if (syncTimer) {
@@ -96,6 +98,15 @@ function scheduleOfflinePersist(flushFn: () => Promise<void>) {
   syncTimer = setTimeout(() => {
     void flushFn()
   }, SYNC_DELAY)
+}
+
+function scheduleOnlinePersist(flushFn: () => Promise<void>) {
+  if (onlineSyncTimer) {
+    clearTimeout(onlineSyncTimer)
+  }
+  onlineSyncTimer = setTimeout(() => {
+    void flushFn()
+  }, ONLINE_SYNC_DELAY)
 }
 
 function ensureSection<T extends keyof AutomergeResumeDocument>(doc: AutomergeResumeDocument, key: T) {
@@ -146,6 +157,9 @@ function applyResumeChange(
       set({ syncError: '文档同步失败，请刷新重试' })
     }
   }
+
+  // 4. 在线模式：调度延时自动保存
+  scheduleOnlinePersist(() => get().syncToSupabase())
 }
 
 const useResumeStore = create<ResumeState>()((set, get) => ({
@@ -287,7 +301,16 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     set({ isSyncing: true })
     try {
       await state.docManager.saveToSupabase(state.docHandle)
-      await updateResumeConfig(resumeId, get().getResumeFormData())
+      // 使用 Automerge 文档冲突解决后的最终内容同步到 resume_config
+      const resolvedDoc = state.docHandle?.doc()
+      if (resolvedDoc) {
+        const resolvedFormData = mapDocToState(resolvedDoc)
+        await updateResumeConfig(resumeId, resolvedFormData)
+      }
+      else {
+        // 降级：如果无法获取 Automerge 文档，使用本地状态
+        await updateResumeConfig(resumeId, get().getResumeFormData())
+      }
       set({
         isSyncing: false,
         pendingChanges: false,
@@ -307,6 +330,10 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     if (syncTimer) {
       clearTimeout(syncTimer)
       syncTimer = null
+    }
+    if (onlineSyncTimer) {
+      clearTimeout(onlineSyncTimer)
+      onlineSyncTimer = null
     }
     await get().syncToSupabase()
   },
@@ -446,6 +473,10 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     if (syncTimer) {
       clearTimeout(syncTimer)
       syncTimer = null
+    }
+    if (onlineSyncTimer) {
+      clearTimeout(onlineSyncTimer)
+      onlineSyncTimer = null
     }
     set({
       cleanupFns: [],
