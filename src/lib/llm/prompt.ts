@@ -14,7 +14,7 @@ const prompt = `
 6) ID 规则：
    - 顶层 id 必须是 UUIDv4（小写、带连字符）。
    - fixChecklist[*].id 也必须是 UUIDv4。
-7) 建议可落地规则（解决你“after 全是 null”的问题）：
+7) 建议可落地规则：
    - 只有当“必须用户提供真实值且无法从输入推断/给模板”时，才允许用 fill_field，并且 after 必须为 null。
    - 对于可改写的文本字段（eduInfo/workInfo/projectInfo/selfEvaluation/honors_certificates.description），必须优先使用 replace_text，并给出 after（html_string，不得为 null）。
    - 对于日期格式问题，必须优先使用 normalize_date，并给出 after（string_array，不得为 null）。

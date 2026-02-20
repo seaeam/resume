@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
   try {
     const { messages, model = 'deepseek-reasoner', response_format, temperature = 0, stream = true } = await req.json()
 
-    // 从环境变量读取 API Key（服务端安全，不会暴露给客户端）
     const apiKey = Deno.env.get('OPENAI_API_KEY')
 
     if (!apiKey) {
