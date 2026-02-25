@@ -1,4 +1,5 @@
 import type { JobApplication } from '../types'
+import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
@@ -41,6 +42,17 @@ export function ColumnCard({ job, onClick, isSelectMode, isSelected, onToggleSel
             •
             {job.location}
           </p>
+          {/* 面试轮次 Badge */}
+          {job.status === 'interview' && job.interview_sub_stages && job.interview_sub_stages.length > 0 && (() => {
+            const activeSubStage = job.interview_sub_stages.find(s => s.status === '进行中')
+            return activeSubStage
+              ? (
+                  <Badge variant="outline" className="mt-1 text-[10px] h-4 px-1.5">
+                    {activeSubStage.label}
+                  </Badge>
+                )
+              : null
+          })()}
         </div>
         {isSelectMode && (
           <Checkbox

@@ -20,7 +20,7 @@ export function DrawerNav({ activeTab, onTabChange }: DrawerNavProps) {
         )}
         onClick={() => onTabChange('information')}
       >
-        Information
+        基本信息
       </button>
       <button
         type="button"
@@ -32,7 +32,7 @@ export function DrawerNav({ activeTab, onTabChange }: DrawerNavProps) {
         )}
         onClick={() => onTabChange('document')}
       >
-        Document
+        简历文档
       </button>
     </div>
   )

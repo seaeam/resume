@@ -1,4 +1,4 @@
-import type { ApplicationStatus, JobApplication, StageDetail } from '@/pages/tracker/types'
+import type { ApplicationStatus, InterviewSubStage, JobApplication, StageDetail } from '@/pages/tracker/types'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
 
@@ -19,10 +19,11 @@ export async function getCompanies(): Promise<JobApplication[]> {
     throw error
   }
 
-  // 转换 stage_details JSON 为数组
+  // 转换 JSON 字段为数组
   return (data || []).map(item => ({
     ...item,
     stage_details: (item.stage_details || []) as StageDetail[],
+    interview_sub_stages: (item.interview_sub_stages || []) as InterviewSubStage[],
   }))
 }
 
@@ -51,6 +52,7 @@ export async function createCompany(
   return {
     ...data,
     stage_details: (data.stage_details || []) as StageDetail[],
+    interview_sub_stages: (data.interview_sub_stages || []) as InterviewSubStage[],
   }
 }
 
@@ -82,6 +84,7 @@ export async function updateCompany(
   return {
     ...data,
     stage_details: (data.stage_details || []) as StageDetail[],
+    interview_sub_stages: (data.interview_sub_stages || []) as InterviewSubStage[],
   }
 }
 

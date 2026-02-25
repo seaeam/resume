@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
 import { BoardView } from './components/board-view'
 import { AddJobDrawer, JobDrawer } from './components/drawer'
 import { JobCard } from './components/job-card'
 import { ViewToggle } from './components/view-toggle'
+import { autoCompleteStages } from './const'
 import useTrackerStore from './store'
 
 function Tracker() {
@@ -18,7 +20,7 @@ function Tracker() {
     selectedIds,
     isSelectMode,
     init,
-    updateJobStatus,
+    updateJobLocal,
     updateJob,
     addJob,
     deleteSelectedJobs,
@@ -50,14 +52,45 @@ function Tracker() {
     setSelectedJob(job) // 同步更新本地 selectedJob
   }
 
-  const handleStatusChange = (jobId: string, status: ApplicationStatus) => {
-    updateJobStatus(jobId, status)
-    // 如果当前 Drawer 显示的是这个 job，需要同步更新 selectedJob
+  const handleStatusChange = async (jobId: string, newStatus: ApplicationStatus) => {
+    const job = jobs.find(j => j.id === jobId)
+    if (!job)
+      return
+
+    // 乐观更新：立即更新 UI（纯本地，不调 API）
+    const updatedStageDetails = autoCompleteStages(job.status, newStatus, job.stage_details)
+    const updatedJob = { ...job, status: newStatus, stage_details: updatedStageDetails }
+
+    // 立即更新本地状态
+    updateJobLocal(updatedJob)
+
+    // 同步更新 Drawer 中的 selectedJob
     if (selectedJob?.id === jobId) {
-      const updatedJob = jobs.find(j => j.id === jobId)
-      if (updatedJob) {
-        setSelectedJob({ ...updatedJob, status })
+      setSelectedJob(updatedJob)
+    }
+
+    // 异步更新数据库
+    try {
+      await updateCompany(jobId, updatedJob)
+
+      // 特殊状态提示
+      if (newStatus === 'offer') {
+        toast.success('Offer🎉')
       }
+      else if (newStatus === 'rejected') {
+        toast.error('终止流程')
+      }
+    }
+    catch (error) {
+      // 回滚
+      updateJobLocal(job)
+      if (selectedJob?.id === jobId) {
+        setSelectedJob(job)
+      }
+      const errorMsg = error instanceof Error ? error.message : '未知错误'
+      toast.error('更新状态失败', {
+        description: errorMsg,
+      })
     }
   }
 
@@ -96,9 +129,11 @@ function Tracker() {
                       checked={selectedIds.size === jobs.length && jobs.length > 0}
                       className="size-4"
                     />
+                    已选
+                    {' '}
                     {selectedIds.size}
                     {' '}
-                    Jobs Selected
+                    个职位
                   </Button>
                 )
               : (
@@ -108,26 +143,23 @@ function Tracker() {
                     className="gap-2"
                     onClick={enterSelectMode}
                   >
-                    Manage Jobs
+                    管理职位
                   </Button>
                 )}
             {/* 竖线分隔符 */}
             <div className="h-6 w-px bg-border" />
             {/* 新建 + 导入 */}
             <Button onClick={() => setAddDrawerOpen(true)}>新建看板</Button>
-            <Button variant="outline" onClick={() => toast.warning('功能开发中')}>
-              导入简历
-            </Button>
             {/* 选择模式下显示：Delete + Done */}
             {isSelectMode && (
               <>
                 {selectedIds.size > 0 && (
                   <Button variant="destructive" size="sm" onClick={deleteSelectedJobs}>
-                    Delete
+                    删除
                   </Button>
                 )}
                 <Button variant="ghost" size="sm" onClick={exitSelectMode}>
-                  × Done
+                  × 完成
                 </Button>
               </>
             )}
@@ -173,7 +205,6 @@ function Tracker() {
         job={selectedJob}
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
-        onStatusChange={handleStatusChange}
         onJobUpdate={handleJobUpdate}
       />
 

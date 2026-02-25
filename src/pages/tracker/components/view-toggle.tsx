@@ -23,7 +23,7 @@ export function ViewToggle({ value, onModeChange }: ViewToggleProps) {
         onClick={() => onModeChange('list')}
       >
         <List className="size-4 mr-1.5" />
-        List
+        列表
       </button>
       {/* Board */}
       <button
@@ -37,7 +37,7 @@ export function ViewToggle({ value, onModeChange }: ViewToggleProps) {
         onClick={() => onModeChange('board')}
       >
         <Kanban className="size-4 mr-1.5" />
-        Board
+        看板
       </button>
     </div>
   )

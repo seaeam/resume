@@ -4,12 +4,12 @@ import { cn } from '@/lib/utils'
 const STATUS_STEPS: ApplicationStatus[] = ['saved', 'applied', 'screen', 'interview', 'offer']
 
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  saved: 'Saved',
-  applied: 'Applied',
-  screen: 'Screen',
-  interview: 'Interview',
-  offer: 'Offer',
-  rejected: 'Rejected',
+  saved: '已保存',
+  applied: '已投递',
+  screen: '筛选中',
+  interview: '面试中',
+  offer: '已录用',
+  rejected: '已拒绝',
 }
 
 interface StatusLineProps {
@@ -30,11 +30,14 @@ export function StatusLine({ currentStatus, onStatusChange }: StatusLineProps) {
           <div key={status} className="flex items-center">
             <button
               type="button"
-              onClick={() => onStatusChange?.(status)}
+              onClick={() => !isRejected && onStatusChange?.(status)}
+              disabled={isRejected}
               className={cn(
                 // 移动端更小的圆点，桌面端正常
                 'size-2.5 md:size-3 rounded-full border-2 transition-all',
-                'hover:scale-125 cursor-pointer',
+                isRejected
+                  ? 'cursor-not-allowed'
+                  : 'hover:scale-125 cursor-pointer',
                 isRejected
                   // 被拒绝时全部变红
                   ? 'bg-red-500 border-red-500'

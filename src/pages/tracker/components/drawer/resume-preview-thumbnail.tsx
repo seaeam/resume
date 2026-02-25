@@ -1,9 +1,33 @@
+import type { HTMLReactParserOptions } from 'html-react-parser'
 import type { ORDERType, VisibilityItemsType } from '@/lib/schema'
 import parser from 'html-react-parser'
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
-import useAge from '@/hooks/useAge'
+import useAge from '@/hooks/use-age'
 import { DEFAULT_VISIBILITY } from '@/lib/schema'
+
+// 统一 HTML 解析，确保图片正确渲染
+const parseOptions: HTMLReactParserOptions = {
+  replace: (domNode: any) => {
+    if (domNode.name === 'img') {
+      return (
+        <img
+          src={domNode.attribs?.src}
+          alt={domNode.attribs?.alt || ''}
+          style={{
+            maxWidth: '100%',
+            height: 'auto',
+            display: 'block',
+          }}
+        />
+      )
+    }
+  },
+}
+
+function parseHtmlWithImages(html: string) {
+  return parser(html, parseOptions)
+}
 
 // 简历数据结构（从 Supabase 获取）
 interface ResumeData {
@@ -61,74 +85,75 @@ export function ResumePreviewThumbnail({ data }: ResumePreviewThumbnailProps) {
 
   const getVisibility = (id: VisibilityItemsType) => visibility[id] ?? false
 
-  // A4 尺寸：210mm x 297mm，使用 px 单位方便计算
-  // 1mm ≈ 3.78px，210mm ≈ 794px，297mm ≈ 1123px
-  const a4Width = 794
-  const a4Height = 1123
-
   return (
+    // 外层容器：100% 宽高，内部可滚动
     <div
       style={{
         width: '100%',
         height: '100%',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
         overflow: 'hidden',
         backgroundColor: '#f5f5f5',
-        padding: '8px',
+        display: 'flex',
+        justifyContent: 'center',
       }}
     >
-      {/* A4 纸张容器 */}
+      {/* 简历内容容器：可上下滚动 */}
       <div
         style={{
-          width: `${a4Width}px`,
-          height: `${a4Height}px`,
+          width: '100%',
+          maxWidth: '600px',
+          height: '100%',
+          overflowY: 'auto',
           backgroundColor: 'white',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          padding: '40px',
+          padding: '32px 28px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
-          transform: 'scale(0.35)',
-          transformOrigin: 'top center',
-          flexShrink: 0,
         }}
       >
-        {order.map((moduleType: ORDERType) => {
-          if (moduleType !== 'basics' && getVisibility(moduleType))
+        {order.map((moduleType: string) => {
+          if (moduleType !== 'basics' && getVisibility(moduleType as VisibilityItemsType))
             return null
 
           switch (moduleType) {
             case 'basics':
               return <BasicsSection key={moduleType} data={data} age={age} />
             case 'eduBackground':
+            case 'edu_background':
               return data.eduBackground?.items?.length > 0
                 ? <EduSection key={moduleType} data={data.eduBackground} />
                 : null
             case 'workExperience':
+            case 'work_experience':
               return data.workExperience?.items?.length > 0
                 ? <WorkSection key={moduleType} data={data.workExperience} />
                 : null
             case 'internshipExperience':
+            case 'internship_experience':
               return data.internshipExperience?.items?.length > 0
                 ? <InternshipSection key={moduleType} data={data.internshipExperience} />
                 : null
             case 'projectExperience':
+            case 'project_experience':
               return data.projectExperience?.items?.length > 0
                 ? <ProjectSection key={moduleType} data={data.projectExperience} />
                 : null
             case 'campusExperience':
+            case 'campus_experience':
               return data.campusExperience?.items?.length > 0
                 ? <CampusSection key={moduleType} data={data.campusExperience} />
                 : null
             case 'skillSpecialty':
+            case 'skill_specialty':
               return (data.skillSpecialty?.description || data.skillSpecialty?.skills?.length > 0)
                 ? <SkillSection key={moduleType} data={data.skillSpecialty} />
                 : null
             case 'honorsCertificates':
+            case 'honors_certificates':
               return (data.honorsCertificates?.description || data.honorsCertificates?.certificates?.length > 0)
                 ? <HonorsSection key={moduleType} data={data.honorsCertificates} />
                 : null
             case 'selfEvaluation':
+            case 'self_evaluation':
               return data.selfEvaluation?.content
                 ? <SelfEvalSection key={moduleType} data={data.selfEvaluation} />
                 : null
@@ -202,7 +227,7 @@ function Entry({ title, subtitle, duration, content }: {
           </div>
         )}
       </div>
-      {content && <div style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parser(content)}</div>}
+      {content && <div className="prose" style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parseHtmlWithImages(content)}</div>}
     </div>
   )
 }
@@ -340,7 +365,7 @@ function CampusSection({ data }: { data: any }) {
 function SkillSection({ data }: { data: any }) {
   return (
     <Section title="技能特长">
-      {data.description && <div style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parser(data.description)}</div>}
+      {data.description && <div className="prose" style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parseHtmlWithImages(data.description)}</div>}
     </Section>
   )
 }
@@ -349,7 +374,7 @@ function SkillSection({ data }: { data: any }) {
 function HonorsSection({ data }: { data: any }) {
   return (
     <Section title="荣誉证书">
-      {data.description && <div style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parser(data.description)}</div>}
+      {data.description && <div className="prose" style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parseHtmlWithImages(data.description)}</div>}
       {data.certificates?.length > 0 && (
         <div style={{ fontSize: defaultFont.contentSize }}>
           {data.certificates.map((cert: any, i: number) => (
@@ -368,7 +393,7 @@ function HonorsSection({ data }: { data: any }) {
 function SelfEvalSection({ data }: { data: any }) {
   return (
     <Section title="自我评价">
-      <div style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parser(data.content)}</div>
+      <div className="prose" style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parseHtmlWithImages(data.content)}</div>
     </Section>
   )
 }
@@ -377,7 +402,7 @@ function SelfEvalSection({ data }: { data: any }) {
 function HobbiesSection({ data }: { data: any }) {
   return (
     <Section title="兴趣爱好">
-      {data.description && <div style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parser(data.description)}</div>}
+      {data.description && <div className="prose" style={{ fontSize: defaultFont.contentSize, lineHeight: defaultSpacing.lineHeight }}>{parseHtmlWithImages(data.description)}</div>}
       {data.hobbies?.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
           {data.hobbies.map((hobby: any, i: number) => (

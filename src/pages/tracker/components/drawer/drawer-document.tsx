@@ -1,6 +1,7 @@
 import type { JobApplication } from '../../types'
 import { FileText, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getAllResumesFromUser, getResumeById } from '@/lib/supabase/resume'
@@ -19,6 +20,7 @@ interface DrawerDocumentProps {
 }
 
 export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
+  const navigate = useNavigate()
   const [resumes, setResumes] = useState<ResumeOption[]>([])
   const [loading, setLoading] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
@@ -49,9 +51,7 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
     setPreviewLoading(true)
     getResumeById(job.resume_id, '*')
       .then((data) => {
-        // Supabase 返回 snake_case，转换为 camelCase
         const mapped = mapSnakeToCamel(data)
-        // console.log('Resume preview data:', mapped)
         setPreviewData(mapped)
       })
       .catch((error) => {
@@ -66,14 +66,34 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
   const handleResumeChange = (resumeId: string) => {
     onUpdate({
       ...job,
-      resume_id: resumeId === 'none' ? null : resumeId,
+      resume_id: resumeId,
     })
   }
 
-  // 获取当前选中的简历名称
-  const selectedResumeName = job.resume_id
-    ? resumes.find(r => r.resume_id === job.resume_id)?.display_name || '未知简历'
-    : '空简历'
+  // 没有简历的空状态
+  if (!loading && resumes.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h3 className="font-semibold text-lg">投递简历</h3>
+        <div className="border rounded-lg aspect-[3/4] bg-white overflow-hidden">
+          <div className="w-full h-full flex items-center justify-center bg-muted/50">
+            <div className="text-center text-muted-foreground px-6">
+              <FileText className="size-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm font-medium mb-2">当前投递简历为空</p>
+              <p className="text-xs mb-4">请先创建一份简历</p>
+              <button
+                type="button"
+                onClick={() => navigate('/resume')}
+                className="text-sm text-primary hover:underline font-medium cursor-pointer"
+              >
+                前往「我的简历」创建 →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -83,7 +103,7 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
       <div className="space-y-1.5">
         <Label>选择简历</Label>
         <Select
-          value={job.resume_id || 'none'}
+          value={job.resume_id || ''}
           onValueChange={handleResumeChange}
           disabled={loading}
         >
@@ -91,11 +111,10 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
             <SelectValue placeholder={loading ? '加载中...' : '选择简历'} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">空简历</SelectItem>
             {resumes.map(resume => (
               <SelectItem key={resume.resume_id} value={resume.resume_id}>
                 {resume.display_name}
-                {resume.type === 'default' && ' (Default)'}
+                {resume.type === 'default' && ' (默认)'}
               </SelectItem>
             ))}
           </SelectContent>
@@ -120,8 +139,7 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
                   <div className="w-full h-full flex items-center justify-center bg-muted/50">
                     <div className="text-center text-muted-foreground">
                       <FileText className="size-12 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">{selectedResumeName}</p>
-                      <p className="text-xs mt-1">简历预览</p>
+                      <p className="text-sm">请选择一份简历</p>
                     </div>
                   </div>
                 )}

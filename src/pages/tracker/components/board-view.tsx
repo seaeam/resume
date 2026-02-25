@@ -4,11 +4,11 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { ColumnCard } from './column-card'
 
 const BOARD_COLUMNS: { status: ApplicationStatus, label: string }[] = [
-  { status: 'saved', label: 'Saved' },
-  { status: 'applied', label: 'Applied' },
-  { status: 'screen', label: 'Screen' },
-  { status: 'interview', label: 'Interview' },
-  { status: 'offer', label: 'Offer' },
+  { status: 'saved', label: '已保存' },
+  { status: 'applied', label: '已投递' },
+  { status: 'screen', label: '筛选中' },
+  { status: 'interview', label: '面试中' },
+  { status: 'offer', label: '已录用' },
 ]
 
 interface BoardViewProps {
@@ -96,7 +96,7 @@ export function BoardView({ jobs, onJobClick, onStatusChange, isSelectMode, sele
                           )
                         : (
                             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                              No jobs
+                              暂无职位
                             </div>
                           )}
                       {provided.placeholder}

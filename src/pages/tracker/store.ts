@@ -16,11 +16,14 @@ interface TrackerStore {
   selectedIds: Set<string>
   isSelectMode: boolean
   loading: boolean
+  error: string | null
+  isInitialized: boolean
 
   // 操作
   init: () => Promise<void>
   setViewMode: (mode: ViewMode) => void
   updateJobStatus: (jobId: string, status: ApplicationStatus) => Promise<void>
+  updateJobLocal: (job: JobApplication) => void
   updateJob: (job: JobApplication) => Promise<void>
   addJob: (job: Omit<JobApplication, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<void>
   deleteSelectedJobs: () => Promise<void>
@@ -39,28 +42,75 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
   selectedIds: new Set(),
   isSelectMode: false,
   loading: false,
+  error: null,
+  isInitialized: false,
 
   init: async () => {
-    set({ loading: true })
+    // 防止重复初始化（React Strict Mode 会导致 useEffect 执行两次）
+    if (get().isInitialized || get().loading) {
+      return
+    }
+
+    set({ loading: true, error: null })
     try {
       const jobs = await getCompanies()
-      set({ jobs, loading: false })
+      set({ jobs, loading: false, error: null, isInitialized: true })
     }
     catch (error) {
-      console.error('Failed to load jobs:', error)
-      toast.error('加载失败')
-      set({ loading: false })
+      // console.error('Failed to load jobs:', error)
+
+      // 详细的错误处理
+      let errorMessage = '加载失败'
+      let errorDetail = ''
+
+      if (error instanceof Error) {
+        // 认证错误
+        if (error.message.includes('未登陆') || error.message.includes('not authenticated')) {
+          errorMessage = '请先登录'
+          errorDetail = '需要登录后才能查看职位追踪'
+        }
+        // 网络错误
+        else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = '网络连接失败'
+          errorDetail = '请检查网络连接后重试'
+        }
+        // 权限错误
+        else if (error.message.includes('permission') || error.message.includes('policy')) {
+          errorMessage = '权限不足'
+          errorDetail = '无法访问职位数据，请联系管理员'
+        }
+        // 数据库错误
+        else if (error.message.includes('database') || error.message.includes('relation')) {
+          errorMessage = '数据库错误'
+          errorDetail = '数据表可能不存在或结构异常'
+        }
+        // 其他错误
+        else {
+          errorMessage = '加载失败'
+          errorDetail = error.message
+        }
+      }
+
+      set({ loading: false, error: errorMessage })
+
+      // 显示用户友好的错误提示
+      toast.error(errorMessage, {
+        description: errorDetail,
+      })
     }
   },
 
   setViewMode: mode => set({ viewMode: mode }),
 
   updateJobStatus: async (jobId, status) => {
+    // 这里有个延迟更新的优化问题，由于采用先请求API，然后进行更新，会造成用户体验卡顿
+    // 这里改为使用乐观更新，先更新UI，再去请求API，并且设置一个旧状态用于回滚
+    const { jobs } = get()
+    const previousJobs = jobs// 保存旧状态用于回滚
+    set({ jobs: jobs.map(job => job.id === jobId ? { ...job, status } : job) })
     try {
       await updateCompanyStatus(jobId, status)
-      const { jobs } = get()
-      const updatedJobs = jobs.map(j => j.id === jobId ? { ...j, status } : j)
-      set({ jobs: updatedJobs })
+
       // 特殊状态的 toast 提示
       if (status === 'offer') {
         toast.success('Offer🎉')
@@ -73,9 +123,20 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
       }
     }
     catch (error) {
-      console.error('Failed to update status:', error)
-      toast.error('更新状态失败')
+      // console.error('Failed to update status:', error)
+      // 如果报错 那就回滚
+      set({ jobs: previousJobs })
+      const errorMsg = error instanceof Error ? error.message : '未知错误'
+      toast.error('更新状态失败', {
+        description: errorMsg,
+      })
     }
+  },
+
+  updateJobLocal: (job) => {
+    set(state => ({
+      jobs: state.jobs.map(j => j.id === job.id ? job : j),
+    }))
   },
 
   updateJob: async (job) => {
@@ -84,11 +145,13 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
       set(state => ({
         jobs: state.jobs.map(j => j.id === job.id ? updated : j),
       }))
-      toast.success('更新成功')
     }
     catch (error) {
       console.error('Failed to update job:', error)
-      toast.error('更新失败')
+      const errorMsg = error instanceof Error ? error.message : '未知错误'
+      toast.error('更新失败', {
+        description: errorMsg,
+      })
     }
   },
 
@@ -100,7 +163,10 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
     }
     catch (error) {
       console.error('Failed to add job:', error)
-      toast.error('添加失败')
+      const errorMsg = error instanceof Error ? error.message : '未知错误'
+      toast.error('添加失败', {
+        description: errorMsg,
+      })
     }
   },
 
@@ -120,7 +186,10 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
     }
     catch (error) {
       console.error('Failed to delete jobs:', error)
-      toast.error('删除失败')
+      const errorMsg = error instanceof Error ? error.message : '未知错误'
+      toast.error('删除失败', {
+        description: errorMsg,
+      })
     }
   },
 

@@ -3,6 +3,15 @@ export type ApplicationStatus = 'saved' | 'applied' | 'screen' | 'interview' | '
 export type StageStatus = '待处理' | '进行中' | '已完成' | '已拒绝'
 export type ViewMode = 'list' | 'board'
 
+export interface InterviewSubStage {
+  id: string
+  label: string
+  status: StageStatus
+  start_date: string | null
+  notes: string
+  order: number
+}
+
 export interface StageDetail {
   stage: ApplicationStatus
   status: StageStatus
@@ -24,4 +33,5 @@ export interface JobApplication {
   job_url: string | null
   status: ApplicationStatus
   stage_details: StageDetail[]
+  interview_sub_stages: InterviewSubStage[]
 }
