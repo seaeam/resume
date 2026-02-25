@@ -14,11 +14,7 @@ import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useIsMobile } from '@/hooks/use-mobile'
-import {
-  PRESET_SKILLS,
-  PROFICIENCY_PERCENTAGE_MAP,
-  skillSpecialtyFormSchema,
-} from '@/lib/schema/resume/form/skillSpecialty'
+import { PRESET_SKILLS, PROFICIENCY_PERCENTAGE_MAP, skillSpecialtyFormSchema } from '@/lib/schema/resume/form/skillSpecialty'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 
@@ -29,7 +25,7 @@ const displayTypes: { value: DisplayType, label: string }[] = [
 ]
 
 function SkillSpecialtyForm({ className }: { className?: string }) {
-  const skillSpecialty = useResumeStore(state => state.skillSpecialty)
+  const skillSpecialty = useResumeStore(state => state.skill_specialty)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
   const [customSkillInput, setCustomSkillInput] = useState('')
@@ -51,7 +47,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('skillSpecialty', value as ShallowPartial<SkillSpecialtyFormType>)
+      updateForm('skill_specialty', value as ShallowPartial<SkillSpecialtyFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])
@@ -195,7 +191,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                         variant="ghost"
                         size="sm"
                         onClick={() => remove(index)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

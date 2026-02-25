@@ -4,6 +4,7 @@ import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-index
 
 let repoInstance: Repo | null = null
 let currentResumeId: string | null = null
+let storageAdapter: IndexedDBStorageAdapter | null = null
 
 /**
  * 获取或创建 Automerge Repo 单例
@@ -15,7 +16,7 @@ export function getAutomergeRepo(userId: string, resumeId?: string) {
   }
 
   if (!repoInstance) {
-    repoInstance = createResumeRepo(userId)
+    repoInstance = createResumeRepo()
   }
 
   currentResumeId = resumeId ?? currentResumeId ?? null
@@ -24,11 +25,14 @@ export function getAutomergeRepo(userId: string, resumeId?: string) {
 
 /**
  * 创建 Automerge Repo
+ * 注意：userId 参数已移除，未来如需 per-user 隔离存储可再引入。
  */
-function createResumeRepo(userId: string): Repo {
+function createResumeRepo(): Repo {
+  storageAdapter = new IndexedDBStorageAdapter('resume-automerge-v1')
+
   const config: RepoConfig = {
     // 本地存储适配器
-    storage: new IndexedDBStorageAdapter('resume-automerge-v1'),
+    storage: storageAdapter,
 
     // 共享策略（允许多标签页共享）
     sharePolicy: async () => true,
@@ -48,11 +52,13 @@ export function destroyAutomergeRepo() {
       repoInstance.networkSubsystem.disconnect()
     }
     catch (error) {
-      // 忽略错误
+      // 忽略断开连接时的错误
     }
 
-    // Repo 没有明确的销毁方法，设为 null 即可
     repoInstance = null
     currentResumeId = null
   }
+
+  // 清理 IndexedDB 存储适配器引用，防止泄漏
+  storageAdapter = null
 }

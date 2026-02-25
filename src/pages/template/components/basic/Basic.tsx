@@ -4,7 +4,7 @@ import type { ORDERType, ProficiencyLevel, ResumeSchema } from '@/lib/schema'
 import parser from 'html-react-parser'
 import { createContext, use, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
-import useAge from '@/hooks/useAge'
+import useAge from '@/hooks/use-age'
 import useResumeStore from '@/store/resume/form'
 import './basic.css'
 
@@ -118,7 +118,7 @@ function Entry({ title, subtitle, duration, content }: {
 
 function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number }) {
   const { theme, font, spacing } = useResumeContext()
-  const { basics, jobIntent } = data
+  const { basics, job_intent } = data
   const infoFields = [
     age && `${age}岁`,
     basics.gender !== '不填' && basics.gender,
@@ -149,7 +149,7 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
         {basics.name || '姓名'}
       </h1>
 
-      {jobIntent && (
+      {job_intent && (
         <div
           style={{
             fontSize: font.jobIntentSize,
@@ -159,10 +159,10 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
           }}
         >
           求职意向：
-          {jobIntent.jobIntent}
-          {jobIntent.intentionalCity && ` | ${jobIntent.intentionalCity}`}
-          {jobIntent.expectedSalary && ` | ${jobIntent.expectedSalary}K`}
-          {jobIntent.dateEntry && jobIntent.dateEntry !== '不填' && ` | ${jobIntent.dateEntry}`}
+          {job_intent.jobIntent}
+          {job_intent.intentionalCity && ` | ${job_intent.intentionalCity}`}
+          {job_intent.expectedSalary && ` | ${job_intent.expectedSalary}K`}
+          {job_intent.dateEntry && job_intent.dateEntry !== '不填' && ` | ${job_intent.dateEntry}`}
         </div>
       )}
 
@@ -222,20 +222,20 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
 
 function ApplicationInfoModule() {
   const { font, spacing } = useResumeContext()
-  const { applicationInfo } = useResumeStore()
+  const { application_info } = useResumeStore()
 
   return (
     <Section title="报考信息">
-      {applicationInfo.applicationSchool && (
+      {application_info.applicationSchool && (
         <div style={{ fontSize: font.contentSize, lineHeight: spacing.lineHeight }}>
           报考院校：
-          <span style={{ fontWeight: font.mediumWeight }}>{applicationInfo.applicationSchool}</span>
+          <span style={{ fontWeight: font.mediumWeight }}>{application_info.applicationSchool}</span>
         </div>
       )}
-      {applicationInfo.applicationMajor && (
+      {application_info.applicationMajor && (
         <div style={{ fontSize: font.contentSize, lineHeight: spacing.lineHeight }}>
           报考专业：
-          <span style={{ fontWeight: font.mediumWeight }}>{applicationInfo.applicationMajor}</span>
+          <span style={{ fontWeight: font.mediumWeight }}>{application_info.applicationMajor}</span>
         </div>
       )}
     </Section>
@@ -243,10 +243,10 @@ function ApplicationInfoModule() {
 }
 
 function EduBackgroundModule() {
-  const { eduBackground } = useResumeStore()
+  const { edu_background } = useResumeStore()
   return (
     <Section title="教育背景">
-      {eduBackground.items.map((item, i) => (
+      {edu_background.items.map((item, i) => (
         <Entry
           key={`edu-${item.schoolName}-${i}`}
           title={item.schoolName}
@@ -260,10 +260,10 @@ function EduBackgroundModule() {
 }
 
 function WorkExperienceModule() {
-  const { workExperience } = useResumeStore()
+  const { work_experience } = useResumeStore()
   return (
     <Section title="工作经历">
-      {workExperience.items.map((item, i) => (
+      {work_experience.items.map((item, i) => (
         <Entry
           key={`work-${item.companyName}-${i}`}
           title={item.companyName}
@@ -277,10 +277,10 @@ function WorkExperienceModule() {
 }
 
 function InternshipExperienceModule() {
-  const { internshipExperience } = useResumeStore()
+  const { internship_experience } = useResumeStore()
   return (
     <Section title="实习经验">
-      {internshipExperience.items.map((item, i) => (
+      {internship_experience.items.map((item, i) => (
         <Entry
           key={`intern-${item.companyName}-${i}`}
           title={item.companyName}
@@ -294,10 +294,10 @@ function InternshipExperienceModule() {
 }
 
 function ProjectExperienceModule() {
-  const { projectExperience } = useResumeStore()
+  const { project_experience } = useResumeStore()
   return (
     <Section title="项目经验">
-      {projectExperience.items.map((item, i) => (
+      {project_experience.items.map((item, i) => (
         <Entry
           key={`project-${item.projectName}-${i}`}
           title={item.projectName}
@@ -311,10 +311,10 @@ function ProjectExperienceModule() {
 }
 
 function CampusExperienceModule() {
-  const { campusExperience } = useResumeStore()
+  const { campus_experience } = useResumeStore()
   return (
     <Section title="校园经历">
-      {campusExperience.items.map((item, i) => (
+      {campus_experience.items.map((item, i) => (
         <Entry
           key={`campus-${item.experienceName}-${i}`}
           title={item.experienceName}
@@ -329,14 +329,14 @@ function CampusExperienceModule() {
 
 function SkillSpecialtyModule() {
   const { theme, font } = useResumeContext()
-  const { skillSpecialty } = useResumeStore()
+  const { skill_specialty } = useResumeStore()
 
   return (
     <Section title="技能特长">
-      {skillSpecialty.description && <div className="prose">{parser(skillSpecialty.description)}</div>}
-      {skillSpecialty.skills?.length > 0 && (
+      {skill_specialty.description && <div className="prose">{parser(skill_specialty.description)}</div>}
+      {skill_specialty.skills?.length > 0 && (
         <div className="grid gap-4 mt-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-          {skillSpecialty.skills.map((skill, i) => {
+          {skill_specialty.skills.map((skill, i) => {
             const percentage = skillProficiencyMap[skill.proficiencyLevel] || 50
             return (
               <div key={`skill-${skill.label}-${i}`} className="flex flex-col gap-1">
@@ -368,14 +368,14 @@ function SkillSpecialtyModule() {
 
 function HonorsCertificatesModule() {
   const { font, spacing } = useResumeContext()
-  const { honorsCertificates } = useResumeStore()
+  const { honors_certificates } = useResumeStore()
 
   return (
     <Section title="荣誉证书">
-      {honorsCertificates.description && <div className="prose">{parser(honorsCertificates.description)}</div>}
-      {honorsCertificates.certificates?.length > 0 && (
+      {honors_certificates.description && <div className="prose">{parser(honors_certificates.description)}</div>}
+      {honors_certificates.certificates?.length > 0 && (
         <div style={{ fontSize: font.contentSize, lineHeight: spacing.lineHeight }}>
-          {honorsCertificates.certificates.map((cert, i) => (
+          {honors_certificates.certificates.map((cert, i) => (
             <span key={`cert-${cert.name}-${i}`}>
               {i > 0 && '、'}
               {cert.name}
@@ -388,10 +388,10 @@ function HonorsCertificatesModule() {
 }
 
 function SelfEvaluationModule() {
-  const { selfEvaluation } = useResumeStore()
+  const { self_evaluation } = useResumeStore()
   return (
     <Section title="自我评价">
-      <div className="prose">{parser(selfEvaluation.content)}</div>
+      <div className="prose">{parser(self_evaluation.content)}</div>
     </Section>
   )
 }
@@ -418,17 +418,17 @@ function HobbiesModule() {
 
 const MODULE_COMPONENTS: Record<ORDERType, React.ComponentType<any>> = {
   basics: BasicsModule,
-  applicationInfo: ApplicationInfoModule,
-  eduBackground: EduBackgroundModule,
-  workExperience: WorkExperienceModule,
-  internshipExperience: InternshipExperienceModule,
-  projectExperience: ProjectExperienceModule,
-  campusExperience: CampusExperienceModule,
-  skillSpecialty: SkillSpecialtyModule,
-  honorsCertificates: HonorsCertificatesModule,
-  selfEvaluation: SelfEvaluationModule,
+  application_info: ApplicationInfoModule,
+  edu_background: EduBackgroundModule,
+  work_experience: WorkExperienceModule,
+  internship_experience: InternshipExperienceModule,
+  project_experience: ProjectExperienceModule,
+  campus_experience: CampusExperienceModule,
+  skill_specialty: SkillSpecialtyModule,
+  honors_certificates: HonorsCertificatesModule,
+  self_evaluation: SelfEvaluationModule,
   hobbies: HobbiesModule,
-  jobIntent: () => null,
+  job_intent: () => null,
 } as const
 
 interface BasicResumeContentProps {

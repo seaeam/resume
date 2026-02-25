@@ -1,47 +1,39 @@
 import type { MouseEvent } from 'react'
-import type { ResumeType } from '@/store/resume/current'
+import type { ResumeItem } from '../types'
 import { Cloud, Edit2, FileText, HardDrive, X } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
+import useResumeListStore from '@/pages/resume/store'
+import useCurrentResumeStore from '@/store/resume/current'
 import { DeleteResumeDialog } from './DeleteResumeDialog'
 import { EditResumeDialog } from './EditResumeDialog'
 
-interface Resume {
-  resume_id: string
-  created_at: string
-  type: ResumeType
-  display_name?: string
-  description?: string
-  isOffline?: boolean
-}
-
 interface ResumeCardProps {
-  resume: Resume
-  onEdit: (resume: Resume) => void
-  onDelete: (id: string) => Promise<void>
-  onUpdate?: (resumeId: string, updates: { display_name: string, description: string }) => void
-  isOnline: boolean
+  resume: ResumeItem
 }
 
-export function ResumeCard({ resume, onEdit, onDelete, onUpdate }: ResumeCardProps) {
+export function ResumeCard({ resume }: ResumeCardProps) {
+  const { deleteResume, updateResume } = useResumeListStore()
+  const { setCurrentResume } = useCurrentResumeStore()
+  const isMobile = useIsMobile()
+
+  const navigate = useNavigate()
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
-  const isMobile = useIsMobile()
 
   const handleUpdateSuccess = (updates: { display_name: string, description: string }) => {
-    // 通知父组件更新
-    if (onUpdate) {
-      onUpdate(resume.resume_id, updates)
-    }
+    updateResume(resume.resume_id, updates)
   }
 
   const handleCardClick = () => {
-    onEdit(resume)
+    setCurrentResume(resume.resume_id, resume.type)
+    navigate('/resume/editor')
   }
 
   const handleEditClick = (e: MouseEvent<HTMLButtonElement>) => {
@@ -54,8 +46,8 @@ export function ResumeCard({ resume, onEdit, onDelete, onUpdate }: ResumeCardPro
     setShowDeleteDialog(true)
   }
 
-  const handleDeleteConfirm = async () => {
-    await onDelete(resume.resume_id)
+  const handleDeleteConfirm = () => {
+    deleteResume(resume.resume_id)
     setShowDeleteDialog(false)
   }
 
@@ -72,7 +64,7 @@ export function ResumeCard({ resume, onEdit, onDelete, onUpdate }: ResumeCardPro
           onClick={handleDeleteClick}
           size="icon"
           className={cn(
-            'absolute -top-2 -right-2 z-10 h-6 w-6 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg hover:cursor-pointer',
+            'absolute -top-2 -right-2 z-10 h-6 w-6 rounded-full bg-linear-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg hover:cursor-pointer',
             isMobile
               ? 'opacity-100 scale-100 rotate-0'
               : isHovered

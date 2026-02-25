@@ -1,15 +1,14 @@
-/* eslint-disable no-console */
 /*
  * @Author: lll 347552878@qq.com
  * @Date: 2025-10-24 21:56:16
  * @LastEditors: shemingcong shemingcong@dcarlife.com
- * @LastEditTime: 2026-01-07 11:03:02
+ * @LastEditTime: 2026-02-10 20:41:13
  * @FilePath: /resume/src/lib/offline-resume-manager.ts
  * @Description: 离线简历管理器,使用 IndexedDB 存储本地简历
  */
 
 import type { DBSchema, IDBPDatabase } from 'idb'
-import type { ResumeSchema } from '@/lib/schema'
+import type { ResumeSchema, ResumeType } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { openDB } from 'idb'
 
@@ -20,7 +19,7 @@ interface ResumeDB extends DBSchema {
       resume_id: string
       display_name: string
       description?: string
-      type: string
+      type: ResumeType
       created_at: string
       updated_at: string
       data: Partial<ResumeSchema>
@@ -55,6 +54,17 @@ async function getDB(): Promise<IDBPDatabase<ResumeDB>> {
     },
   })
 
+  // 当其他标签页升级数据库版本时，关闭当前连接以避免阻塞
+  dbInstance.onversionchange = () => {
+    dbInstance?.close()
+    dbInstance = null
+  }
+
+  // 异常关闭时清除缓存引用，下次访问会重新打开
+  dbInstance.onclose = () => {
+    dbInstance = null
+  }
+
   return dbInstance
 }
 
@@ -71,8 +81,8 @@ function generateResumeId(): string {
 export async function createOfflineResume(options: {
   display_name?: string
   description?: string
-  type?: string
-}): Promise<string> {
+  type?: ResumeType
+}) {
   const db = await getDB()
   const resumeId = generateResumeId()
 
@@ -87,8 +97,6 @@ export async function createOfflineResume(options: {
   }
 
   await db.add('resumes', resume)
-
-  console.log('✅ 创建离线简历', { resumeId, display_name: resume.display_name })
 
   return resumeId
 }
@@ -130,8 +138,6 @@ export async function updateOfflineResume(
   resume.updated_at = dayjs().toISOString()
 
   await db.put('resumes', resume)
-
-  console.log('✅ 更新离线简历', { resumeId })
 }
 
 /**
@@ -149,11 +155,9 @@ export async function updateOfflineResumeMeta(resumeId: string, meta: { display_
     resume.display_name = meta.display_name
   if (meta.description !== undefined)
     resume.description = meta.description
-  resume.updated_at = new Date().toISOString()
+  resume.updated_at = dayjs().toISOString()
 
   await db.put('resumes', resume)
-
-  console.log('✅ 更新离线简历元信息', { resumeId, meta })
 }
 
 /**
@@ -162,8 +166,6 @@ export async function updateOfflineResumeMeta(resumeId: string, meta: { display_
 export async function deleteOfflineResume(resumeId: string) {
   const db = await getDB()
   await db.delete('resumes', resumeId)
-
-  console.log('🗑️ 删除离线简历', { resumeId })
 }
 
 /**
@@ -179,8 +181,6 @@ export function isOfflineResumeId(resumeId: string): boolean {
 export async function clearAllOfflineResumes() {
   const db = await getDB()
   await db.clear('resumes')
-
-  console.log('🧹 清空所有离线简历')
 }
 
 /**
@@ -199,11 +199,8 @@ export async function migrateOfflineResumesToCloud(
   }
 
   if (offlineResumes.length === 0) {
-    console.log('📭 没有需要迁移的本地简历')
     return { success: 0, failed: 0, errors: [] }
   }
-
-  console.log(`📤 开始迁移 ${offlineResumes.length} 个本地简历到云端...`)
 
   let success = 0
   let failed = 0
@@ -222,7 +219,6 @@ export async function migrateOfflineResumesToCloud(
       // 上传成功后删除本地简历
       await deleteOfflineResume(resume.resume_id)
       success++
-      console.log(`✅ 成功迁移简历: ${resume.display_name}`)
     }
     catch (error) {
       failed++
@@ -231,8 +227,6 @@ export async function migrateOfflineResumesToCloud(
       console.error(`❌ 迁移简历失败: ${resume.display_name}`, error)
     }
   }
-
-  console.log(`📊 迁移完成: 成功 ${success} 个, 失败 ${failed} 个`)
 
   return { success, failed, errors }
 }
@@ -267,8 +261,6 @@ export async function importOfflineResume(jsonData: string): Promise<string> {
   }
 
   await db.add('resumes', resume)
-
-  console.log('📥 导入离线简历', { resumeId: newResumeId })
 
   return newResumeId
 }

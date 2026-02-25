@@ -110,7 +110,7 @@ AI 从五个维度评估你的简历：
 
 ### 环境要求
 
-- Node.js 18+
+- Node.js 20+
 - pnpm（推荐）
 
 ### 本地运行
@@ -132,6 +132,9 @@ pnpm dev
 ```
 
 访问 `http://localhost:5173` 开始使用。
+
+> [!WARNING]
+> 在你的 supabase 项目中，请将 `supabase/migrations/*` 中的所有 `SQL` 在你的数据库中执行一次，以创建必要的表结构。
 
 ### 生产部署
 

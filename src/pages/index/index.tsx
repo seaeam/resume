@@ -1,5 +1,5 @@
-import type { Resume } from './type'
-import type { ResumeType } from '@/store/resume/current'
+import type { Resume } from './types'
+import type { ResumeType } from '@/lib/schema'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { getAllOfflineResumes } from '@/lib/offline-resume-manager'
@@ -66,6 +66,9 @@ export default function DashboardPage() {
         }))
 
         setResumes([...onlineResumes, ...offlineResumes])
+      }
+      catch (error) {
+        console.error('加载简历列表失败:', error)
       }
       finally {
         setResumesLoading(false)

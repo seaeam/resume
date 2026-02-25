@@ -96,6 +96,8 @@ function BasicResumeForm({ className }: { className?: string }) {
             control={form.control}
             name="birthMonth"
             render={({ field }) => {
+              const birthday = dayjs(field.value).isValid() ? dayjs(field.value) : dayjs('2002-01-01')
+
               return (
                 <FormItem>
                   <FormLabel>出生年月</FormLabel>
@@ -110,8 +112,8 @@ function BasicResumeForm({ className }: { className?: string }) {
                       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                         <Calendar
                           mode="single"
-                          defaultMonth={new Date(field.value || '2002-1-1')}
-                          selected={field.value ? new Date(field.value) : undefined}
+                          defaultMonth={birthday.toDate()}
+                          selected={birthday.toDate()}
                           captionLayout="dropdown"
                           onSelect={(date) => {
                             field.onChange(date && dayjs(date).format('YYYY-MM-DD'))

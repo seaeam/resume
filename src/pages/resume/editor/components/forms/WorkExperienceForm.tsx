@@ -2,6 +2,7 @@ import type { WorkExperienceFormType } from '@/lib/schema'
 import type { ShallowPartial } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconDoorExit } from '@tabler/icons-react'
+import dayjs from 'dayjs'
 import { Laptop, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
@@ -21,7 +22,7 @@ import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 
 function WorkExperienceForm({ className }: { className?: string }) {
-  const workExperience = useResumeStore(state => state.workExperience)
+  const workExperience = useResumeStore(state => state.work_experience)
   const [isUptoNow, setIsUptoNow] = useState(() => workExperience.items?.some(item => item.workDuration?.[1] === '至今') || false)
   const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
@@ -42,7 +43,7 @@ function WorkExperienceForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('workExperience', value as ShallowPartial<WorkExperienceFormType>)
+      updateForm('work_experience', value as ShallowPartial<WorkExperienceFormType>)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])
@@ -108,72 +109,77 @@ function WorkExperienceForm({ className }: { className?: string }) {
                 <FormField
                   name={`items.${index}.workDuration`}
                   control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>工作时间</FormLabel>
-                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
-                              {field.value?.[0] || '入职时间'}
-                              <Laptop className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent align="start" className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              captionLayout="dropdown"
-                              defaultMonth={new Date(field.value?.[0] || '2002-1-1')}
-                              disabled={date => date > new Date()}
-                              selected={field.value?.[0] ? new Date(field.value[0]) : undefined}
-                              onSelect={(date) => {
-                                field.onChange([date?.toLocaleDateString(), field.value?.[1]])
+                  render={({ field }) => {
+                    const start = dayjs(field.value?.[0]).isValid() ? dayjs(field.value?.[0]) : dayjs('2020-01-01')
+                    const end = dayjs(field.value?.[1]).isValid() ? dayjs(field.value?.[1]) : dayjs('2024-09-01')
+
+                    return (
+                      <FormItem>
+                        <FormLabel>工作时间</FormLabel>
+                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
+                                {field.value?.[0] || '入职时间'}
+                                <Laptop className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent align="start" className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                captionLayout="dropdown"
+                                defaultMonth={start.toDate()}
+                                disabled={date => date > new Date()}
+                                selected={start.toDate()}
+                                onSelect={(date) => {
+                                  field.onChange([dayjs(date).format('YYYY-MM-DD'), field.value?.[1]])
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+
+                          <span className="text-muted-foreground hidden sm:inline">-</span>
+
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button disabled={isUptoNow} variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
+                                {field.value?.[1] || '离职时间'}
+                                <IconDoorExit className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent align="start" className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                captionLayout="dropdown"
+                                defaultMonth={end.toDate()}
+                                endMonth={new Date(2035, 11)}
+                                selected={end.toDate()}
+                                onSelect={(date) => {
+                                  field.onChange([field.value?.[0], dayjs(date).format('YYYY-MM-DD')])
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <div className="flex items-center space-x-2">
+                            <Label htmlFor="up-to-now">至今</Label>
+                            <Checkbox
+                              id="up-to-now"
+                              checked={isUptoNow}
+                              onCheckedChange={(checked) => {
+                                setIsUptoNow(!!checked)
+                                if (checked) {
+                                  field.onChange([start.format('YYYY-MM-DD'), '至今'])
+                                }
+                                else {
+                                  field.onChange([start.format('YYYY-MM-DD'), ''])
+                                }
                               }}
                             />
-                          </PopoverContent>
-                        </Popover>
-
-                        <span className="text-muted-foreground hidden sm:inline">-</span>
-
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button disabled={isUptoNow} variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
-                              {field.value?.[1] || '离职时间'}
-                              <IconDoorExit className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent align="start" className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              captionLayout="dropdown"
-                              defaultMonth={new Date(field.value?.[1] || '2002-1-1')}
-                              endMonth={new Date(2035, 11)}
-                              selected={field.value?.[1] ? new Date(field.value[1]) : undefined}
-                              onSelect={(date) => {
-                                field.onChange([field.value?.[0], date?.toLocaleDateString()])
-                              }}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <div className="flex items-center space-x-2">
-                          <Label htmlFor="up-to-now">至今</Label>
-                          <Checkbox
-                            id="up-to-now"
-                            checked={isUptoNow}
-                            onCheckedChange={(checked) => {
-                              setIsUptoNow(!!checked)
-                              if (checked) {
-                                field.onChange([field.value?.[0], '至今'])
-                              }
-                              else {
-                                field.onChange([field.value?.[0], ''])
-                              }
-                            }}
-                          />
+                          </div>
                         </div>
-                      </div>
-                    </FormItem>
-                  )}
+                      </FormItem>
+                    )
+                  }}
                 />
               </section>
 

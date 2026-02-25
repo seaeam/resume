@@ -241,7 +241,7 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
       handlePrint()
     }
     catch (error) {
-      toast.error(`导出 PDF 失败,请稍后重试${error}`)
+      toast.error(`导出 PDF 失败,请稍后重试${error instanceof Error ? `: ${error.message}` : ''}`)
     }
   },
 
@@ -263,7 +263,12 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
 
       // 只获取第一个页面的内容
       const firstPage = resumeRef.current.querySelector('[data-resume-content]')
-      const contentHtml = firstPage ? firstPage.innerHTML : resumeRef.current.innerHTML
+      const rawHtml = firstPage ? firstPage.innerHTML : resumeRef.current.innerHTML
+
+      // 对 innerHTML 进行基本消毒，移除 script 标签和事件处理属性以防止 XSS
+      const contentHtml = rawHtml
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/\s*on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '')
 
       const html = createResumeDocHtml(contentHtml, {
         baseFontSize: fontSize,
@@ -283,7 +288,7 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
       toast.success('导出成功!')
     }
     catch (error) {
-      toast.error(`导出 Word 失败,请稍后重试${error}`)
+      toast.error(`导出 Word 失败,请稍后重试${error instanceof Error ? `: ${error.message}` : ''}`)
     }
   },
 }))

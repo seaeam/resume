@@ -1,53 +1,36 @@
 import { Calendar, FileText } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import useResumeListStore from '@/pages/resume/store'
 import { formatDate } from '@/utils/date'
 
-interface OfflineResume {
-  resume_id: string
-  display_name: string
-  description?: string
-  type: string
-  created_at: string
-}
+export function SyncResumesDialog() {
+  const open = useResumeListStore(s => s.showSyncDialog)
+  const setOpen = useResumeListStore(s => s.setShowSyncDialog)
+  const rawOfflineResumes = useResumeListStore(s => s.offlineResumes)
+  const isSyncing = useResumeListStore(s => s.isSyncing)
+  const syncResumes = useResumeListStore(s => s.syncResumes)
 
-interface SyncResumesDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  offlineResumes: OfflineResume[]
-  onSync: (selectedIds: string[]) => Promise<void>
-  isSyncing?: boolean
-}
+  const offlineResumes = useMemo(() => rawOfflineResumes.map(r => ({
+    resume_id: r.resume_id,
+    display_name: r.display_name || '未命名简历',
+    description: r.description,
+    type: r.type,
+    created_at: r.created_at,
+  })), [rawOfflineResumes])
 
-export function SyncResumesDialog({
-  open,
-  onOpenChange,
-  offlineResumes,
-  onSync,
-  isSyncing = false,
-}: SyncResumesDialogProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [initialIds, setInitialIds] = useState<string[]>([])
 
   useEffect(() => {
     if (open) {
-      setInitialIds(prev => (prev.length ? prev : offlineResumes.map(r => r.resume_id)))
       setSelectedIds(prev => (prev.length ? prev : offlineResumes.map(r => r.resume_id)))
     }
     else {
-      setInitialIds([])
       setSelectedIds([])
     }
   }, [open, offlineResumes])
@@ -68,11 +51,11 @@ export function SyncResumesDialog({
   const handleSync = async () => {
     if (selectedIds.length === 0)
       return
-    await onSync(selectedIds)
+    await syncResumes(selectedIds)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="text-2xl">同步本地简历到云端</DialogTitle>
@@ -164,7 +147,7 @@ export function SyncResumesDialog({
             个简历
           </p>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSyncing}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSyncing}>
               稍后同步
             </Button>
             <Button onClick={handleSync} disabled={selectedIds.length === 0 || isSyncing}>

@@ -1,4 +1,4 @@
-import type { CollaborationPanelContextValue, CollaborationPanelProviderProps } from './collaboration-types'
+import type { CollaborationPanelContextValue, CollaborationPanelProviderProps } from '../../types'
 
 import { createContext, use } from 'react'
 import { useCollaborationPanelValue } from '../../hooks/useCollaborationPanelValue'

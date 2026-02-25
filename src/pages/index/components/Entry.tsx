@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Resume } from '../type'
+import type { Resume } from '../types'
 import { ArrowRight, BarChart3, Clock, Cloud, CloudOff, FileUser, Plus, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'

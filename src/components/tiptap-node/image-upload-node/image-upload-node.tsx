@@ -427,22 +427,20 @@ const DropZoneContent: React.FC<{ maxSize: number, limit: number }> = ({
 
     <div className="tiptap-image-upload-content">
       <span className="tiptap-image-upload-text">
-        <em>Click to upload</em>
+        <em>点击上传</em>
         {' '}
-        or drag and drop
+       或拖放图片文件到此处
       </span>
       <span className="tiptap-image-upload-subtext">
-        Maximum
+        最多
         {' '}
         {limit}
         {' '}
-        file
-        {limit === 1 ? '' : 's'}
-        ,
+        个文件, 每个
         {' '}
         {maxSize / 1024 / 1024}
+        {' '}
         MB
-        each.
       </span>
     </div>
   </>

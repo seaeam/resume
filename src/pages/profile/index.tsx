@@ -19,10 +19,14 @@ export default function ProfilePage() {
       try {
         setLoading(true)
         const currentUser = await getCurrentUser()
+        if (!currentUser) {
+          navigate('/login')
+          return
+        }
         setUser(currentUser)
       }
       catch (error: any) {
-        toast.error(`用户信息加载失败：${error.message}`)
+        toast.error(`用户信息加载失败：${error instanceof Error ? error.message : String(error)}`)
         navigate('/login')
       }
       finally {

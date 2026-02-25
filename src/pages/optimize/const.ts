@@ -94,6 +94,8 @@ export const FIELD_LABEL_MAP: Record<string, string> = {
 
   // 自我评价
   selfEvaluation: '自我评价',
+  self_evaluation: '自我评价',
+  content: '内容',
 }
 
 // 熟练度对应百分比

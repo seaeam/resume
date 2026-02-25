@@ -1,5 +1,5 @@
 import type { DateRange } from 'react-day-picker'
-import type { Resume } from '../../type'
+import type { Resume } from '../../types'
 import dayjs from 'dayjs'
 import { AreaChart as AreaChartIcon, BarChart3, Calendar as CalendarIcon, LineChart as LineChartIcon, TrendingUp } from 'lucide-react'
 import { useMemo, useState } from 'react'

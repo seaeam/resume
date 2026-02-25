@@ -1,6 +1,7 @@
+import type { ChatCompletionCreateParamsBase } from 'openai/resources/chat/completions'
 import type { ResumeSchema } from '../schema'
 import { throttle } from 'lodash'
-import client from './client'
+import { callLLM } from './call'
 import prompt from './prompt'
 
 export async function runAtsStructured(
@@ -11,8 +12,7 @@ export async function runAtsStructured(
   const { throttleMs = 100 } = options || {}
 
   const promptText = prompt.replace('<<<RESUME_JSON>>>', JSON.stringify(resumeConfig, null, 2))
-  const stream = await client.chat.completions.create({
-    model: 'deepseek-reasoner',
+  const req = {
     messages: [
       {
         role: 'system',
@@ -23,9 +23,9 @@ export async function runAtsStructured(
     response_format: {
       type: 'json_object',
     },
-    temperature: 0,
-    stream: true,
-  })
+  } as ChatCompletionCreateParamsBase
+
+  const stream = await callLLM(req)
 
   let fullContent = ''
   let fullReasoning = ''

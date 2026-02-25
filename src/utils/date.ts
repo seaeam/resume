@@ -9,9 +9,10 @@ dayjs.locale('zh-cn')
 /**
  * 格式化相对时间
  * @param dateString - 日期字符串或Date对象
+ * @param includeTime - 是否在超过7天时包含时分信息，默认 false
  * @returns 格式化后的相对时间字符串 (如: "刚刚", "5分钟前", "3小时前", "2天前", "2023年1月1日")
  */
-export function formatRelativeTime(dateString: string | Date | number | null | undefined): string {
+export function formatRelativeTime(dateString: string | Date | number | null | undefined, includeTime = false): string {
   if (!dateString)
     return '未知'
 
@@ -41,49 +42,24 @@ export function formatRelativeTime(dateString: string | Date | number | null | u
     return `${diffInDays}天前`
   }
 
-  if (diffInDays < 30) {
-    return `${Math.floor(diffInDays / 7)}周前`
+  if (!includeTime) {
+    if (diffInDays < 30) {
+      return `${Math.floor(diffInDays / 7)}周前`
+    }
+    return date.format('YYYY年M月D日')
   }
 
-  return date.format('YYYY年M月D日')
+  return date.format('YYYY年M月D日 HH:mm')
 }
 
 /**
  * 格式化相对时间 (包含时分)
+ * @deprecated 使用 formatRelativeTime(date, true) 代替
  * @param dateString - 日期字符串或Date对象
  * @returns 格式化后的相对时间字符串，如果超过7天则显示具体时间
  */
 export function formatRelativeDateTime(dateString: string | Date | number): string {
-  if (!dateString)
-    return '未知'
-
-  const date = dayjs(dateString)
-  const now = dayjs()
-
-  if (!date.isValid())
-    return '无效日期'
-
-  const diffInMinutes = now.diff(date, 'minute')
-  const diffInHours = now.diff(date, 'hour')
-  const diffInDays = now.diff(date, 'day')
-
-  if (diffInMinutes < 1) {
-    return '刚刚'
-  }
-
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes}分钟前`
-  }
-
-  if (diffInHours < 24) {
-    return `${diffInHours}小时前`
-  }
-
-  if (diffInDays < 7) {
-    return `${diffInDays}天前`
-  }
-
-  return date.format('YYYY年M月D日 HH:mm')
+  return formatRelativeTime(dateString, true)
 }
 
 /**

@@ -1,5 +1,4 @@
 import path from 'node:path'
-/* global __dirname */
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -80,12 +79,10 @@ export default defineConfig({
           // Supabase
           'supabase': ['@supabase/supabase-js'],
           // 其他工具库
-          'utils': ['clsx', 'tailwind-merge', 'date-fns', 'zod', 'zustand'],
+          'utils': ['clsx', 'tailwind-merge', 'dayjs', 'zod', 'zustand', 'shiki'],
         },
       },
     },
-    // 提高 chunk 大小警告阈值(临时)
-    chunkSizeWarningLimit: 600,
     // 启用 CSS 代码分割
     cssCodeSplit: true,
     // 启用压缩 terser

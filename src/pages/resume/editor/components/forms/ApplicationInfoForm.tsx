@@ -9,11 +9,11 @@ import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
 
 function ApplicationInfoForm({ className }: { className?: string }) {
-  const applicationInfo = useResumeStore(state => state.applicationInfo)
+  const applicationInfo = useResumeStore(state => state.application_info)
   const updateForm = useResumeStore(state => state.updateForm)
 
   const form = useForm({
-    resolver: zodResolver(resumeSchema.shape.applicationInfo),
+    resolver: zodResolver(resumeSchema.shape.application_info),
     defaultValues: applicationInfo,
     mode: 'onChange',
     reValidateMode: 'onChange',
@@ -21,7 +21,7 @@ function ApplicationInfoForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      updateForm('applicationInfo', value)
+      updateForm('application_info', value)
     })
     return () => subscription.unsubscribe()
   }, [form, updateForm])

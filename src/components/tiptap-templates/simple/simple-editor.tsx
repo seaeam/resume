@@ -71,6 +71,7 @@ import '@/components/tiptap-node/heading-node/heading-node.scss'
 import '@/components/tiptap-node/paragraph-node/paragraph-node.scss'
 // --- Styles ---
 import '@/components/tiptap-templates/simple/simple-editor.scss'
+import { toast } from 'sonner'
 
 function MainToolbarContent({
   onHighlighterClick,
@@ -230,9 +231,9 @@ export function SimpleEditor({
       ImageUploadNode.configure({
         accept: 'image/*',
         maxSize: MAX_FILE_SIZE,
-        limit: 3,
+        limit: 2,
         upload: handleImageUpload,
-        onError: error => console.error('Upload failed:', error),
+        onError: error => toast.error(`上传图片失败: ${error.message}`),
       }),
     ],
     content,

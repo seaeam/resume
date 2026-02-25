@@ -1,21 +1,15 @@
-import type { Dispatch, SetStateAction } from 'react'
 import { CloudUpload, Wifi, WifiOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Highlighter } from '@/components/ui/highlighter'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
+import useResumeListStore from '@/pages/resume/store'
 
-function HeadBars({
-  setShowSyncDialog,
-  hasOfflineResumesToSync,
-  isOnline,
-  offlineResumes,
-}: {
-  setShowSyncDialog: Dispatch<SetStateAction<boolean>>
-  hasOfflineResumesToSync: boolean
-  isOnline: boolean
-  offlineResumes: any[]
-}) {
+function HeadBars() {
+  const isOnline = useResumeListStore(s => s.isOnline)
+  const offlineResumes = useResumeListStore(s => s.offlineResumes)
+  const setShowSyncDialog = useResumeListStore(s => s.setShowSyncDialog)
+  const hasOfflineResumesToSync = isOnline && offlineResumes.length > 0
   const isMobile = useIsMobile()
 
   return (
@@ -27,7 +21,7 @@ function HeadBars({
         <p className="text-muted-foreground mt-2">管理和编辑你的简历</p>
       </div>
       <div className={cn('mb-5', isMobile ? 'flex flex-col gap-3 items-end' : 'flex items-center gap-3')}>
-        <Highlighter action={isOnline ? 'highlight' : 'underline'} color={isOnline ? '#bbf7d0' : '#e4e4e7'}>
+        <Highlighter action={isOnline ? 'highlight' : 'underline'} color={isOnline ? '#8599cb80' : '#e4e4e7'}>
           <div className="flex gap-2 items-center text-sm font-medium">
             {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
             <span>{isOnline ? '在线' : '离线'}</span>

@@ -1,4 +1,4 @@
-import throttle from 'lodash.throttle'
+import { throttle } from 'lodash'
 import * as React from 'react'
 import { useUnmount } from './use-unmount'
 
@@ -30,10 +30,20 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
   cancel: () => void
   flush: () => void
 } {
+  // 使用 ref 持有最新的 fn，避免 throttle 内部闭包引用陈旧回调
+  const fnRef = React.useRef(fn)
+  React.useEffect(() => {
+    fnRef.current = fn
+  }, [fn])
+
   const handler = React.useMemo(
-    () => throttle<T>(fn, wait, options),
+    () => throttle<T>(
+      ((...args: any[]) => fnRef.current(...args)) as T,
+      wait,
+      options,
+    ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    dependencies,
+    [wait, ...dependencies],
   )
 
   useUnmount(() => {

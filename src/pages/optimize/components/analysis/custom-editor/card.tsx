@@ -237,7 +237,7 @@ function ValueEditor({ value, valueType, onChange }: {
   }
 
   // 默认使用Tiptap文本编辑器
-  return <SimpleEditor content={String(value || '')} onChange={editor => onChange(editor.getHTML())} />
+  return <SimpleEditor content={String(value || '')} onChange={editor => onChange(editor.getText())} />
 }
 
 export default SuggestionEditCard
