@@ -4,6 +4,7 @@ export const mockApplications: JobApplication[] = [
   {
     id: '1',
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     resume_id: null,
     user_id: 'mock-user',
     company: 'Google',
@@ -14,16 +15,15 @@ export const mockApplications: JobApplication[] = [
     job_url: 'https://google.com/careers',
     status: 'interview',
     stage_details: [
-      { stage: 'saved', status: '已完成', start_date: '2024-01-25', notes: '' },
-      { stage: 'applied', status: '已完成', start_date: '2024-01-26', notes: '' },
-      { stage: 'interview', status: '进行中', start_date: '2024-01-28', notes: '' },
+      { stage: 'saved', status: '已完成', start_date: '2026-01-25', notes: '' },
+      { stage: 'applied', status: '已完成', start_date: '2026-01-26', notes: '' },
+      { stage: 'interview', status: '进行中', start_date: '2026-01-28', notes: '' },
     ],
-    applied_date: '2024-01-26',
-    notes: null,
   },
   {
     id: '2',
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     resume_id: null,
     user_id: 'mock-user',
     company: 'Microsoft',
@@ -34,15 +34,14 @@ export const mockApplications: JobApplication[] = [
     job_url: 'https://microsoft.com/careers',
     status: 'applied',
     stage_details: [
-      { stage: 'saved', status: '已完成', start_date: '2024-01-20', notes: '' },
-      { stage: 'applied', status: '进行中', start_date: '2024-01-22', notes: '' },
+      { stage: 'saved', status: '已完成', start_date: '2026-01-20', notes: '' },
+      { stage: 'applied', status: '进行中', start_date: '2026-01-22', notes: '' },
     ],
-    applied_date: '2024-01-22',
-    notes: null,
   },
   {
     id: '3',
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     resume_id: null,
     user_id: 'mock-user',
     company: 'Apple',
@@ -55,7 +54,5 @@ export const mockApplications: JobApplication[] = [
     stage_details: [
       { stage: 'saved', status: '待处理', start_date: null, notes: '' },
     ],
-    applied_date: null,
-    notes: null,
   },
 ]

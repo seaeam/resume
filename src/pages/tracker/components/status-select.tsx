@@ -10,12 +10,12 @@ import {
 
 // 状态选项配置
 const STATUS_OPTIONS: { value: ApplicationStatus, label: string }[] = [
-  { value: 'saved', label: 'Saved' },
-  { value: 'applied', label: 'Applied' },
-  { value: 'screen', label: 'Screen' },
-  { value: 'interview', label: 'Interview' },
-  { value: 'offer', label: 'Offer' },
-  { value: 'rejected', label: 'Rejected' },
+  { value: 'saved', label: '已保存' },
+  { value: 'applied', label: '已投递' },
+  { value: 'screen', label: '筛选中' },
+  { value: 'interview', label: '面试中' },
+  { value: 'offer', label: '已录用' },
+  { value: 'rejected', label: '终止流程' },
 ]
 
 interface StatusSelectProps {
@@ -28,7 +28,7 @@ export function StatusSelect({ value, onChange }: StatusSelectProps) {
     <Select value={value} onValueChange={onChange}>
       {/* 触发器 选中当前值 */}
       <SelectTrigger className="w-24 md:w-28 shrink-0">
-        <SelectValue placeholder="Select a status" />
+        <SelectValue placeholder="选择状态" />
       </SelectTrigger>
       {/* 下拉内容 */}
       <SelectContent>

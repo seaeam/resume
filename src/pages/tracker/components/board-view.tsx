@@ -4,11 +4,11 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { ColumnCard } from './column-card'
 
 const BOARD_COLUMNS: { status: ApplicationStatus, label: string }[] = [
-  { status: 'saved', label: 'Saved' },
-  { status: 'applied', label: 'Applied' },
-  { status: 'screen', label: 'Screen' },
-  { status: 'interview', label: 'Interview' },
-  { status: 'offer', label: 'Offer' },
+  { status: 'saved', label: '已保存' },
+  { status: 'applied', label: '已投递' },
+  { status: 'screen', label: '筛选中' },
+  { status: 'interview', label: '面试中' },
+  { status: 'offer', label: '已录用' },
 ]
 
 interface BoardViewProps {
@@ -43,9 +43,9 @@ export function BoardView({ jobs, onJobClick, onStatusChange, isSelectMode, sele
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      {/* 添加 max-w-full 限制最大宽度 */}
-      <div className="max-w-full overflow-x-auto">
-        <div className="flex gap-4 pb-4 min-h-[400px]">
+      {/* 限制自身宽度，内部横向滚动 */}
+      <div className="w-full min-w-0 max-w-full overflow-x-auto">
+        <div className="flex w-max gap-4 pb-4 min-h-[400px]">
           {BOARD_COLUMNS.map((column) => {
             const columnJobs = getJobsByStatus(column.status)
             return (
@@ -96,7 +96,7 @@ export function BoardView({ jobs, onJobClick, onStatusChange, isSelectMode, sele
                           )
                         : (
                             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                              No jobs
+                              暂无职位
                             </div>
                           )}
                       {provided.placeholder}
