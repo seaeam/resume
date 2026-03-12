@@ -1,14 +1,11 @@
 // 视图切换
-import type { ViewMode } from '../types'
 import { Kanban, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import useTrackerStore from '../store'
 
-interface ViewToggleProps {
-  value: ViewMode
-  onModeChange: (value: ViewMode) => void
-}
+export function ViewToggle() {
+  const { viewMode, setViewMode } = useTrackerStore()
 
-export function ViewToggle({ value, onModeChange }: ViewToggleProps) {
   return (
     <div className="inline-flex items-center gap-1 rounded-lg border p-1">
       {/* List */}
@@ -16,11 +13,11 @@ export function ViewToggle({ value, onModeChange }: ViewToggleProps) {
         type="button"
         className={cn(
           'inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm transition-colors',
-          value === 'list'
+          viewMode === 'list'
             ? 'bg-primary text-primary-foreground'
             : 'hover:bg-muted',
         )}
-        onClick={() => onModeChange('list')}
+        onClick={() => setViewMode('list')}
       >
         <List className="size-4 mr-1.5" />
         列表
@@ -30,11 +27,11 @@ export function ViewToggle({ value, onModeChange }: ViewToggleProps) {
         type="button"
         className={cn(
           'inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm transition-colors',
-          value === 'board'
+          viewMode === 'board'
             ? 'bg-primary text-primary-foreground'
             : 'hover:bg-muted',
         )}
-        onClick={() => onModeChange('board')}
+        onClick={() => setViewMode('board')}
       >
         <Kanban className="size-4 mr-1.5" />
         看板

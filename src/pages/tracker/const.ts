@@ -1,4 +1,21 @@
-import type { ApplicationStatus, StageDetail, StageStatus } from './types'
+import type { ApplicationStatus, StageStatus } from './types'
+
+// 看板列配置
+export const BOARD_COLUMNS = [
+  { status: 'saved' as ApplicationStatus, label: '已保存' },
+  { status: 'applied' as ApplicationStatus, label: '已投递' },
+  { status: 'screen' as ApplicationStatus, label: '筛选中' },
+  { status: 'interview' as ApplicationStatus, label: '面试中' },
+  { status: 'offer' as ApplicationStatus, label: '已录用' },
+]
+
+// 阶段状态颜色配置（用于 drawer-stage-detail）
+export const STAGE_STATUS_COLORS: Record<StageStatus, { bg: string, text: string, border: string }> = {
+  待处理: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-200' },
+  进行中: { bg: 'bg-green-100', text: 'text-green-600', border: 'border-green-200' },
+  已完成: { bg: 'bg-yellow-100', text: 'text-yellow-600', border: 'border-yellow-200' },
+  已拒绝: { bg: 'bg-red-100', text: 'text-red-600', border: 'border-red-200' },
+}
 
 // 申请状态配置
 export const APPLICATION_STATUS_CONFIG: Record<ApplicationStatus, { label: string, color: string, bgColor: string }> = {
@@ -38,49 +55,3 @@ export const VIEW_MODE_LABELS = {
 
 // 默认面试子阶段模板
 export const DEFAULT_INTERVIEW_SUB_STAGES: string[] = ['一面', '二面', '三面', 'HR面']
-
-// 状态自动完成工具函数
-// 规则：之前的阶段=已完成，当前阶段=待处理，之后的阶段保持或待处理
-export function autoCompleteStages(
-  _currentStatus: ApplicationStatus,
-  newStatus: ApplicationStatus,
-  stageDetails: StageDetail[],
-): StageDetail[] {
-  const newIndex = APPLICATION_STATUS_ORDER.indexOf(newStatus)
-
-  // rejected 不在 ORDER 中，返回原样
-  if (newIndex === -1)
-    return stageDetails
-
-  return APPLICATION_STATUS_ORDER.map((status, idx) => {
-    const existing = stageDetails.find(s => s.stage === status)
-
-    if (idx < newIndex) {
-      // 之前的阶段：已完成
-      return {
-        stage: status,
-        status: '已完成' as const,
-        start_date: existing?.start_date || null,
-        notes: existing?.notes || '',
-      }
-    }
-
-    if (idx === newIndex) {
-      // 当前阶段：待处理
-      return {
-        stage: status,
-        status: '待处理' as const,
-        start_date: existing?.start_date || null,
-        notes: existing?.notes || '',
-      }
-    }
-
-    // 之后的阶段：保持原状或待处理
-    return existing || {
-      stage: status,
-      status: '待处理' as const,
-      start_date: null,
-      notes: '',
-    }
-  })
-}

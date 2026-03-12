@@ -1,13 +1,12 @@
+import type { DrawerTab } from '../../types'
 import { cn } from '@/lib/utils'
-
-export type DrawerTab = 'information' | 'document'
 
 interface DrawerNavProps {
   activeTab: DrawerTab
   onTabChange: (tab: DrawerTab) => void
 }
 
-export function DrawerNav({ activeTab, onTabChange }: DrawerNavProps) {
+export default function DrawerNav({ activeTab, onTabChange }: DrawerNavProps) {
   return (
     <div className="flex gap-2 p-1 bg-muted rounded-lg">
       <button

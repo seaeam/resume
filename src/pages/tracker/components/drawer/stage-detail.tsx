@@ -1,4 +1,4 @@
-import type { ApplicationStatus, InterviewSubStage, JobApplication, StageStatus } from '../../types'
+import type { ApplicationStatus, InterviewSubStage, StageStatus } from '../../types'
 import { format, parseISO } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { CalendarIcon, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
@@ -12,44 +12,41 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { APPLICATION_STATUS_ORDER, DEFAULT_INTERVIEW_SUB_STAGES, STAGE_STATUS_OPTIONS } from '../../const'
+import { APPLICATION_STATUS_ORDER, DEFAULT_INTERVIEW_SUB_STAGES, STAGE_STATUS_COLORS, STAGE_STATUS_OPTIONS } from '../../const'
+import useTrackerStore from '../../store'
 
 interface DrawerStageDetailProps {
-  job: JobApplication
   displayStage: ApplicationStatus
   isViewingHistory?: boolean
-  onUpdate?: (job: JobApplication) => void
+  onSaved?: () => void
 }
 
-// 状态颜色配置
-const STATUS_COLORS: Record<StageStatus, { bg: string, text: string, border: string }> = {
-  待处理: { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-200' },
-  进行中: { bg: 'bg-green-100', text: 'text-green-600', border: 'border-green-200' },
-  已完成: { bg: 'bg-yellow-100', text: 'text-yellow-600', border: 'border-yellow-200' },
-  已拒绝: { bg: 'bg-red-100', text: 'text-red-600', border: 'border-red-200' },
-}
+export default function DrawerStageDetail({ displayStage, isViewingHistory = false, onSaved }: DrawerStageDetailProps) {
+  const { selectedJob: job, updateJob } = useTrackerStore()
 
-export function DrawerStageDetail({ job, displayStage, isViewingHistory = false, onUpdate }: DrawerStageDetailProps) {
   // 本地状态
-  const [localDetails, setLocalDetails] = useState(job.stage_details)
-  const [localSubStages, setLocalSubStages] = useState(() => job.interview_sub_stages || [])
+  const [localDetails, setLocalDetails] = useState(job?.stage_details || [])
+  const [localSubStages, setLocalSubStages] = useState(() => job?.interview_sub_stages || [])
   const [isDirty, setIsDirty] = useState(false)
   const [isStatusOpen, setIsStatusOpen] = useState(false)
-  const [openSubStages, setOpenSubStages] = useState<Set<string>>(new Set())
+  const [openSubStages, setOpenSubStages] = useState<Set<string>>(() => new Set())
 
   // 当 job 变化时重置本地状态
   useEffect(() => {
-    setLocalDetails(job.stage_details)
-    setLocalSubStages(job.interview_sub_stages || [])
+    setLocalDetails(job?.stage_details || [])
+    setLocalSubStages(job?.interview_sub_stages || [])
     setIsDirty(false)
-  }, [job.id, job.status, job.stage_details, job.interview_sub_stages])
+  }, [job?.id, job?.status, job?.stage_details, job?.interview_sub_stages])
+
+  if (!job)
+    return null
 
   const isInterviewStatus = displayStage === 'interview'
 
   // 当前显示阶段的详情
   const currentStageDetail = localDetails.find(s => s.stage === displayStage)
   const currentStatus = currentStageDetail?.status || '待处理'
-  const statusColors = STATUS_COLORS[currentStatus]
+  const statusColors = STAGE_STATUS_COLORS[currentStatus]
 
   // 检查是否有修改
   const checkDirty = () => {
@@ -170,6 +167,9 @@ export function DrawerStageDetail({ job, displayStage, isViewingHistory = false,
   }
 
   const handleSave = () => {
+    if (!job)
+      return
+
     // 检查当前阶段是否标记为“已完成”，如果是则自动推进到下一阶段
     const currentDetail = localDetails.find(s => s.stage === displayStage)
     if (currentDetail?.status === '已完成' && displayStage === job.status) {
@@ -177,13 +177,13 @@ export function DrawerStageDetail({ job, displayStage, isViewingHistory = false,
       const nextStatus = APPLICATION_STATUS_ORDER[currentIdx + 1]
 
       if (nextStatus) {
-        // 确保下一阶段的 detail 存在
+      // 确保下一阶段的 detail 存在
         const hasNext = localDetails.find(s => s.stage === nextStatus)
         const finalDetails = hasNext
           ? localDetails
           : [...localDetails, { stage: nextStatus, status: '待处理' as const, start_date: null, notes: '' }]
 
-        onUpdate?.({
+        updateJob({
           ...job,
           status: nextStatus,
           stage_details: finalDetails,
@@ -191,18 +191,20 @@ export function DrawerStageDetail({ job, displayStage, isViewingHistory = false,
         })
         setIsDirty(false)
         setOpenSubStages(new Set())
+        onSaved?.()
         return
       }
     }
 
     // 普通保存（未完成 / 拒绝 等）
-    onUpdate?.({
+    updateJob({
       ...job,
       stage_details: localDetails,
       interview_sub_stages: localSubStages,
     })
     setIsDirty(false)
     setOpenSubStages(new Set())
+    onSaved?.()
   }
 
   const handleCancel = () => {
@@ -241,7 +243,7 @@ export function DrawerStageDetail({ job, displayStage, isViewingHistory = false,
                 <PopoverContent className="w-32 p-1" align="end">
                   <div className="flex flex-col">
                     {STAGE_STATUS_OPTIONS.map((status) => {
-                      const colors = STATUS_COLORS[status]
+                      const colors = STAGE_STATUS_COLORS[status]
                       const isSelected = status === currentStatus
                       return (
                         <button
@@ -310,7 +312,7 @@ export function DrawerStageDetail({ job, displayStage, isViewingHistory = false,
           <label className="text-sm text-muted-foreground block">面试轮次</label>
           <div className="space-y-2">
             {localSubStages.map((subStage) => {
-              const subColors = STATUS_COLORS[subStage.status]
+              const subColors = STAGE_STATUS_COLORS[subStage.status]
               const isOpen = openSubStages.has(subStage.id)
               const subDate = subStage.start_date ? parseISO(subStage.start_date) : undefined
 
@@ -372,7 +374,7 @@ export function DrawerStageDetail({ job, displayStage, isViewingHistory = false,
                           <PopoverContent className="w-32 p-1" align="start">
                             <div className="flex flex-col">
                               {STAGE_STATUS_OPTIONS.map((status) => {
-                                const colors = STATUS_COLORS[status]
+                                const colors = STAGE_STATUS_COLORS[status]
                                 return (
                                   <button
                                     key={status}

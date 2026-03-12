@@ -1,56 +1,63 @@
 import type { DropResult } from '@hello-pangea/dnd'
-import type { ApplicationStatus, JobApplication } from '../types'
+import type { ApplicationStatus } from '../../types'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
+import { useCallback, useRef } from 'react'
+import { BOARD_COLUMNS } from '../../const'
+import useTrackerStore from '../../store'
 import { ColumnCard } from './column-card'
 
-const BOARD_COLUMNS: { status: ApplicationStatus, label: string }[] = [
-  { status: 'saved', label: '已保存' },
-  { status: 'applied', label: '已投递' },
-  { status: 'screen', label: '筛选中' },
-  { status: 'interview', label: '面试中' },
-  { status: 'offer', label: '已录用' },
-]
+export default function BoardView() {
+  const { jobs, changeJobStatus } = useTrackerStore()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const columnRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
-interface BoardViewProps {
-  jobs: JobApplication[]
-  onJobClick?: (job: JobApplication) => void
-  onStatusChange?: (jobId: string, newStatus: ApplicationStatus) => void
-  isSelectMode?: boolean
-  selectedIds?: Set<string>
-  onToggleSelect?: (id: string) => void
-}
-
-export function BoardView({ jobs, onJobClick, onStatusChange, isSelectMode, selectedIds, onToggleSelect }: BoardViewProps) {
   const getJobsByStatus = (status: ApplicationStatus) =>
     jobs.filter(job => job.status === status)
 
-  // 处理拖拽结束
+  // 滚动到目标列
+  const scrollToColumn = useCallback((status: string) => {
+    const container = scrollContainerRef.current
+    const columnEl = columnRefs.current.get(status)
+    if (!container || !columnEl)
+      return
+
+    const containerRect = container.getBoundingClientRect()
+    const columnRect = columnEl.getBoundingClientRect()
+
+    // 如果目标列不在可视区域内，滚动到该列
+    if (columnRect.left < containerRect.left || columnRect.right > containerRect.right) {
+      const scrollLeft = columnEl.offsetLeft - container.offsetLeft - 16
+      container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+    }
+  }, [])
+
   const handleDragEnd = (result: DropResult) => {
     const { destination, draggableId } = result
-
-    // 如果没有目标位置，不做任何处理
     if (!destination)
       return
 
-    // 获取目标列的状态
     const newStatus = destination.droppableId as ApplicationStatus
+    changeJobStatus(draggableId, newStatus)
 
-    // 调用回调更新状态
-    if (onStatusChange) {
-      onStatusChange(draggableId, newStatus)
-    }
+    // 拖拽完成后滚动到目标列
+    requestAnimationFrame(() => {
+      scrollToColumn(newStatus)
+    })
   }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      {/* 限制自身宽度，内部横向滚动 */}
-      <div className="w-full min-w-0 max-w-full overflow-x-auto">
-        <div className="flex w-max gap-4 pb-4 min-h-[400px]">
+      <div ref={scrollContainerRef} className="w-full min-w-0 max-w-full overflow-x-auto scroll-smooth">
+        <div className="flex w-max gap-4 pb-4 min-h-[500px]">
           {BOARD_COLUMNS.map((column) => {
             const columnJobs = getJobsByStatus(column.status)
             return (
               <div
                 key={column.status}
+                ref={(el) => {
+                  if (el)
+                    columnRefs.current.set(column.status, el)
+                }}
                 className="flex flex-col min-w-[280px] w-[280px] shrink-0"
               >
                 {/* 列标题 */}
@@ -68,7 +75,7 @@ export function BoardView({ jobs, onJobClick, onStatusChange, isSelectMode, sele
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={`flex-1 flex flex-col gap-2 p-2 rounded-lg overflow-y-auto transition-colors ${
-                        snapshot.isDraggingOver ? 'bg-primary/10' : 'bg-muted/30'
+                        snapshot.isDraggingOver ? 'bg-primary/10 ring-2 ring-primary/20' : 'bg-muted/30'
                       }`}
                     >
                       {columnJobs.length > 0
@@ -80,22 +87,16 @@ export function BoardView({ jobs, onJobClick, onStatusChange, isSelectMode, sele
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className={snapshot.isDragging ? 'opacity-80' : ''}
+                                    className={snapshot.isDragging ? 'opacity-80 rotate-2 scale-105' : ''}
                                   >
-                                    <ColumnCard
-                                      job={job}
-                                      onClick={() => onJobClick?.(job)}
-                                      isSelectMode={isSelectMode}
-                                      isSelected={selectedIds?.has(job.id)}
-                                      onToggleSelect={onToggleSelect}
-                                    />
+                                    <ColumnCard job={job} />
                                   </div>
                                 )}
                               </Draggable>
                             ))
                           )
                         : (
-                            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm min-h-[120px]">
                               暂无职位
                             </div>
                           )}

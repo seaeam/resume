@@ -1,12 +1,17 @@
-import type { JobApplication } from '../../types'
 import { Briefcase, Building2, DollarSign, ExternalLink, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import useTrackerStore from '../../store'
 
-interface DrawerHeaderProps {
-  job: JobApplication
+interface DrawerHeaderInfoProps {
   onEdit?: () => void
 }
-export function DrawerHeader({ job, onEdit }: DrawerHeaderProps) {
+
+export default function DrawerHeaderInfo({ onEdit }: DrawerHeaderInfoProps) {
+  const { selectedJob: job } = useTrackerStore()
+
+  if (!job)
+    return null
+
   return (
     <div className="space-y-4">
       {/* 公司名 + Logo + 职位 */}

@@ -1,129 +1,141 @@
-import type { ApplicationStatus, JobApplication } from '../../types'
-import type { DrawerTab } from './drawer-nav'
+import type { ApplicationStatus, DrawerTab } from '../../types'
 import { useState } from 'react'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
-import { DrawerDocument } from './drawer-document'
-import { DrawerEditForm } from './drawer-edit-form'
-import { DrawerHeader } from './drawer-header'
-import { DrawerNav } from './drawer-nav'
-import { DrawerProgress } from './drawer-progress'
-import { DrawerStageDetail } from './drawer-stage-detail'
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { useIsMobile } from '@/hooks/use-mobile'
+import useTrackerStore from '../../store'
+import { autoCompleteStages } from '../../utils'
+import DrawerDocument from './document'
+import DrawerEditForm from './edit-form'
+import DrawerHeaderInfo from './header'
+import DrawerNav from './nav'
+import DrawerProgress from './progress'
+import DrawerStageDetail from './stage-detail'
 
-// Re-export AddJobDrawer
-export { AddJobDrawer } from './drawer-add-job'
-
-interface JobDrawerProps {
-  job: JobApplication | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onStatusChange?: (jobId: string, status: ApplicationStatus) => void
-  onJobUpdate?: (job: JobApplication) => void
-}
-
-export function JobDrawer({
-  job,
-  open,
-  onOpenChange,
-  onJobUpdate,
-}: JobDrawerProps) {
+export default function JobDrawer() {
+  const { selectedJob, drawerOpen, closeJobDrawer, updateJob } = useTrackerStore()
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState<DrawerTab>('information')
   const [isEditing, setIsEditing] = useState(false)
-  // 当前查看的阶段（可能是已完成的历史阶段，不等于 job.status）
   const [viewingStage, setViewingStage] = useState<ApplicationStatus | null>(null)
 
-  // 重置状态当 Drawer 关闭时
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       setActiveTab('information')
       setIsEditing(false)
       setViewingStage(null)
+      closeJobDrawer()
     }
-    onOpenChange(newOpen)
   }
 
-  const handleSave = (updated: JobApplication) => {
-    onJobUpdate?.(updated)
+  const handleSaved = () => {
     setIsEditing(false)
   }
 
-  // 当 job 更新后重置 viewingStage 到最新状态
-  const handleJobUpdate = (updated: JobApplication) => {
-    onJobUpdate?.(updated)
-    setViewingStage(null) // 回到最新阶段
+  // 进度前进/后退
+  const handleProgressChange = (newStatus: ApplicationStatus) => {
+    if (!selectedJob)
+      return
+    const updatedStageDetails = autoCompleteStages(selectedJob.status, newStatus, selectedJob.stage_details)
+    updateJob({
+      ...selectedJob,
+      status: newStatus,
+      stage_details: updatedStageDetails,
+    })
+    setViewingStage(null)
   }
 
-  if (!job)
+  if (!selectedJob)
     return null
 
-  // 实际显示的阶段：viewingStage 或 job.status
-  const displayStage = viewingStage || job.status
+  const displayStage = viewingStage || selectedJob.status
 
+  const drawerContent = (
+    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <DrawerNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {activeTab === 'information'
+        ? (
+            isEditing
+              ? (
+                  <DrawerEditForm
+                    onSaved={handleSaved}
+                    onCancel={() => setIsEditing(false)}
+                  />
+                )
+              : (
+                  <>
+                    <DrawerHeaderInfo
+                      onEdit={() => setIsEditing(true)}
+                    />
+                    <DrawerProgress
+                      viewingStage={viewingStage}
+                      onStageClick={(stage) => {
+                        setViewingStage(stage === selectedJob.status ? null : stage)
+                      }}
+                      onStatusChange={handleProgressChange}
+                    />
+                    {selectedJob.status !== 'rejected' && (
+                      <DrawerStageDetail
+                        displayStage={displayStage}
+                        isViewingHistory={viewingStage !== null && viewingStage !== selectedJob.status}
+                        onSaved={() => setViewingStage(null)}
+                      />
+                    )}
+                  </>
+                )
+          )
+        : (
+            <DrawerDocument />
+          )}
+    </div>
+  )
+
+  // 移动端：底部 Drawer (vaul)
+  if (isMobile) {
+    return (
+      <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="text-left">
+            <DrawerTitle>
+              {selectedJob.company}
+              {' '}
+              ·
+              {' '}
+              {selectedJob.position}
+            </DrawerTitle>
+            <DrawerDescription>
+              {selectedJob.location}
+              {selectedJob.salary ? ` · ${selectedJob.salary}` : ''}
+            </DrawerDescription>
+          </DrawerHeader>
+          {drawerContent}
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
+  // 桌面端：右侧 Sheet
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:w-1/2 sm:max-w-none overflow-y-auto rounded-l-2xl p-0">
-        <SheetHeader>
-          <SheetTitle className="sr-only">职位详情</SheetTitle>
-          <SheetDescription className="sr-only">
-            查看和编辑职位申请的详细信息
+    <Sheet open={drawerOpen} onOpenChange={handleOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full sm:w-[520px] lg:w-[600px] sm:max-w-none overflow-hidden rounded-l-2xl p-0 flex flex-col"
+      >
+        <SheetHeader className="p-6 pb-4 border-b shrink-0">
+          <SheetTitle>
+            {selectedJob.company}
+            {' '}
+            ·
+            {' '}
+            {selectedJob.position}
+          </SheetTitle>
+          <SheetDescription>
+            {selectedJob.location}
+            {selectedJob.salary ? ` · ${selectedJob.salary}` : ''}
           </SheetDescription>
         </SheetHeader>
-
-        <div className="p-6 space-y-6">
-          {/* 导航栏 */}
-          <DrawerNav activeTab={activeTab} onTabChange={setActiveTab} />
-
-          {/* 内容区域 */}
-          {activeTab === 'information'
-            ? (
-                isEditing
-                  ? (
-                      <DrawerEditForm
-                        job={job}
-                        onSave={handleSave}
-                        onCancel={() => setIsEditing(false)}
-                      />
-                    )
-                  : (
-                      <>
-                        {/* 上模块：公司信息 */}
-                        <DrawerHeader
-                          job={job}
-                          onEdit={() => setIsEditing(true)}
-                        />
-                        {/* 中模块：进度条 */}
-                        <DrawerProgress
-                          currentStatus={job.status}
-                          stageDetails={job.stage_details}
-                          viewingStage={viewingStage}
-                          onStageClick={(stage) => {
-                            setViewingStage(stage === job.status ? null : stage)
-                          }}
-                        />
-                        {/* 下模块：阶段详情 */}
-                        {job.status !== 'rejected' && (
-                          <DrawerStageDetail
-                            job={job}
-                            displayStage={displayStage}
-                            isViewingHistory={viewingStage !== null && viewingStage !== job.status}
-                            onUpdate={handleJobUpdate}
-                          />
-                        )}
-                      </>
-                    )
-              )
-            : (
-                <DrawerDocument
-                  job={job}
-                  onUpdate={onJobUpdate!}
-                />
-              )}
-        </div>
+        {drawerContent}
       </SheetContent>
     </Sheet>
   )

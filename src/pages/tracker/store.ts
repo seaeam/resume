@@ -1,29 +1,34 @@
 import type { ApplicationStatus, JobApplication, ViewMode } from './types'
 import { toast } from 'sonner'
 import { create } from 'zustand'
-import {
-  createCompany,
-  deleteCompany,
-  getCompanies,
-  updateCompany,
-  updateCompanyStatus,
-} from '@/lib/supabase/resume'
+import { createCompany, deleteCompany, getCompanies, updateCompany } from '@/lib/supabase/resume'
+import { autoCompleteStages } from './utils'
 
 interface TrackerStore {
-  // 状态
+  // 数据
   jobs: JobApplication[]
   viewMode: ViewMode
-  selectedIds: Set<string>
-  isSelectMode: boolean
   loading: boolean
   error: string | null
   isInitialized: boolean
 
-  // 操作
+  // 选择模式
+  selectedIds: Set<string>
+  isSelectMode: boolean
+
+  // Drawer
+  selectedJob: JobApplication | null
+  drawerOpen: boolean
+  addDrawerOpen: boolean
+
+  // 初始化
   init: () => Promise<void>
+
+  // 视图
   setViewMode: (mode: ViewMode) => void
-  updateJobStatus: (jobId: string, status: ApplicationStatus) => Promise<void>
-  updateJobLocal: (job: JobApplication) => void
+
+  // 数据操作
+  changeJobStatus: (jobId: string, newStatus: ApplicationStatus) => Promise<void>
   updateJob: (job: JobApplication) => Promise<void>
   addJob: (job: Omit<JobApplication, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<void>
   deleteSelectedJobs: () => Promise<void>
@@ -33,20 +38,32 @@ interface TrackerStore {
   exitSelectMode: () => void
   toggleSelect: (id: string) => void
   selectAll: () => void
+
+  // Drawer 操作
+  openJobDrawer: (job: JobApplication) => void
+  closeJobDrawer: () => void
+  openAddDrawer: () => void
+  closeAddDrawer: () => void
 }
 
 const useTrackerStore = create<TrackerStore>()((set, get) => ({
   // 初始状态
   jobs: [],
   viewMode: 'list',
-  selectedIds: new Set(),
-  isSelectMode: false,
   loading: false,
   error: null,
   isInitialized: false,
 
+  // 选择模式
+  selectedIds: new Set(),
+  isSelectMode: false,
+
+  // Drawer
+  selectedJob: null,
+  drawerOpen: false,
+  addDrawerOpen: false,
+
   init: async () => {
-    // 防止重复初始化（React Strict Mode 会导致 useEffect 执行两次）
     if (get().isInitialized || get().loading) {
       return
     }
@@ -57,34 +74,26 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
       set({ jobs, loading: false, error: null, isInitialized: true })
     }
     catch (error) {
-      // console.error('Failed to load jobs:', error)
-
-      // 详细的错误处理
       let errorMessage = '加载失败'
       let errorDetail = ''
 
       if (error instanceof Error) {
-        // 认证错误
         if (error.message.includes('未登陆') || error.message.includes('not authenticated')) {
           errorMessage = '请先登录'
           errorDetail = '需要登录后才能查看职位追踪'
         }
-        // 网络错误
         else if (error.message.includes('network') || error.message.includes('fetch')) {
           errorMessage = '网络连接失败'
           errorDetail = '请检查网络连接后重试'
         }
-        // 权限错误
         else if (error.message.includes('permission') || error.message.includes('policy')) {
           errorMessage = '权限不足'
           errorDetail = '无法访问职位数据，请联系管理员'
         }
-        // 数据库错误
         else if (error.message.includes('database') || error.message.includes('relation')) {
           errorMessage = '数据库错误'
           errorDetail = '数据表可能不存在或结构异常'
         }
-        // 其他错误
         else {
           errorMessage = '加载失败'
           errorDetail = error.message
@@ -92,66 +101,69 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
       }
 
       set({ loading: false, error: errorMessage })
-
-      // 显示用户友好的错误提示
-      toast.error(errorMessage, {
-        description: errorDetail,
-      })
+      toast.error(errorMessage, { description: errorDetail })
     }
   },
 
   setViewMode: mode => set({ viewMode: mode }),
 
-  updateJobStatus: async (jobId, status) => {
-    // 这里有个延迟更新的优化问题，由于采用先请求API，然后进行更新，会造成用户体验卡顿
-    // 这里改为使用乐观更新，先更新UI，再去请求API，并且设置一个旧状态用于回滚
-    const { jobs } = get()
-    const previousJobs = jobs// 保存旧状态用于回滚
-    set({ jobs: jobs.map(job => job.id === jobId ? { ...job, status } : job) })
-    try {
-      await updateCompanyStatus(jobId, status)
+  changeJobStatus: async (jobId, newStatus) => {
+    const { jobs, selectedJob } = get()
+    const job = jobs.find(j => j.id === jobId)
+    if (!job)
+      return
 
-      // 特殊状态的 toast 提示
-      if (status === 'offer') {
+    const previousJobs = jobs
+    const previousSelectedJob = selectedJob
+
+    const updatedStageDetails = autoCompleteStages(job.status, newStatus, job.stage_details)
+    const updatedJob = { ...job, status: newStatus, stage_details: updatedStageDetails }
+
+    // 乐观更新
+    set({
+      jobs: jobs.map(j => j.id === jobId ? updatedJob : j),
+      selectedJob: selectedJob?.id === jobId ? updatedJob : selectedJob,
+    })
+
+    try {
+      await updateCompany(jobId, updatedJob)
+
+      if (newStatus === 'offer') {
         toast.success('Offer🎉')
       }
-      else if (status === 'rejected') {
-        toast.error('Reject😅')
-      }
-      else {
-        toast.success(`状态已更新为 ${status}`)
+      else if (newStatus === 'rejected') {
+        toast.error('终止流程')
       }
     }
     catch (error) {
-      // console.error('Failed to update status:', error)
-      // 如果报错 那就回滚
-      set({ jobs: previousJobs })
+      set({ jobs: previousJobs, selectedJob: previousSelectedJob })
       const errorMsg = error instanceof Error ? error.message : '未知错误'
-      toast.error('更新状态失败', {
-        description: errorMsg,
-      })
+      toast.error('更新状态失败', { description: errorMsg })
     }
   },
 
-  updateJobLocal: (job) => {
+  updateJob: async (job) => {
+    const previousJobs = get().jobs
+    const previousSelectedJob = get().selectedJob
+
+    // 乐观更新
     set(state => ({
       jobs: state.jobs.map(j => j.id === job.id ? job : j),
+      selectedJob: state.selectedJob?.id === job.id ? job : state.selectedJob,
     }))
-  },
 
-  updateJob: async (job) => {
     try {
       const updated = await updateCompany(job.id, job)
       set(state => ({
         jobs: state.jobs.map(j => j.id === job.id ? updated : j),
+        selectedJob: state.selectedJob?.id === updated.id ? updated : state.selectedJob,
       }))
     }
     catch (error) {
+      set({ jobs: previousJobs, selectedJob: previousSelectedJob })
       console.error('Failed to update job:', error)
       const errorMsg = error instanceof Error ? error.message : '未知错误'
-      toast.error('更新失败', {
-        description: errorMsg,
-      })
+      toast.error('更新失败', { description: errorMsg })
     }
   },
 
@@ -164,16 +176,13 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
     catch (error) {
       console.error('Failed to add job:', error)
       const errorMsg = error instanceof Error ? error.message : '未知错误'
-      toast.error('添加失败', {
-        description: errorMsg,
-      })
+      toast.error('添加失败', { description: errorMsg })
     }
   },
 
   deleteSelectedJobs: async () => {
     const { selectedIds, jobs } = get()
     try {
-      // 并行删除所有选中的
       await Promise.all(
         Array.from(selectedIds).map(id => deleteCompany(id)),
       )
@@ -187,9 +196,7 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
     catch (error) {
       console.error('Failed to delete jobs:', error)
       const errorMsg = error instanceof Error ? error.message : '未知错误'
-      toast.error('删除失败', {
-        description: errorMsg,
-      })
+      toast.error('删除失败', { description: errorMsg })
     }
   },
 
@@ -214,6 +221,11 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
       set({ selectedIds: new Set(jobs.map(j => j.id)) })
     }
   },
+
+  openJobDrawer: job => set({ selectedJob: job, drawerOpen: true }),
+  closeJobDrawer: () => set({ drawerOpen: false }),
+  openAddDrawer: () => set({ addDrawerOpen: true }),
+  closeAddDrawer: () => set({ addDrawerOpen: false }),
 }))
 
 export default useTrackerStore

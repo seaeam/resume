@@ -9,11 +9,6 @@ export function TodoCard() {
     lastExportDays: 5,
   }
 
-  const followUp = {
-    pendingCount: 3,
-    days: 7,
-  }
-
   return (
     <Card className="overflow-hidden">
       <TodoHeader />
@@ -27,10 +22,7 @@ export function TodoCard() {
             <ExportModule lastExportDays={exportInfo.lastExportDays} />
           </div>
           <div className="min-w-[80%] snap-center md:min-w-0">
-            <FollowUpModule
-              pendingCount={followUp.pendingCount}
-              days={followUp.days}
-            />
+            <FollowUpModule />
           </div>
         </div>
       </CardContent>

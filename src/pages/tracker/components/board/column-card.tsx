@@ -1,26 +1,35 @@
-import type { JobApplication } from '../types'
+import type { JobApplication } from '../../types'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
+import useTrackerStore from '../../store'
 
 interface ColumnCardProps {
   job: JobApplication
-  isSelectMode?: boolean
-  isSelected?: boolean
-  onClick?: () => void
-  onToggleSelect?: (id: string) => void
 }
-export function ColumnCard({ job, onClick, isSelectMode, isSelected, onToggleSelect }: ColumnCardProps) {
+
+export function ColumnCard({ job }: ColumnCardProps) {
+  const { isSelectMode, selectedIds, toggleSelect, openJobDrawer } = useTrackerStore()
+  const isSelected = selectedIds.has(job.id)
+
+  const handleClick = () => {
+    if (isSelectMode) {
+      toggleSelect(job.id)
+    }
+    else {
+      openJobDrawer(job)
+    }
+  }
+
   return (
     <Card
       className={cn(
-        'p-3 cursor-pointer',
+        'p-3 cursor-pointer hover:shadow-md transition-all',
         isSelected && 'border-primary bg-primary/5',
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
-      {/* 直接在 Card 内部放内容，不要再嵌套 div */}
       <div className="flex items-center gap-2">
         {/* Logo */}
         <div className="size-8 rounded bg-muted flex items-center justify-center shrink-0">
@@ -38,11 +47,9 @@ export function ColumnCard({ job, onClick, isSelectMode, isSelected, onToggleSel
           <p className="text-sm font-medium truncate">{job.position}</p>
           <p className="text-xs text-muted-foreground truncate">
             {job.company}
-            {' '}
-            •
+            {' · '}
             {job.location}
           </p>
-          {/* 面试轮次 Badge */}
           {job.status === 'interview' && job.interview_sub_stages && job.interview_sub_stages.length > 0 && (() => {
             const activeSubStage = job.interview_sub_stages.find(s => s.status === '进行中')
             return activeSubStage
@@ -59,7 +66,7 @@ export function ColumnCard({ job, onClick, isSelectMode, isSelected, onToggleSel
             checked={isSelected}
             className="ml-auto size-5"
             onClick={e => e.stopPropagation()}
-            onCheckedChange={() => onToggleSelect?.(job.id)}
+            onCheckedChange={() => toggleSelect(job.id)}
           />
         )}
       </div>

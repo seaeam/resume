@@ -35,3 +35,5 @@ export interface JobApplication {
   stage_details: StageDetail[]
   interview_sub_stages: InterviewSubStage[]
 }
+
+export type DrawerTab = 'information' | 'document'

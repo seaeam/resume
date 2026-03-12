@@ -1,22 +1,23 @@
-import type { JobApplication } from '../../types'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import useTrackerStore from '../../store'
 
 interface DrawerEditFormProps {
-  job: JobApplication
-  onSave: (updated: JobApplication) => void
+  onSaved: () => void
   onCancel: () => void
 }
 
-export function DrawerEditForm({ job, onSave, onCancel }: DrawerEditFormProps) {
+export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProps) {
+  const { selectedJob, updateJob } = useTrackerStore()
+
   const [formData, setFormData] = useState({
-    company: job.company,
-    position: job.position,
-    location: job.location,
-    salary: job.salary || '',
-    job_url: job.job_url || '',
+    company: selectedJob?.company || '',
+    position: selectedJob?.position || '',
+    location: selectedJob?.location || '',
+    salary: selectedJob?.salary || '',
+    job_url: selectedJob?.job_url || '',
   })
 
   const handleChange = (field: string, value: string) => {
@@ -24,14 +25,17 @@ export function DrawerEditForm({ job, onSave, onCancel }: DrawerEditFormProps) {
   }
 
   const handleSubmit = () => {
-    onSave({
-      ...job,
+    if (!selectedJob)
+      return
+    updateJob({
+      ...selectedJob,
       company: formData.company,
       position: formData.position,
       location: formData.location,
       salary: formData.salary || null,
       job_url: formData.job_url || null,
     })
+    onSaved()
   }
 
   return (

@@ -1,29 +1,65 @@
-import type { JobApplication } from '../../types'
+import type { ResumeOption, ResumePreviewData } from './types'
 import { FileText, Loader2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DEFAULT_FONT_CONFIG, DEFAULT_SPACING_CONFIG, DEFAULT_THEME_CONFIG } from '@/lib/schema'
 import { getAllResumesFromUser, getResumeById } from '@/lib/supabase/resume'
-import { ResumePreviewThumbnail } from './resume-preview-thumbnail'
+import { ResumePreview } from '@/pages/resume/editor/components/preview/ResumePreview'
+import useResumeConfigStore from '@/store/resume/config'
+import useResumeStore from '@/store/resume/form'
+import useTrackerStore from '../../store'
+import { normalizeResumePreviewData } from '../../utils'
 
-interface ResumeOption {
-  id: string
-  resume_id: string
-  display_name: string
-  type: string
+function SharedResumePreview({ data }: { data: ResumePreviewData }) {
+  const resumeRef = useRef<HTMLDivElement>(null)
+  const previousResumeStateRef = useRef<ReturnType<typeof useResumeStore.getState> | null>(null)
+  const previousConfigStateRef = useRef<ReturnType<typeof useResumeConfigStore.getState> | null>(null)
+  const normalizedData = useMemo(() => normalizeResumePreviewData(data), [data])
+
+  useLayoutEffect(() => {
+    previousResumeStateRef.current ??= useResumeStore.getState()
+    previousConfigStateRef.current ??= useResumeConfigStore.getState()
+
+    useResumeConfigStore.setState(state => ({
+      ...state,
+      spacing: DEFAULT_SPACING_CONFIG,
+      font: DEFAULT_FONT_CONFIG,
+      theme: DEFAULT_THEME_CONFIG,
+    }))
+
+    return () => {
+      if (previousResumeStateRef.current) {
+        useResumeStore.setState(previousResumeStateRef.current)
+      }
+
+      if (previousConfigStateRef.current) {
+        useResumeConfigStore.setState(previousConfigStateRef.current)
+      }
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    useResumeStore.setState(state => ({
+      ...state,
+      ...normalizedData,
+    }))
+  }, [normalizedData])
+
+  return (
+    <div className="h-full overflow-auto bg-muted/30">
+      <ResumePreview resumeRef={resumeRef} />
+    </div>
+  )
 }
 
-interface DrawerDocumentProps {
-  job: JobApplication
-  onUpdate: (job: JobApplication) => void
-}
-
-export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
+export default function DrawerDocument() {
+  const { selectedJob: job, updateJob } = useTrackerStore()
   const navigate = useNavigate()
   const [resumes, setResumes] = useState<ResumeOption[]>([])
   const [loading, setLoading] = useState(false)
-  const [previewData, setPreviewData] = useState<any>(null)
+  const [previewData, setPreviewData] = useState<ResumePreviewData | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
 
   // 加载用户简历列表
@@ -43,7 +79,7 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
 
   // 加载选中简历的完整数据用于预览
   useEffect(() => {
-    if (!job.resume_id) {
+    if (!job?.resume_id) {
       setPreviewData(null)
       return
     }
@@ -51,8 +87,7 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
     setPreviewLoading(true)
     getResumeById(job.resume_id, '*')
       .then((data) => {
-        const mapped = mapSnakeToCamel(data)
-        setPreviewData(mapped)
+        setPreviewData(data as ResumePreviewData)
       })
       .catch((error) => {
         console.error('Failed to load resume preview:', error)
@@ -61,21 +96,27 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
       .finally(() => {
         setPreviewLoading(false)
       })
-  }, [job.resume_id])
+  }, [job?.resume_id])
 
   const handleResumeChange = (resumeId: string) => {
-    onUpdate({
+    if (!job)
+      return
+
+    updateJob({
       ...job,
       resume_id: resumeId,
     })
   }
+
+  if (!job)
+    return null
 
   // 没有简历的空状态
   if (!loading && resumes.length === 0) {
     return (
       <div className="space-y-4">
         <h3 className="font-semibold text-lg">投递简历</h3>
-        <div className="border rounded-lg aspect-[3/4] bg-white overflow-hidden">
+        <div className="border rounded-lg aspect-3/4 bg-white overflow-hidden">
           <div className="w-full h-full flex items-center justify-center bg-muted/50">
             <div className="text-center text-muted-foreground px-6">
               <FileText className="size-12 mx-auto mb-3 opacity-50" />
@@ -124,7 +165,7 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
       {/* 简历预览区域 */}
       <div className="space-y-1.5">
         <Label>简历预览</Label>
-        <div className="border rounded-lg aspect-[3/4] bg-white overflow-hidden">
+        <div className="border rounded-lg aspect-3/4 bg-white overflow-hidden">
           {previewLoading
             ? (
                 <div className="w-full h-full flex items-center justify-center bg-muted/50">
@@ -133,7 +174,7 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
               )
             : previewData
               ? (
-                  <ResumePreviewThumbnail data={previewData} />
+                  <SharedResumePreview data={previewData} />
                 )
               : (
                   <div className="w-full h-full flex items-center justify-center bg-muted/50">
@@ -147,28 +188,4 @@ export function DrawerDocument({ job, onUpdate }: DrawerDocumentProps) {
       </div>
     </div>
   )
-}
-
-// 将 Supabase snake_case 字段转换为 camelCase
-function mapSnakeToCamel(data: any): any {
-  if (!data)
-    return null
-
-  return {
-    type: data.type,
-    basics: data.basics,
-    jobIntent: data.jobIntent || data.job_intent,
-    eduBackground: data.eduBackground || data.edu_background,
-    workExperience: data.workExperience || data.work_experience,
-    internshipExperience: data.internshipExperience || data.internship_experience,
-    campusExperience: data.campusExperience || data.campus_experience,
-    projectExperience: data.projectExperience || data.project_experience,
-    skillSpecialty: data.skillSpecialty || data.skill_specialty,
-    honorsCertificates: data.honorsCertificates || data.honors_certificates,
-    selfEvaluation: data.selfEvaluation || data.self_evaluation,
-    hobbies: data.hobbies,
-    applicationInfo: data.applicationInfo || data.application_info,
-    order: data.order,
-    visibility: data.visibility,
-  }
 }
