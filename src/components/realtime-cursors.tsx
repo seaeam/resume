@@ -5,7 +5,7 @@ import { RemoteClickRipple } from '@/components/remote-click-ripple'
 import { useRealtimeCursors } from '@/hooks/use-realtime-cursors'
 import useCollaborationUIStore from '@/store/collaboration-ui'
 
-const THROTTLE_MS = 50
+const THROTTLE_MS = 12
 
 export function RealtimeCursors({ roomName, username }: { roomName: string, username: string }) {
   const { cursors } = useRealtimeCursors({ roomName, username, throttleMs: THROTTLE_MS })
@@ -17,14 +17,14 @@ export function RealtimeCursors({ roomName, username }: { roomName: string, user
       {Object.keys(cursors).map(id => (
         <Cursor
           key={id}
-          className="fixed transition-transform ease-in-out z-50"
+          className="fixed z-50"
           style={{
-            transitionDuration: '20ms',
             top: 0,
             left: 0,
-            transform: `translate(${cursors[id].position.x}px, ${cursors[id].position.y}px)`,
+            willChange: 'transform',
             zIndex: 10000,
           }}
+          point={cursors[id].position}
           color={cursors[id].color}
           name={cursors[id].user.name}
         />

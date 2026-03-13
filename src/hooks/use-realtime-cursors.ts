@@ -2,6 +2,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import supabase from '@/lib/supabase/client'
+import { getViewportSize, projectPointToViewport } from '@/lib/collaboration/viewport'
 import { useThrottledCallback } from '@/hooks/use-throttled-callback'
 
 const generateRandomColor = () => `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)`
@@ -14,6 +15,10 @@ interface CursorEventPayload {
   position: {
     x: number
     y: number
+  }
+  viewport?: {
+    width: number
+    height: number
   }
   user: {
     id: number
@@ -40,7 +45,7 @@ export function useRealtimeCursors({
   const channelRef = useRef<RealtimeChannel | null>(null)
 
   const callback = useCallback(
-    (event: MouseEvent) => {
+    (event: PointerEvent) => {
       const { clientX, clientY } = event
 
       const payload: CursorEventPayload = {
@@ -48,6 +53,7 @@ export function useRealtimeCursors({
           x: clientX,
           y: clientY,
         },
+        viewport: getViewportSize(),
         user: {
           id: userId,
           name: username,
@@ -67,7 +73,10 @@ export function useRealtimeCursors({
     [color, userId, username],
   )
 
-  const handleMouseMove = useThrottledCallback(callback, throttleMs, [callback])
+  const handlePointerMove = useThrottledCallback(callback, throttleMs, [callback], {
+    leading: true,
+    trailing: true,
+  })
 
   useEffect(() => {
     const channel = supabase.channel(roomName)
@@ -100,12 +109,17 @@ export function useRealtimeCursors({
         if (user.id === userId)
           return
 
+        const projectedPayload: CursorEventPayload = {
+          ...data.payload,
+          position: projectPointToViewport(data.payload.position, data.payload.viewport),
+        }
+
         setCursors((prev) => {
           const next = { ...prev }
           delete next[userId]
           return {
             ...next,
-            [user.id]: data.payload,
+            [user.id]: projectedPayload,
           }
         })
       })
@@ -127,14 +141,12 @@ export function useRealtimeCursors({
   }, [roomName, username, userId, color])
 
   useEffect(() => {
-    // Add event listener for mousemove
-    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
 
-    // Cleanup on unmount
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('pointermove', handlePointerMove)
     }
-  }, [handleMouseMove])
+  }, [handlePointerMove])
 
   return { cursors }
 }

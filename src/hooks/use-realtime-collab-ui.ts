@@ -13,6 +13,7 @@ import type { FontConfigType, ORDERType, SpacingConfigType, ThemeConfigType } fr
 import type { ClickEventBroadcastPayload, UIAction, UIActionBroadcastPayload, UIStateBroadcastPayload } from '@/store/collaboration-ui'
 import { REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { getViewportSize, projectPointToViewport } from '@/lib/collaboration/viewport'
 import supabase from '@/lib/supabase/client'
 import useCollaborationUIStore from '@/store/collaboration-ui'
 import { useThrottledCallback } from './use-throttled-callback'
@@ -136,6 +137,7 @@ export function useRealtimeCollabUI({
       userName: username,
       color,
       position,
+      viewport: getViewportSize(),
       targetLabel,
       timestamp: Date.now(),
     }
@@ -176,7 +178,10 @@ export function useRealtimeCollabUI({
       .on('broadcast', { event: CLICK_EVENT }, (data: { payload: ClickEventBroadcastPayload }) => {
         if (data.payload.userId === userId)
           return
-        addRemoteClick(data.payload)
+        addRemoteClick({
+          ...data.payload,
+          position: projectPointToViewport(data.payload.position, data.payload.viewport),
+        })
       })
       .subscribe(async (status) => {
         if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {

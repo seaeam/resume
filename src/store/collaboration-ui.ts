@@ -58,6 +58,7 @@ export interface ClickEventBroadcastPayload {
   userName: string
   color: string
   position: { x: number, y: number }
+  viewport?: { width: number, height: number }
   targetLabel?: string
   timestamp: number
 }
