@@ -1,5 +1,5 @@
 import type { FileError, FileRejection } from 'react-dropzone'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import supabase from '@/lib/supabase/client'
 
@@ -54,6 +54,22 @@ interface UseSupabaseUploadOptions {
 
 type UseSupabaseUploadReturn = ReturnType<typeof useSupabaseUpload>
 
+function createPreviewFile(
+  file: File,
+  errors: readonly FileError[] = [],
+): FileWithPreview {
+  return Object.assign(file, {
+    preview: URL.createObjectURL(file),
+    errors,
+  }) as FileWithPreview
+}
+
+function revokePreview(file: FileWithPreview) {
+  if (file.preview) {
+    URL.revokeObjectURL(file.preview)
+  }
+}
+
 /**
  * 封装基于 Supabase Storage 的文件拖拽上传流程。
  *
@@ -94,6 +110,7 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
   const [loading, setLoading] = useState<boolean>(false)
   const [errors, setErrors] = useState<{ name: string, message: string }[]>([])
   const [successes, setSuccesses] = useState<string[]>([])
+  const previousFilesRef = useRef<FileWithPreview[]>([])
 
   const isSuccess = useMemo(() => {
     if (errors.length === 0 && successes.length === 0) {
@@ -107,43 +124,59 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
 
   const onDrop = useCallback(
     (acceptedFiles: File[], fileRejections: FileRejection[]) => {
-      const validFiles = acceptedFiles
-        .filter(file => !files.find(x => x.name === file.name))
-        .map((file) => {
-          ;(file as FileWithPreview).preview = URL.createObjectURL(file)
-          ;(file as FileWithPreview).errors = []
-          return file as FileWithPreview
+      setFiles((previousFiles) => {
+        const existingFileNames = new Set(
+          previousFiles.map(file => file.name),
+        )
+
+        const validFiles = acceptedFiles
+          .filter(file => !existingFileNames.has(file.name))
+          .map(file => createPreviewFile(file))
+
+        const invalidFiles = fileRejections.map(({ file, errors }) => {
+          return createPreviewFile(file, errors)
         })
 
-      const invalidFiles = fileRejections.map(({ file, errors }) => {
-        ;(file as FileWithPreview).preview = URL.createObjectURL(file)
-        ;(file as FileWithPreview).errors = errors
-        return file as FileWithPreview
+        return [...previousFiles, ...validFiles, ...invalidFiles]
       })
-
-      const newFiles = [...files, ...validFiles, ...invalidFiles]
-
-      setFiles(newFiles)
     },
-    [files, setFiles],
+    [],
   )
 
-  // 清理 Object URL 防止内存泄漏
   useEffect(() => {
-    return () => {
-      files.forEach((file) => {
-        if (file.preview) {
-          URL.revokeObjectURL(file.preview)
-        }
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // 仅在卸载时清理
+    const activePreviewUrls = new Set(
+      files.map(file => file.preview).filter(Boolean),
+    )
+
+    previousFilesRef.current.forEach((file) => {
+      if (file.preview && !activePreviewUrls.has(file.preview)) {
+        revokePreview(file)
+      }
+    })
+
+    previousFilesRef.current = files
+  }, [files])
+
+  useEffect(
+    () => () => {
+      previousFilesRef.current.forEach(revokePreview)
+    },
+    [],
+  )
+
+  const accept = useMemo(
+    () =>
+      allowedMimeTypes.reduce<Record<string, []>>((accumulator, mimeType) => {
+        accumulator[mimeType] = []
+        return accumulator
+      }, {}),
+    [allowedMimeTypes],
+  )
 
   const dropzoneProps = useDropzone({
     onDrop,
     noClick: true,
-    accept: allowedMimeTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
+    accept,
     maxSize: maxFileSize,
     maxFiles,
     multiple: maxFiles !== 1,
@@ -152,65 +185,94 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
   const onUpload = useCallback(async () => {
     setLoading(true)
 
-    // [Joshen] This is to support handling partial successes
-    // If any files didn't upload for any reason, hitting "Upload" again will only upload the files that had errors
-    const filesWithErrors = new Set(errors.map(x => x.name))
-    const successSet = new Set(successes)
-    const filesToUpload
-      = filesWithErrors.size > 0
-        ? files.filter(f => filesWithErrors.has(f.name) || !successSet.has(f.name))
-        : files
+    try {
+      const filesWithErrors = new Set(errors.map(fileError => fileError.name))
+      const uploadedFileNames = new Set(successes)
+      const filesToUpload
+        = filesWithErrors.size > 0
+          ? files.filter(
+              file =>
+                filesWithErrors.has(file.name)
+                || !uploadedFileNames.has(file.name),
+            )
+          : files
 
-    const responses = await Promise.all(
-      filesToUpload.map(async (file) => {
-        const { error } = await supabase.storage
-          .from(bucketName)
-          .upload(path ? `${path}/${file.name}` : file.name, file, {
-            cacheControl: cacheControl.toString(),
-            upsert,
-          })
-        if (error) {
-          return { name: file.name, message: error.message }
-        }
-        else {
-          return { name: file.name, message: undefined }
-        }
-      }),
-    )
+      const uploadResults = await Promise.all(
+        filesToUpload.map(async (file) => {
+          try {
+            const { error } = await supabase.storage
+              .from(bucketName)
+              .upload(path ? `${path}/${file.name}` : file.name, file, {
+                cacheControl: cacheControl.toString(),
+                upsert,
+              })
 
-    const responseErrors = responses.filter(x => x.message !== undefined) as { name: string, message: string }[]
-    // if there were errors previously, this function tried to upload the files again so we should clear/overwrite the existing errors.
-    setErrors(responseErrors)
+            return error
+              ? { name: file.name, message: error.message }
+              : { name: file.name, message: undefined }
+          }
+          catch (error) {
+            return {
+              name: file.name,
+              message: error instanceof Error ? error.message : '上传失败',
+            }
+          }
+        }),
+      )
 
-    const responseSuccesses = responses.filter(x => x.message === undefined)
-    const newSuccesses = Array.from(
-      new Set([...successes, ...responseSuccesses.map(x => x.name)]),
-    )
-    setSuccesses(newSuccesses)
+      const uploadErrors = uploadResults.filter(
+        (result): result is { name: string, message: string } =>
+          result.message !== undefined,
+      )
+      const uploadedSuccesses = uploadResults
+        .filter(result => result.message === undefined)
+        .map(result => result.name)
 
-    setLoading(false)
-  }, [files, path, bucketName, errors, successes, upsert, cacheControl, setLoading, setErrors, setSuccesses])
+      setErrors(uploadErrors)
+      setSuccesses(previousSuccesses =>
+        Array.from(new Set([...previousSuccesses, ...uploadedSuccesses])),
+      )
+    }
+    finally {
+      setLoading(false)
+    }
+  }, [files, path, bucketName, errors, successes, upsert, cacheControl])
 
   useEffect(() => {
     if (files.length === 0) {
       setErrors([])
+      setSuccesses([])
+      return
     }
 
-    // If the number of files doesn't exceed the maxFiles parameter, remove the error 'Too many files' from each file
     if (files.length <= maxFiles) {
       let changed = false
-      const newFiles = files.map((file) => {
-        if (file.errors.some(e => e.code === 'too-many-files')) {
-          file.errors = file.errors.filter(e => e.code !== 'too-many-files')
+      const nextFiles = files.map((file) => {
+        if (file.errors.some(error => error.code === 'too-many-files')) {
+          file.errors = file.errors.filter(
+            error => error.code !== 'too-many-files',
+          )
           changed = true
         }
         return file
       })
+
       if (changed) {
-        setFiles(newFiles)
+        setFiles(nextFiles)
       }
     }
-  }, [files.length, setFiles, maxFiles])
+  }, [files, maxFiles])
+
+  useEffect(() => {
+    const activeFileNames = new Set(files.map(file => file.name))
+
+    setErrors(previousErrors =>
+      previousErrors.filter(error => activeFileNames.has(error.name)),
+    )
+    setSuccesses(previousSuccesses =>
+      previousSuccesses.filter(fileName => activeFileNames.has(fileName)),
+    )
+  }, [files])
 
   return {
     files,
@@ -228,4 +290,8 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
   }
 }
 
-export { useSupabaseUpload, type UseSupabaseUploadOptions, type UseSupabaseUploadReturn }
+export {
+  useSupabaseUpload,
+  type UseSupabaseUploadOptions,
+  type UseSupabaseUploadReturn,
+}

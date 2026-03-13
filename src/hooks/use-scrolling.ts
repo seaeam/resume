@@ -1,5 +1,5 @@
 import type { RefObject } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type ScrollTarget = RefObject<HTMLElement> | Window | null | undefined
 type EventTargetWithScroll = Window | HTMLElement | Document
@@ -7,6 +7,19 @@ type EventTargetWithScroll = Window | HTMLElement | Document
 interface UseScrollingOptions {
   debounce?: number
   fallbackToDocument?: boolean
+}
+
+function resolveScrollTarget(
+  target?: ScrollTarget,
+): Window | HTMLElement | null {
+  if (!target)
+    return null
+
+  if (typeof Window !== 'undefined' && target instanceof Window) {
+    return target
+  }
+
+  return target.current
 }
 
 /**
@@ -29,15 +42,26 @@ export function useScrolling(
 ): boolean {
   const { debounce = 150, fallbackToDocument = true } = options
   const [isScrolling, setIsScrolling] = useState(false)
+  const isScrollingRef = useRef(false)
+  const resolvedTarget = resolveScrollTarget(target)
+
+  const updateScrollingState = (nextValue: boolean) => {
+    if (isScrollingRef.current === nextValue)
+      return
+
+    isScrollingRef.current = nextValue
+    setIsScrolling(nextValue)
+  }
 
   useEffect(() => {
-    // Resolve element or window
-    const element: EventTargetWithScroll
-      = target && typeof Window !== 'undefined' && target instanceof Window
-        ? target
-        : ((target as RefObject<HTMLElement>)?.current ?? window)
+    if (typeof window === 'undefined')
+      return
 
-    // Mobile: fallback to document when using window
+    const element: EventTargetWithScroll
+      = resolvedTarget && resolvedTarget instanceof Window
+        ? resolvedTarget
+        : (resolvedTarget ?? window)
+
     const eventTarget: EventTargetWithScroll
       = fallbackToDocument
         && element === window
@@ -45,46 +69,35 @@ export function useScrolling(
         ? document
         : element
 
-    const on = (
-      el: EventTargetWithScroll,
-      event: string,
-      handler: (event: Event) => void,
-    ) => el.addEventListener(event, handler, { passive: true })
-
-    const off = (
-      el: EventTargetWithScroll,
-      event: string,
-      handler: (event: Event) => void,
-    ) => el.removeEventListener(event, handler)
-
     let timeout: ReturnType<typeof setTimeout>
     const supportsScrollEnd = element === window && 'onscrollend' in window
 
-    const handleScroll: (event: Event) => void = () => {
-      if (!isScrolling)
-        setIsScrolling(true)
-
+    const handleScroll = () => {
+      updateScrollingState(true)
       if (!supportsScrollEnd) {
         clearTimeout(timeout)
-        timeout = setTimeout(() => setIsScrolling(false), debounce)
+        timeout = setTimeout(() => updateScrollingState(false), debounce)
       }
     }
 
-    const handleScrollEnd: (event: Event) => void = () => setIsScrolling(false)
+    const handleScrollEnd = () => updateScrollingState(false)
 
-    on(eventTarget, 'scroll', handleScroll)
+    eventTarget.addEventListener('scroll', handleScroll, { passive: true })
     if (supportsScrollEnd) {
-      on(eventTarget, 'scrollend', handleScrollEnd)
+      eventTarget.addEventListener('scrollend', handleScrollEnd, {
+        passive: true,
+      })
     }
 
     return () => {
-      off(eventTarget, 'scroll', handleScroll)
+      eventTarget.removeEventListener('scroll', handleScroll)
       if (supportsScrollEnd) {
-        off(eventTarget, 'scrollend', handleScrollEnd)
+        eventTarget.removeEventListener('scrollend', handleScrollEnd)
       }
       clearTimeout(timeout)
+      updateScrollingState(false)
     }
-  }, [target, debounce, fallbackToDocument])
+  }, [resolvedTarget, debounce, fallbackToDocument])
 
   return isScrolling
 }

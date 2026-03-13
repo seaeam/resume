@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { createContext, use, useCallback, useEffect, useRef, useState } from 'react'
+import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 interface DragItem {
@@ -35,7 +35,9 @@ export function DragProvider({ children }: { children: ReactNode }) {
   const overIndexRef = useRef<number | null>(null) // 用 ref 跟踪 overIndex 避免频繁重建回调
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 }) // 预览位置
   const [initialRect, setInitialRect] = useState<DOMRect | null>(null) // 初始位置
-  const itemsRef = useRef<Map<string, { index: number, element: HTMLElement }>>(new Map()) // 注册的可拖拽元素
+  const itemsRef = useRef<Map<string, { index: number, element: HTMLElement }>>(
+    new Map(),
+  ) // 注册的可拖拽元素
   const positionsRef = useRef<ItemPosition[]>([]) // 元素位置数据
   const startPosRef = useRef({ x: 0, y: 0 }) // 拖拽起始位置
   const previewContentRef = useRef<HTMLDivElement>(null) // 预览内容容器
@@ -49,9 +51,19 @@ export function DragProvider({ children }: { children: ReactNode }) {
     }
   }, [draggedItem])
 
-  const registerItem = useCallback((index: number, id: string, element: HTMLElement) => {
-    itemsRef.current.set(id, { index, element })
+  useEffect(() => {
+    return () => {
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
   }, [])
+
+  const registerItem = useCallback(
+    (index: number, id: string, element: HTMLElement) => {
+      itemsRef.current.set(id, { index, element })
+    },
+    [],
+  )
 
   const unregisterItem = useCallback((id: string) => {
     itemsRef.current.delete(id)
@@ -83,6 +95,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
         startPosRef.current = { x: startX, y: startY }
         setPreviewPos({ x: rect.left, y: rect.top })
         setDraggedItem({ index, id, element: item.element })
+        overIndexRef.current = index
         setOverIndex(index)
         document.body.style.userSelect = 'none'
         document.body.style.cursor = 'grabbing'
@@ -139,6 +152,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
 
   const endDrag = useCallback(() => {
     setDraggedItem(null)
+    overIndexRef.current = null
     setOverIndex(null)
     setPreviewPos({ x: 0, y: 0 })
     setInitialRect(null)
@@ -173,18 +187,13 @@ export function DragProvider({ children }: { children: ReactNode }) {
     )
   }
 
+  const contextValue = useMemo<DragContextValue>(
+    () => ({ draggedItem, overIndex, registerItem, unregisterItem, startDrag, endDrag, updateOverIndex }),
+    [draggedItem, overIndex, registerItem, unregisterItem, startDrag, endDrag, updateOverIndex],
+  )
+
   return (
-    <DragContext
-      value={{
-        draggedItem,
-        overIndex,
-        registerItem,
-        unregisterItem,
-        startDrag,
-        endDrag,
-        updateOverIndex,
-      }}
-    >
+    <DragContext value={contextValue}>
       {children}
       {renderDragPreview()}
     </DragContext>

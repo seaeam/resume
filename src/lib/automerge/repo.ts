@@ -51,7 +51,7 @@ export function destroyAutomergeRepo() {
     try {
       repoInstance.networkSubsystem.disconnect()
     }
-    catch (error) {
+    catch {
       // 忽略断开连接时的错误
     }
 

@@ -43,10 +43,10 @@
   @keyframes pulse {
     0%,
     100% {
-      boxshadow: 0 0 0 0 var(--pulse-color);
+      box-shadow: 0 0 0 0 var(--pulse-color);
     }
     50% {
-      boxshadow: 0 0 0 8px var(--pulse-color);
+      box-shadow: 0 0 0 8px var(--pulse-color);
     }
   }
   --animate-rainbow: rainbow var(--speed, 2s) infinite linear;

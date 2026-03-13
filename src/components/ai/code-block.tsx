@@ -1,15 +1,7 @@
 import type { ComponentProps, HTMLAttributes } from 'react'
 import type { BundledLanguage, ShikiTransformer } from 'shiki'
 import { CheckIcon, CopyIcon } from 'lucide-react'
-import {
-
-  createContext,
-
-  use,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { createContext, use, useEffect, useMemo, useState } from 'react'
 import { codeToHtml } from 'shiki'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -54,7 +46,9 @@ export async function highlightCode(
   language: BundledLanguage,
   showLineNumbers = false,
 ) {
-  const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : []
+  const transformers: ShikiTransformer[] = showLineNumbers
+    ? [lineNumberTransformer]
+    : []
 
   return await Promise.all([
     codeToHtml(code, {
@@ -80,24 +74,25 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const [html, setHtml] = useState<string>('')
   const [darkHtml, setDarkHtml] = useState<string>('')
-  const mounted = useRef(false)
+  const contextValue = useMemo(() => ({ code }), [code])
 
   useEffect(() => {
+    let cancelled = false
+
     highlightCode(code, language, showLineNumbers).then(([light, dark]) => {
-      if (!mounted.current) {
+      if (!cancelled) {
         setHtml(light)
         setDarkHtml(dark)
-        mounted.current = true
       }
     })
 
     return () => {
-      mounted.current = false
+      cancelled = true
     }
   }, [code, language, showLineNumbers])
 
   return (
-    <CodeBlockContext value={{ code }}>
+    <CodeBlockContext value={contextValue}>
       <div
         className={cn(
           'group relative w-full overflow-hidden rounded-md border bg-background text-foreground',
@@ -115,7 +110,9 @@ export function CodeBlock({
             dangerouslySetInnerHTML={{ __html: darkHtml }}
           />
           {children && (
-            <div className="absolute top-2 right-2 flex items-center gap-2">{children}</div>
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+              {children}
+            </div>
           )}
         </div>
       </div>
@@ -187,8 +184,8 @@ export default function CodeBlockDemo() {
     <div className="w-full max-w-2xl p-6">
       <CodeBlock code={code} language="jsx">
         <CodeBlockCopyButton
-          onCopy={() => console.log('Copied code to clipboard')}
-          onError={() => console.error('Failed to copy code to clipboard')}
+          onCopy={() => undefined}
+          onError={() => undefined}
         />
       </CodeBlock>
     </div>

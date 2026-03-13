@@ -1,6 +1,5 @@
 import { throttle } from 'lodash'
 import * as React from 'react'
-import { useUnmount } from './use-unmount'
 
 interface ThrottleSettings {
   leading?: boolean | undefined
@@ -37,27 +36,31 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
   cancel: () => void
   flush: () => void
 } {
-  // 使用 ref 持有最新的 fn，避免 throttle 内部闭包引用陈旧回调
   const fnRef = React.useRef(fn)
+  const { leading = false, trailing = true } = options
+
   React.useEffect(() => {
     fnRef.current = fn
   }, [fn])
 
-  const handler = React.useMemo(
-    () => throttle<T>(
-      ((...args: any[]) => fnRef.current(...args)) as T,
-      wait,
-      options,
-    ),
+  const throttledCallback = React.useMemo(
+    () =>
+      throttle<T>(((...args: any[]) => fnRef.current(...args)) as T, wait, {
+        leading,
+        trailing,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [wait, ...dependencies],
+    [wait, leading, trailing, ...dependencies],
   )
 
-  useUnmount(() => {
-    handler.cancel()
-  })
+  React.useEffect(
+    () => () => {
+      throttledCallback.cancel()
+    },
+    [throttledCallback],
+  )
 
-  return handler
+  return throttledCallback
 }
 
 export default useThrottledCallback

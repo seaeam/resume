@@ -2,7 +2,14 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useThrottledCallback } from '@/hooks/use-throttled-callback'
-import { getViewportSize, projectPointToViewport } from '@/lib/collaboration/viewport'
+import {
+  createRealtimeUserId,
+  getPresenceUserId,
+} from '@/lib/collaboration/realtime-user'
+import {
+  getViewportSize,
+  projectPointToViewport,
+} from '@/lib/collaboration/viewport'
 import supabase from '@/lib/supabase/client'
 
 /**
@@ -12,14 +19,9 @@ import supabase from '@/lib/supabase/client'
  *
  * @returns 一个适合高亮显示的 HSL 颜色字符串
  */
-const generateRandomColor = () => `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)`
-
-/**
- * 生成当前协作者在光标同步频道中使用的临时用户 ID。
- *
- * @returns 一个用于本地去重和 Presence 追踪的随机整数
- */
-const generateRandomNumber = () => Math.floor(Math.random() * 100)
+function generateRandomColor() {
+  return `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)`
+}
 
 const EVENT_NAME = 'realtime-cursor-move'
 
@@ -66,7 +68,7 @@ export function useRealtimeCursors({
   throttleMs: number
 }) {
   const [color] = useState(() => generateRandomColor())
-  const [userId] = useState(() => generateRandomNumber())
+  const [userId] = useState(createRealtimeUserId)
   const [cursors, setCursors] = useState<Record<string, CursorEventPayload>>({})
   const cursorPayload = useRef<CursorEventPayload | null>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
@@ -100,21 +102,33 @@ export function useRealtimeCursors({
     [color, userId, username],
   )
 
-  const handlePointerMove = useThrottledCallback(callback, throttleMs, [callback], {
-    leading: true,
-    trailing: true,
-  })
+  const handlePointerMove = useThrottledCallback(
+    callback,
+    throttleMs,
+    [callback],
+    {
+      leading: true,
+      trailing: true,
+    },
+  )
 
   useEffect(() => {
     const channel = supabase.channel(roomName)
 
     channel
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-        leftPresences.forEach((element) => {
-          // Remove cursor when user leaves
+        leftPresences.forEach((presence) => {
+          const leftUserId = getPresenceUserId(presence)
+
+          if (leftUserId === null || leftUserId === userId)
+            return
+
           setCursors((prev) => {
+            if (!(leftUserId in prev))
+              return prev
+
             const next = { ...prev }
-            delete next[element.key]
+            delete next[leftUserId]
             return next
           })
         })
@@ -130,30 +144,43 @@ export function useRealtimeCursors({
           payload: cursorPayload.current,
         })
       })
-      .on('broadcast', { event: EVENT_NAME }, (data: { payload: CursorEventPayload }) => {
-        const { user } = data.payload
-        // Don't render your own cursor
-        if (user.id === userId)
-          return
+      .on(
+        'broadcast',
+        { event: EVENT_NAME },
+        (data: { payload: CursorEventPayload }) => {
+          const { user } = data.payload
+          // Don't render your own cursor
+          if (user.id === userId)
+            return
 
-        const projectedPayload: CursorEventPayload = {
-          ...data.payload,
-          position: projectPointToViewport(data.payload.position, data.payload.viewport),
-        }
-
-        setCursors((prev) => {
-          const next = { ...prev }
-          delete next[userId]
-          return {
-            ...next,
-            [user.id]: projectedPayload,
+          const projectedPayload: CursorEventPayload = {
+            ...data.payload,
+            position: projectPointToViewport(
+              data.payload.position,
+              data.payload.viewport,
+            ),
           }
-        })
-      })
+
+          setCursors((prev) => {
+            return {
+              ...prev,
+              [user.id]: projectedPayload,
+            }
+          })
+        },
+      )
       .subscribe(async (status) => {
         if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
-          await channel.track({ key: userId })
           channelRef.current = channel
+          await channel.track({
+            userId,
+            metadata: {
+              userId,
+              userName: username,
+              color,
+            },
+            onlineAt: new Date().toISOString(),
+          })
         }
         else {
           setCursors({})

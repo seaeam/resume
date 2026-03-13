@@ -1,11 +1,10 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useTheme } from 'next-themes'
 import { Suspense, useState } from 'react'
 import { useLocation, useRoutes } from 'react-router-dom'
 import routes from '~react-pages'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { SiteHeader } from '@/components/dashboard/site-header'
-import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeProvider, useTheme } from '@/components/theme-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { BackgroundLines } from './components/ui/background-lines'
@@ -56,8 +55,8 @@ function App() {
 }
 
 function Loading() {
-  const theme = useTheme()
-  const shadowColor = theme.resolvedTheme === 'dark' ? 'white' : 'black'
+  const { resolvedTheme } = useTheme()
+  const shadowColor = resolvedTheme === 'dark' ? 'white' : 'black'
 
   return (
     <BackgroundLines className="flex items-center justify-center">

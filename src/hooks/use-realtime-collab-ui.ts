@@ -9,11 +9,28 @@
  * 使用独立的 channel（`${roomName}:ui`）以避免和光标 channel 冲突。
  */
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import type { FontConfigType, ORDERType, SpacingConfigType, ThemeConfigType } from '@/lib/schema'
-import type { ClickEventBroadcastPayload, UIAction, UIActionBroadcastPayload, UIStateBroadcastPayload } from '@/store/collaboration-ui'
+import type {
+  FontConfigType,
+  ORDERType,
+  SpacingConfigType,
+  ThemeConfigType,
+} from '@/lib/schema'
+import type {
+  ClickEventBroadcastPayload,
+  UIAction,
+  UIActionBroadcastPayload,
+  UIStateBroadcastPayload,
+} from '@/store/collaboration-ui'
 import { REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getViewportSize, projectPointToViewport } from '@/lib/collaboration/viewport'
+import {
+  createRealtimeUserId,
+  getPresenceUserId,
+} from '@/lib/collaboration/realtime-user'
+import {
+  getViewportSize,
+  projectPointToViewport,
+} from '@/lib/collaboration/viewport'
 import supabase from '@/lib/supabase/client'
 import useCollaborationUIStore from '@/store/collaboration-ui'
 import { useThrottledCallback } from './use-throttled-callback'
@@ -23,22 +40,15 @@ const UI_ACTION_EVENT = 'collab-ui-action'
 const CLICK_EVENT = 'collab-mouse-click'
 
 /**
- * 生成一个随机用户标识，用于区分同一房间内的不同协作者。
- *
- * 该值只在当前 hook 生命周期内使用，不依赖后端持久化身份。
- *
- * @returns 一个随机整数 ID
- */
-const generateRandomNumber = () => Math.floor(Math.random() * 100000)
-
-/**
  * 生成当前协作者在协作 UI 中使用的展示颜色。
  *
  * 颜色会用于远程抽屉状态、点击动画等视觉反馈，方便区分不同用户。
  *
  * @returns 一个 HSL 颜色字符串
  */
-const generateRandomColor = () => `hsl(${Math.floor(Math.random() * 360)}, 85%, 65%)`
+function generateRandomColor() {
+  return `hsl(${Math.floor(Math.random() * 360)}, 85%, 65%)`
+}
 
 interface UseRealtimeCollabUIOptions {
   roomName: string
@@ -63,7 +73,10 @@ interface UseRealtimeCollabUIReturn {
   /** 广播一个 UI 动作给所有协作者 */
   broadcastUIAction: (action: UIAction) => void
   /** 广播点击事件 */
-  broadcastClick: (position: { x: number, y: number }, targetLabel?: string) => void
+  broadcastClick: (
+    position: { x: number, y: number },
+    targetLabel?: string,
+  ) => void
   /** 当前用户 ID */
   userId: number
 }
@@ -100,13 +113,17 @@ export function useRealtimeCollabUI({
   getScrollPosition,
   throttleMs = 100,
 }: UseRealtimeCollabUIOptions): UseRealtimeCollabUIReturn {
-  const [userId] = useState(() => generateRandomNumber())
+  const [userId] = useState(createRealtimeUserId)
   const [color] = useState(() => generateRandomColor())
   const channelRef = useRef<RealtimeChannel | null>(null)
 
-  const updateRemoteUIState = useCollaborationUIStore(s => s.updateRemoteUIState)
+  const updateRemoteUIState = useCollaborationUIStore(
+    s => s.updateRemoteUIState,
+  )
   const addRemoteClick = useCollaborationUIStore(s => s.addRemoteClick)
-  const setLatestRemoteAction = useCollaborationUIStore(s => s.setLatestRemoteAction)
+  const setLatestRemoteAction = useCollaborationUIStore(
+    s => s.setLatestRemoteAction,
+  )
   const removeRemoteUser = useCollaborationUIStore(s => s.removeRemoteUser)
   const reset = useCollaborationUIStore(s => s.reset)
 
@@ -134,9 +151,21 @@ export function useRealtimeCollabUI({
       event: UI_STATE_EVENT,
       payload,
     })
-  }, [userId, username, color, drawerOpen, activeTabId, config, getScrollPosition])
+  }, [
+    userId,
+    username,
+    color,
+    drawerOpen,
+    activeTabId,
+    config,
+    getScrollPosition,
+  ])
 
-  const throttledBroadcastState = useThrottledCallback(broadcastState, throttleMs, [broadcastState])
+  const throttledBroadcastState = useThrottledCallback(
+    broadcastState,
+    throttleMs,
+    [broadcastState],
+  )
 
   // 当 UI 状态变化时自动广播
   useEffect(() => {
@@ -144,48 +173,54 @@ export function useRealtimeCollabUI({
   }, [drawerOpen, activeTabId, config, throttledBroadcastState])
 
   // 广播 UI 动作（精确事件，用于驱动远程端 UI 操作）
-  const broadcastUIAction = useCallback((action: UIAction) => {
-    if (!channelRef.current)
-      return
+  const broadcastUIAction = useCallback(
+    (action: UIAction) => {
+      if (!channelRef.current)
+        return
 
-    const payload: UIActionBroadcastPayload = {
-      type: 'ui-action',
-      action,
-      userId,
-      userName: username,
-      color,
-      timestamp: Date.now(),
-    }
+      const payload: UIActionBroadcastPayload = {
+        type: 'ui-action',
+        action,
+        userId,
+        userName: username,
+        color,
+        timestamp: Date.now(),
+      }
 
-    channelRef.current.send({
-      type: 'broadcast',
-      event: UI_ACTION_EVENT,
-      payload,
-    })
-  }, [userId, username, color])
+      channelRef.current.send({
+        type: 'broadcast',
+        event: UI_ACTION_EVENT,
+        payload,
+      })
+    },
+    [userId, username, color],
+  )
 
   // 广播点击事件
-  const broadcastClick = useCallback((position: { x: number, y: number }, targetLabel?: string) => {
-    if (!channelRef.current)
-      return
+  const broadcastClick = useCallback(
+    (position: { x: number, y: number }, targetLabel?: string) => {
+      if (!channelRef.current)
+        return
 
-    const payload: ClickEventBroadcastPayload = {
-      type: 'mouse-click',
-      userId,
-      userName: username,
-      color,
-      position,
-      viewport: getViewportSize(),
-      targetLabel,
-      timestamp: Date.now(),
-    }
+      const payload: ClickEventBroadcastPayload = {
+        type: 'mouse-click',
+        userId,
+        userName: username,
+        color,
+        position,
+        viewport: getViewportSize(),
+        targetLabel,
+        timestamp: Date.now(),
+      }
 
-    channelRef.current.send({
-      type: 'broadcast',
-      event: CLICK_EVENT,
-      payload,
-    })
-  }, [userId, username, color])
+      channelRef.current.send({
+        type: 'broadcast',
+        event: CLICK_EVENT,
+        payload,
+      })
+    },
+    [userId, username, color],
+  )
 
   // 建立 channel 订阅
   useEffect(() => {
@@ -194,37 +229,63 @@ export function useRealtimeCollabUI({
 
     channel
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-        leftPresences.forEach((p) => {
-          if (p.key && typeof p.key === 'number') {
-            removeRemoteUser(p.key)
-          }
+        leftPresences.forEach((presence) => {
+          const leftUserId = getPresenceUserId(presence)
+
+          if (leftUserId === null || leftUserId === userId)
+            return
+
+          removeRemoteUser(leftUserId)
         })
       })
       // 监听 UI 状态更新
-      .on('broadcast', { event: UI_STATE_EVENT }, (data: { payload: UIStateBroadcastPayload }) => {
-        if (data.payload.userId === userId)
-          return
-        updateRemoteUIState(data.payload)
-      })
+      .on(
+        'broadcast',
+        { event: UI_STATE_EVENT },
+        (data: { payload: UIStateBroadcastPayload }) => {
+          if (data.payload.userId === userId)
+            return
+          updateRemoteUIState(data.payload)
+        },
+      )
       // 监听 UI 动作
-      .on('broadcast', { event: UI_ACTION_EVENT }, (data: { payload: UIActionBroadcastPayload }) => {
-        if (data.payload.userId === userId)
-          return
-        setLatestRemoteAction(data.payload)
-      })
+      .on(
+        'broadcast',
+        { event: UI_ACTION_EVENT },
+        (data: { payload: UIActionBroadcastPayload }) => {
+          if (data.payload.userId === userId)
+            return
+          setLatestRemoteAction(data.payload)
+        },
+      )
       // 监听点击事件
-      .on('broadcast', { event: CLICK_EVENT }, (data: { payload: ClickEventBroadcastPayload }) => {
-        if (data.payload.userId === userId)
-          return
-        addRemoteClick({
-          ...data.payload,
-          position: projectPointToViewport(data.payload.position, data.payload.viewport),
-        })
-      })
+      .on(
+        'broadcast',
+        { event: CLICK_EVENT },
+        (data: { payload: ClickEventBroadcastPayload }) => {
+          if (data.payload.userId === userId)
+            return
+          addRemoteClick({
+            ...data.payload,
+            position: projectPointToViewport(
+              data.payload.position,
+              data.payload.viewport,
+            ),
+          })
+        },
+      )
       .subscribe(async (status) => {
         if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
-          await channel.track({ key: userId })
           channelRef.current = channel
+          await channel.track({
+            userId,
+            metadata: {
+              userId,
+              userName: username,
+              color,
+            },
+            onlineAt: new Date().toISOString(),
+          })
           // 首次订阅成功后立即广播当前状态
           broadcastState()
         }
@@ -238,7 +299,7 @@ export function useRealtimeCollabUI({
       channelRef.current = null
       reset()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomName, userId])
 
   // 监听本地鼠标点击并广播
@@ -257,7 +318,8 @@ export function useRealtimeCollabUI({
           targetLabel = closestTab.getAttribute('data-tab-id') ?? undefined
         }
         else if (closestButton) {
-          targetLabel = closestButton.textContent?.trim().slice(0, 20) ?? undefined
+          targetLabel
+            = closestButton.textContent?.trim().slice(0, 20) ?? undefined
         }
         else if (closestSwitch) {
           targetLabel = '开关'

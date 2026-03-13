@@ -1,4 +1,14 @@
+/* global Deno */
+
 import { corsHeaders } from '../shared/cors.ts'
+
+interface LLMProxyRequest {
+  messages: unknown[]
+  model?: string
+  response_format?: unknown
+  temperature?: number
+  stream?: boolean
+}
 
 Deno.serve(async (req) => {
   // 处理 CORS 预检请求
@@ -9,36 +19,42 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { messages, model = 'deepseek-reasoner', response_format, temperature = 0, stream = true } = await req.json()
+    const {
+      messages,
+      model = 'deepseek-reasoner',
+      response_format,
+      temperature = 0,
+      stream = true,
+    } = (await req.json()) as LLMProxyRequest
 
     const apiKey = Deno.env.get('OPENAI_API_KEY')
 
     if (!apiKey) {
-      return new Response(JSON.stringify({
-        error: 'API Key not configured OPENAI_API_KEY',
-      }), {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
+      return new Response(
+        JSON.stringify({
+          error: 'API Key not configured OPENAI_API_KEY',
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
         },
-      })
+      )
     }
 
-    // 构建请求体
-    const requestBody: any = {
+    const requestBody: Record<string, unknown> = {
       model,
       messages,
       temperature,
       stream,
     }
 
-    // 仅在需要时添加 response_format
     if (response_format) {
       requestBody.response_format = response_format
     }
 
-    // 调用 DeepSeek API
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -50,18 +66,20 @@ Deno.serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.text()
-      return new Response(JSON.stringify({
-        error: `DeepSeek API error: ${error}`,
-      }), {
-        status: response.status,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
+      return new Response(
+        JSON.stringify({
+          error: `DeepSeek API error: ${error}`,
+        }),
+        {
+          status: response.status,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
         },
-      })
+      )
     }
 
-    // 如果是流式响应，直接透传
     if (stream) {
       return new Response(response.body, {
         headers: {
@@ -71,7 +89,6 @@ Deno.serve(async (req) => {
       })
     }
 
-    // 非流式响应
     const data = await response.json()
     return new Response(JSON.stringify(data), {
       headers: {
@@ -80,15 +97,18 @@ Deno.serve(async (req) => {
       },
     })
   }
-  catch (error: any) {
-    return new Response(JSON.stringify({
-      error: error.message,
-    }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json',
+  catch (error: unknown) {
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unexpected error',
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
       },
-    })
+    )
   }
 })

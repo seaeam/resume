@@ -5,20 +5,32 @@ import { createContext, use, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-export function formatBytes(bytes: number, decimals = 2, size?: 'bytes' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB') {
+function formatBytes(
+  bytes: number,
+  decimals = 2,
+  size?: 'bytes' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB',
+) {
   const k = 1000
   const dm = decimals < 0 ? 0 : decimals
   const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
   if (bytes === 0 || bytes === undefined)
     return size !== undefined ? `0 ${size}` : '0 bytes'
-  const i = size !== undefined ? sizes.indexOf(size) : Math.floor(Math.log(bytes) / Math.log(k))
+  const i
+    = size !== undefined
+      ? sizes.indexOf(size)
+      : Math.floor(Math.log(bytes) / Math.log(k))
   return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`
 }
 
-type DropzoneContextType = Omit<UseSupabaseUploadReturn, 'getRootProps' | 'getInputProps'>
+type DropzoneContextType = Omit<
+  UseSupabaseUploadReturn,
+  'getRootProps' | 'getInputProps'
+>
 
-const DropzoneContext = createContext<DropzoneContextType | undefined>(undefined)
+const DropzoneContext = createContext<DropzoneContextType | undefined>(
+  undefined,
+)
 
 type DropzoneProps = UseSupabaseUploadReturn & {
   className?: string
@@ -31,6 +43,7 @@ function Dropzone({
   getInputProps,
   ...restProps
 }: PropsWithChildren<DropzoneProps>) {
+  const contextValue: DropzoneContextType = restProps
   const isSuccess = restProps.isSuccess
   const isActive = restProps.isDragActive
   const isInvalid
@@ -39,7 +52,7 @@ function Dropzone({
       || restProps.files.some(file => file.errors.length !== 0)
 
   return (
-    <DropzoneContext value={{ ...restProps }}>
+    <DropzoneContext value={contextValue}>
       <div
         {...getRootProps({
           className: cn(
@@ -58,30 +71,27 @@ function Dropzone({
   )
 }
 function DropzoneContent({ className }: { className?: string }) {
-  const {
-    files,
-    setFiles,
-    onUpload,
-    loading,
-    successes,
-    errors,
-    maxFileSize,
-    maxFiles,
-    isSuccess,
-  } = useDropzoneContext()
+  const { files, setFiles, onUpload, loading, successes, errors, maxFileSize, maxFiles, isSuccess } = useDropzoneContext()
 
   const exceedMaxFiles = files.length > maxFiles
 
   const handleRemoveFile = useCallback(
     (fileName: string) => {
-      setFiles(files.filter(file => file.name !== fileName))
+      setFiles(previousFiles =>
+        previousFiles.filter(file => file.name !== fileName),
+      )
     },
-    [files, setFiles],
+    [setFiles],
   )
 
   if (isSuccess) {
     return (
-      <div className={cn('flex flex-row items-center gap-x-2 justify-center', className)}>
+      <div
+        className={cn(
+          'flex flex-row items-center gap-x-2 justify-center',
+          className,
+        )}
+      >
         <CheckCircle size={16} className="text-primary" />
         <p className="text-primary text-sm">
           Successfully uploaded
@@ -97,19 +107,23 @@ function DropzoneContent({ className }: { className?: string }) {
 
   return (
     <div className={cn('flex flex-col', className)}>
-      {files.map((file, idx) => {
+      {files.map((file) => {
         const fileError = errors.find(e => e.name === file.name)
         const isSuccessfullyUploaded = !!successes.find(e => e === file.name)
 
         return (
           <div
-            key={`${file.name}-${idx}`}
+            key={file.preview ?? `${file.name}-${file.size}`}
             className="flex items-center gap-x-4 border-b py-2 first:mt-4 last:mb-4 "
           >
             {file.type.startsWith('image/')
               ? (
                   <div className="h-10 w-10 rounded border overflow-hidden shrink-0 bg-muted flex items-center justify-center">
-                    <img src={file.preview} alt={file.name} className="object-cover" />
+                    <img
+                      src={file.preview}
+                      alt={file.name}
+                      className="object-cover"
+                    />
                   </div>
                 )
               : (
@@ -136,7 +150,9 @@ function DropzoneContent({ className }: { className?: string }) {
                   )
                 : loading && !isSuccessfullyUploaded
                   ? (
-                      <p className="text-xs text-muted-foreground">Uploading file...</p>
+                      <p className="text-xs text-muted-foreground">
+                        Uploading file...
+                      </p>
                     )
                   : fileError
                     ? (
@@ -147,10 +163,14 @@ function DropzoneContent({ className }: { className?: string }) {
                       )
                     : isSuccessfullyUploaded
                       ? (
-                          <p className="text-xs text-primary">Successfully uploaded file</p>
+                          <p className="text-xs text-primary">
+                            Successfully uploaded file
+                          </p>
                         )
                       : (
-                          <p className="text-xs text-muted-foreground">{formatBytes(file.size, 2)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatBytes(file.size, 2)}
+                          </p>
                         )}
             </div>
 
