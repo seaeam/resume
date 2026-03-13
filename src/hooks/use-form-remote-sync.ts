@@ -15,9 +15,13 @@ import { useEffect, useRef } from 'react'
  * 返回 `isResettingRef`，调用方应在 `form.watch` 回调中检查该 ref，
  * 以避免 form.reset → watch → updateForm 的循环广播。
  *
- * @param form - react-hook-form 实例
- * @param storeData - 从 Zustand store 读取的最新数据
- * @returns isResettingRef - 当正在重置时为 true，调用方应跳过 updateForm
+ * 该 Hook 只负责“远程数据进入表单”的同步路径，不负责把本地表单修改反推回 store。
+ * 因此它通常与 form 的 `watch` / `subscribe` 逻辑配合使用，
+ * 一进一出共同完成本地与协作状态的双向同步。
+ *
+ * @param form react-hook-form 实例
+ * @param storeData 从 Zustand 或协作 store 中读取到的最新远程表单数据
+ * @returns 一个 ref 对象；当 `current === true` 时表示本次变更来自远程重置，调用方应跳过向远端回写
  */
 export function useFormRemoteSync<T extends FieldValues>(
   form: UseFormReturn<T>,
@@ -28,13 +32,17 @@ export function useFormRemoteSync<T extends FieldValues>(
   useEffect(() => {
     // 取当前 form 内部值与 store 值比较
     const currentFormValues = form.getValues()
+
     if (!isEqual(currentFormValues, storeData)) {
       isResettingRef.current = true
       form.reset(storeData)
+
       // 使用 setTimeout 确保 react-hook-form 内部处理完 reset 引发的 watch 回调后再复位
-      setTimeout(() => {
+      const cleanup = setTimeout(() => {
         isResettingRef.current = false
       }, 0)
+
+      return () => clearTimeout(cleanup)
     }
   }, [storeData, form])
 

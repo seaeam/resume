@@ -15,8 +15,7 @@ export function useResumeLoader() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
-  const resumeId = useCurrentResumeStore(state => state.resumeId)
-  const { setCurrentResume } = useCurrentResumeStore()
+  const { resumeId, setCurrentResume } = useCurrentResumeStore()
   const { loadResumeData } = useResumeStore()
 
   const queryResumeId = searchParams.get('resumeId')

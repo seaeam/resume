@@ -25,7 +25,8 @@ function ApplicationInfoForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('application_info', value)
     })
     return () => subscription.unsubscribe()

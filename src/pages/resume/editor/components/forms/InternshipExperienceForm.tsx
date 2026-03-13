@@ -50,7 +50,8 @@ function InternshipExperienceForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('internship_experience', value as ShallowPartial<InternshipExperienceFormType>)
     })
     return () => subscription.unsubscribe()

@@ -31,6 +31,7 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
   // 收到但尚未分派到本地文档的消息缓存（当本地文档信息未知时使用）
   private pendingMessages: Array<{ senderId: any, targetId: any, messageType: any, documentId: any, message: string, timestamp: number }>
     = []
+
   /** 待处理消息的过期时间（30秒），防止长期积压陈旧消息 */
   private static readonly PENDING_MESSAGE_TTL = 30_000
 

@@ -5,49 +5,67 @@ type Orientation = 'horizontal' | 'vertical' | 'both'
 
 interface MenuNavigationOptions<T> {
   /**
-   * The Tiptap editor instance, if using with a Tiptap editor.
+   * Tiptap 编辑器实例；用于在编辑器场景下监听键盘事件。
    */
   editor?: Editor | null
   /**
-   * Reference to the container element for handling keyboard events.
+   * 菜单容器元素的 ref；非编辑器场景下会绑定键盘事件到该元素。
    */
   containerRef?: React.RefObject<HTMLElement | null>
   /**
-   * Search query that affects the selected item.
+   * 当前搜索词；变化时可用于重置默认选中项。
    */
   query?: string
   /**
-   * Array of items to navigate through.
+   * 参与导航的候选项数组。
    */
   items: T[]
   /**
-   * Callback fired when an item is selected.
+   * 用户确认选择某一项时触发的回调。
    */
   onSelect?: (item: T) => void
   /**
-   * Callback fired when the menu should close.
+   * 用户请求关闭菜单时触发的回调。
    */
   onClose?: () => void
   /**
-   * The navigation orientation of the menu.
+   * 菜单的导航方向。
+   * 默认为 `vertical`，即主要响应上下方向键。
+   *
    * @default "vertical"
    */
   orientation?: Orientation
   /**
-   * Whether to automatically select the first item when the menu opens.
+   * 菜单打开时是否自动选中第一项。
+   *
    * @default true
    */
   autoSelectFirstItem?: boolean
 }
 
 /**
- * Hook that implements keyboard navigation for dropdown menus and command palettes.
+ * 为菜单、下拉面板和命令面板提供统一的键盘导航能力。
  *
- * Handles arrow keys, tab, home/end, enter for selection, and escape to close.
- * Works with both Tiptap editors and regular DOM elements.
+ * Hook 会监听目标容器上的键盘事件，处理以下常见交互：
+ * - 方向键或 `Tab` 在列表项之间切换焦点索引
+ * - `Home` / `End` 快速跳到首尾
+ * - `Enter` 触发当前项选择
+ * - `Escape` 请求关闭菜单
  *
- * @param options - Configuration options for the menu navigation
- * @returns Object containing the selected index and a setter function
+ * 同时支持两种使用方式：
+ * - 绑定到 Tiptap 编辑器 DOM
+ * - 绑定到普通容器元素 ref
+ *
+ * @param options 菜单导航配置
+ * @param options.editor Tiptap 编辑器实例；提供后会优先监听编辑器 DOM
+ * @param options.containerRef 普通菜单容器 ref；未提供 editor 时使用
+ * @param options.query 当前搜索词；变化时可触发选中项重置
+ * @param options.items 可导航的数据项数组
+ * @param options.onSelect 用户确认选择某一项时的回调
+ * @param options.onClose 用户请求关闭菜单时的回调
+ * @param options.orientation 菜单布局方向，决定响应哪些方向键
+ * @param options.autoSelectFirstItem 菜单初始化或搜索词变化时是否自动选中首项
+ * @returns 当前选中索引，以及供外部手动控制选中项的 setter
  */
 export function useMenuNavigation<T>({
   editor,

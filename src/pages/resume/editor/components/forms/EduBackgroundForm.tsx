@@ -53,7 +53,8 @@ function EduBackgroundForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('edu_background', value as ShallowPartial<EduBackgroundFormType>)
     })
     return () => subscription.unsubscribe()

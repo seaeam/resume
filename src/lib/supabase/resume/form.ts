@@ -52,10 +52,20 @@ export async function uploadOfflineResumeToCloud(
 
   // 安全字段白名单，避免覆盖 user_id 等安全字段
   const ALLOWED_FIELDS = [
-    'basics', 'job_intent', 'application_info', 'edu_background',
-    'work_experience', 'internship_experience', 'campus_experience',
-    'project_experience', 'skill_specialty', 'honors_certificates',
-    'self_evaluation', 'hobbies', 'order', 'visibility',
+    'basics',
+    'job_intent',
+    'application_info',
+    'edu_background',
+    'work_experience',
+    'internship_experience',
+    'campus_experience',
+    'project_experience',
+    'skill_specialty',
+    'honors_certificates',
+    'self_evaluation',
+    'hobbies',
+    'order',
+    'visibility',
   ]
   const safeData: Record<string, unknown> = {}
   for (const key of ALLOWED_FIELDS) {

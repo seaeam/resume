@@ -1,9 +1,7 @@
-import { IconFolderCode } from '@tabler/icons-react'
 import { ArrowRight, FileText } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Empty, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import supabase from '@/lib/supabase/client'
 import { getCurrentUser } from '@/lib/supabase/user'
 

@@ -47,7 +47,8 @@ function HonorsCertificatesForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('honors_certificates', value as ShallowPartial<HonorsCertificatesFormType>)
     })
     return () => subscription.unsubscribe()

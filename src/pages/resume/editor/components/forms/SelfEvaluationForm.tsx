@@ -31,7 +31,8 @@ function SelfEvaluationForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('self_evaluation', value as ShallowPartial<SelfEvaluationFormType>)
     })
     return () => subscription.unsubscribe()

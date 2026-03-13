@@ -4,8 +4,8 @@ import type { ORDERType, ProficiencyLevel, ResumeSchema } from '@/lib/schema'
 import parser from 'html-react-parser'
 import { createContext, use, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
-import useAge from '@/hooks/use-age'
 import useResumeStore from '@/store/resume/form'
+import { getAge } from '@/utils'
 import './basic.css'
 
 // 创建简历上下文
@@ -440,7 +440,7 @@ interface BasicResumeContentProps {
 export default function BasicResume({ theme, spacing, font }: BasicResumeContentProps) {
   const data = useResumeStore()
   const getVisibility = useResumeStore(state => state.getVisibility)
-  const age = useAge(data.basics.birthMonth)
+  const age = getAge(data.basics.birthMonth)
 
   return (
     <ResumeProvider theme={theme} spacing={spacing} font={font}>

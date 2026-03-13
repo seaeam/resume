@@ -52,7 +52,8 @@ function BasicResumeForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('basics', value as ShallowPartial<BasicFormType>)
     })
     return () => subscription.unsubscribe()

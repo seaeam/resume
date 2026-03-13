@@ -55,8 +55,7 @@ function Editor() {
     visibility: visibilityState,
   } = useResumeStore()
 
-  const roomName = useCollaborationStore(state => state.roomName)
-  const isSharing = useCollaborationStore(state => state.isSharing)
+  const { roomName, isSharing } = useCollaborationStore()
 
   const fill = theme === 'dark' ? '#0c0a09' : '#fafaf9'
   const stroke = theme === 'dark' ? '#3d3b3b' : '#e7e5e4'

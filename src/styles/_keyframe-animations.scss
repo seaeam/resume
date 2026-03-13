@@ -154,7 +154,8 @@
 
 /* 跟随模式指示器闪烁 */
 @keyframes collab-follow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

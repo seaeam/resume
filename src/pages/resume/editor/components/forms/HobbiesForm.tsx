@@ -47,7 +47,8 @@ function HobbiesForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('hobbies', value as ShallowPartial<HobbiesFormType>)
     })
     return () => subscription.unsubscribe()

@@ -55,7 +55,8 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('skill_specialty', value as ShallowPartial<SkillSpecialtyFormType>)
     })
     return () => subscription.unsubscribe()

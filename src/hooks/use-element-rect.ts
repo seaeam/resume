@@ -7,20 +7,21 @@ export type RectState = Omit<DOMRect, 'toJSON'>
 
 export interface ElementRectOptions {
   /**
-   * The element to track. Can be an Element, ref, or selector string.
-   * Defaults to document.body if not provided.
+   * 需要追踪的目标元素。
+   * 可以直接传入 `Element`、React `ref` 或 CSS 选择器字符串。
+   * 未提供时默认追踪 `document.body`。
    */
   element?: Element | React.RefObject<Element> | string | null
   /**
-   * Whether to enable rect tracking
+   * 是否启用矩形追踪。
    */
   enabled?: boolean
   /**
-   * Throttle delay in milliseconds for rect updates
+   * 矩形更新的节流间隔，单位毫秒。
    */
   throttleMs?: number
   /**
-   * Whether to use ResizeObserver for more accurate tracking
+   * 是否启用 `ResizeObserver` 以更准确地响应元素尺寸变化。
    */
   useResizeObserver?: boolean
 }
@@ -40,15 +41,35 @@ const isSSR = typeof window === 'undefined'
 const hasResizeObserver = !isSSR && typeof ResizeObserver !== 'undefined'
 
 /**
- * Helper function to check if code is running on client side
+ * 判断当前代码是否运行在浏览器客户端环境。
+ *
+ * 该函数用于在访问 `window`、`document`、`ResizeObserver`
+ * 等仅浏览器可用的 API 之前进行保护，避免 SSR 阶段报错。
+ *
+ * @returns 当前是否处于可安全访问浏览器 API 的客户端环境
  */
 const isClientSide = (): boolean => !isSSR
 
 /**
- * Custom hook that tracks an element's bounding rectangle and updates on resize, scroll, etc.
+ * 实时追踪目标元素的 `getBoundingClientRect()` 结果。
  *
- * @param options Configuration options for element rect tracking
- * @returns The current bounding rectangle of the element
+ * Hook 支持通过三种方式指定目标元素：
+ * - 直接传入 `Element`
+ * - 传入 React `ref`
+ * - 传入 CSS 选择器字符串
+ *
+ * 若未提供 `element`，默认追踪 `document.body`。
+ * 当窗口滚动、窗口尺寸变化，或启用了 `ResizeObserver` 且目标元素尺寸变化时，
+ * Hook 会以节流方式更新矩形状态。
+ *
+ * 适用于吸顶判断、悬浮层定位、可视范围计算等依赖元素位置信息的场景。
+ *
+ * @param options 追踪配置
+ * @param options.element 需要观测的目标元素、ref 或选择器；省略时默认为 `document.body`
+ * @param options.enabled 是否启用追踪；关闭时会返回初始空矩形
+ * @param options.throttleMs 矩形更新的节流间隔，单位毫秒
+ * @param options.useResizeObserver 是否启用 `ResizeObserver` 监听元素尺寸变化
+ * @returns 当前目标元素的矩形快照；在不可用场景下返回零值矩形
  */
 export function useElementRect({
   element,
@@ -147,7 +168,13 @@ export function useElementRect({
 }
 
 /**
- * Convenience hook for tracking document.body rect
+ * 追踪 `document.body` 的矩形信息。
+ *
+ * 这是 `useElementRect` 的便捷封装，自动将追踪目标固定为 `document.body`，
+ * 适合页面整体高度、正文区域位置等全局布局测量场景。
+ *
+ * @param options 除 `element` 外的其余追踪配置
+ * @returns `document.body` 的当前矩形信息
  */
 export function useBodyRect(
   options: Omit<ElementRectOptions, 'element'> = {},
@@ -159,7 +186,14 @@ export function useBodyRect(
 }
 
 /**
- * Convenience hook for tracking a ref element's rect
+ * 追踪某个 ref 元素的矩形信息。
+ *
+ * 这是 `useElementRect` 的便捷封装，调用方只需传入元素 ref，
+ * 即可持续获得该元素的矩形变化结果。
+ *
+ * @param ref 需要观测的元素 ref
+ * @param options 除 `element` 外的其余追踪配置
+ * @returns ref 当前指向元素的矩形信息
  */
 export function useRefRect<T extends Element>(
   ref: React.RefObject<T>,

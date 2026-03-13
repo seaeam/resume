@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { getStoredSessionRole } from '@/lib/collaboration/session-storage'
 import useCollaborationStore from '@/store/collaboration'
-
 import useResumeStore from '@/store/resume/form'
 
 interface UseCollaborationPanelValueParams {
@@ -53,7 +52,7 @@ export function useCollaborationPanelValue({
     acknowledgeRemoteShareEnd,
   } = useCollaborationStore()
 
-  const participantCount = useMemo(() => Object.keys(participants).length, [participants])
+  const participantCount = Object.keys(participants).length
 
   const collabDisabledReason = useMemo(() => {
     if (mode !== 'online')

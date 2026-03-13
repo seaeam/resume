@@ -33,3 +33,10 @@ export interface CollaborationPanelProviderProps {
   userDisplayName: string
   children: ReactNode
 }
+
+export interface Item<T> {
+  id: T
+  label: string
+  icon: ReactNode
+  content: ReactNode
+}

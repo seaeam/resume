@@ -10,47 +10,75 @@ interface FileWithPreview extends File {
 
 interface UseSupabaseUploadOptions {
   /**
-   * Name of bucket to upload files to in your Supabase project
+   * Supabase Storage 中用于上传文件的 bucket 名称。
    */
   bucketName: string
   /**
-   * Folder to upload files to in the specified bucket within your Supabase project.
+   * 上传到指定 bucket 后的目标目录。
    *
-   * Defaults to uploading files to the root of the bucket
+   * 未提供时会直接上传到 bucket 根目录。
    *
-   * e.g If specified path is `test`, your file will be uploaded as `test/file_name`
+   * 例如传入 `test` 时，文件会被上传为 `test/file_name`。
    */
   path?: string
   /**
-   * Allowed MIME types for each file upload (e.g `image/png`, `text/html`, etc). Wildcards are also supported (e.g `image/*`).
+   * 允许上传的 MIME 类型列表，例如 `image/png`、`text/html`。
+   * 也支持通配写法，例如 `image/*`。
    *
-   * Defaults to allowing uploading of all MIME types.
+   * 默认为不限制类型。
    */
   allowedMimeTypes?: string[]
   /**
-   * Maximum upload size of each file allowed in bytes. (e.g 1000 bytes = 1 KB)
+   * 单个文件允许上传的最大体积，单位字节。
    */
   maxFileSize?: number
   /**
-   * Maximum number of files allowed per upload.
+   * 单次选择允许上传的最大文件数。
    */
   maxFiles?: number
   /**
-   * The number of seconds the asset is cached in the browser and in the Supabase CDN.
+   * 文件在浏览器和 Supabase CDN 中的缓存时长，单位秒。
    *
-   * This is set in the Cache-Control: max-age=<seconds> header. Defaults to 3600 seconds.
+   * 实际会写入 `Cache-Control: max-age=<seconds>` 头。
+   * 默认值为 `3600` 秒。
    */
   cacheControl?: number
   /**
-   * When set to true, the file is overwritten if it exists.
+   * 是否允许覆盖同名文件。
    *
-   * When set to false, an error is thrown if the object already exists. Defaults to `false`
+   * 设为 `true` 时，目标对象已存在会被覆盖；
+   * 设为 `false` 时，已存在会抛出错误。默认值为 `false`。
    */
   upsert?: boolean
 }
 
 type UseSupabaseUploadReturn = ReturnType<typeof useSupabaseUpload>
 
+/**
+ * 封装基于 Supabase Storage 的文件拖拽上传流程。
+ *
+ * Hook 集成了 `react-dropzone` 的拖拽接收能力，并维护上传过程中常见的状态：
+ * - 当前待上传文件列表
+ * - 每个文件的本地预览地址与校验错误
+ * - 上传中状态
+ * - 成功与失败结果
+ *
+ * 调用 `onUpload` 时，Hook 会把文件上传到指定 bucket/path；
+ * 如果之前存在失败文件，再次点击上传时会优先重试失败项，
+ * 从而支持“部分成功后继续补传”的工作流。
+ *
+ * 注意：该 Hook 只处理前端选择、校验和上传状态，不负责业务层面的文件记录落库。
+ *
+ * @param options 上传配置
+ * @param options.bucketName Supabase Storage 中的 bucket 名称
+ * @param options.path 上传目录；省略时直接上传到 bucket 根目录
+ * @param options.allowedMimeTypes 允许上传的 MIME 类型列表
+ * @param options.maxFileSize 单个文件允许的最大体积，单位字节
+ * @param options.maxFiles 单次允许选择的最大文件数
+ * @param options.cacheControl 上传对象的缓存时间，单位秒
+ * @param options.upsert 是否允许覆盖同名文件
+ * @returns 上传状态、文件列表、错误信息、成功结果、上传方法以及 dropzone 所需属性
+ */
 function useSupabaseUpload(options: UseSupabaseUploadOptions) {
   const {
     bucketName,

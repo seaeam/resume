@@ -5,38 +5,40 @@ import { useThrottledCallback } from './use-throttled-callback'
 
 export interface WindowSizeState {
   /**
-   * The width of the window's visual viewport in pixels.
+   * 当前可视视口的宽度，单位像素。
    */
   width: number
   /**
-   * The height of the window's visual viewport in pixels.
+   * 当前可视视口的高度，单位像素。
    */
   height: number
   /**
-   * The distance from the top of the visual viewport to the top of the layout viewport.
-   * Particularly useful for handling mobile keyboard appearance.
+   * 可视视口顶部距离布局视口顶部的偏移量。
+   * 在移动端软键盘弹出时尤其有用。
    */
   offsetTop: number
   /**
-   * The distance from the left of the visual viewport to the left of the layout viewport.
+   * 可视视口左侧距离布局视口左侧的偏移量。
    */
   offsetLeft: number
   /**
-   * The scale factor of the visual viewport.
-   * This is useful for scaling elements based on the current zoom level.
+   * 当前可视视口的缩放比例。
+   * 可用于根据页面缩放级别调整浮层或辅助元素。
    */
   scale: number
 }
 
 /**
- * Hook that tracks the window's visual viewport dimensions, position, and provides
- * a CSS transform for positioning elements.
+ * 监听浏览器可视视口（Visual Viewport）的尺寸与偏移变化。
  *
- * Uses the Visual Viewport API to get accurate measurements, especially important
- * for mobile devices where virtual keyboards can change the visible area.
- * Only updates state when values actually change to optimize performance.
+ * 与传统的 `window.innerWidth/innerHeight` 相比，
+ * `visualViewport` 能更准确地反映移动端键盘弹出、页面缩放后的真实可见区域。
+ * Hook 会在视口尺寸、偏移量或缩放比例变化时更新状态，并在值未变化时跳过 setState，
+ * 以减少不必要的渲染。
  *
- * @returns An object containing viewport properties and a CSS transform string
+ * 适用于悬浮工具栏、光标跟随、弹层定位等依赖真实可见区域的场景。
+ *
+ * @returns 当前可视视口的宽高、偏移量和缩放比例
  */
 export function useWindowSize(): WindowSizeState {
   const [windowSize, setWindowSize] = React.useState<WindowSizeState>({

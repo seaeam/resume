@@ -50,7 +50,8 @@ function CampusExperienceForm({ className }: { className?: string }) {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
-      if (isResettingRef.current) return
+      if (isResettingRef.current)
+        return
       updateForm('campus_experience', value as ShallowPartial<CampusExperienceFormType>)
     })
     return () => subscription.unsubscribe()

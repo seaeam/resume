@@ -5,22 +5,29 @@ import { useBodyRect } from './use-element-rect'
 
 export interface CursorVisibilityOptions {
   /**
-   * The Tiptap editor instance
+   * 需要监听光标可见性的 Tiptap 编辑器实例。
    */
   editor?: Editor | null
   /**
-   * Reference to the toolbar element that may obscure the cursor
+   * 顶部遮挡区域的高度，例如固定工具栏、悬浮条等可能遮住光标的区域高度。
    */
   overlayHeight?: number
 }
 
 /**
- * Custom hook that ensures the cursor remains visible when typing in a Tiptap editor.
- * Automatically scrolls the window when the cursor would be hidden by the toolbar.
+ * 确保 Tiptap 编辑器中的光标始终处于可见区域。
  *
- * @param options.editor The Tiptap editor instance
- * @param options.overlayHeight Toolbar height to account for
- * @returns The bounding rect of the body
+ * Hook 会结合当前窗口可视高度与 `document.body` 的矩形信息，
+ * 在编辑器获得焦点并输入内容时检查光标位置。
+ * 如果光标即将被顶部工具栏遮挡，或已经超出当前可见区域，
+ * 则会通过平滑滚动把光标移动到更合适的可视位置。
+ *
+ * 适用于移动端键盘弹出、顶部悬浮工具栏存在时的编辑体验优化。
+ *
+ * @param options Hook 配置项
+ * @param options.editor 当前使用的 Tiptap 编辑器实例
+ * @param options.overlayHeight 需要预留的顶部遮挡高度，例如固定工具栏高度
+ * @returns `document.body` 的最新矩形信息，可供调用方继续复用
  */
 export function useCursorVisibility({
   editor,

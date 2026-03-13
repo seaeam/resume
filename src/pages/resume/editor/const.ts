@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { Item } from './types'
 import type { ORDERType } from '@/lib/schema'
 import { Award, Briefcase, Building2, Code2, GraduationCap, Heart, Lightbulb, MessageSquare, School, Trophy, UserCheck, UserRound } from 'lucide-react'
 import { createElement } from 'react'
@@ -14,13 +14,6 @@ import ProjectExperienceForm from './components/forms/ProjectExperienceForm'
 import SelfEvaluationForm from './components/forms/SelfEvaluationForm'
 import SkillSpecialtyForm from './components/forms/SkillSpecialtyForm'
 import WorkExperienceForm from './components/forms/WorkExperienceForm'
-
-export interface Item<T> {
-  id: T
-  label: string
-  icon: ReactNode
-  content: ReactNode
-}
 
 export const ITEMS: Item<ORDERType>[] = [
   {

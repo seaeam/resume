@@ -1,7 +1,9 @@
 import type { Node as TiptapNode } from '@tiptap/pm/model'
 import type { Editor } from '@tiptap/react'
 import { NodeSelection, Selection, TextSelection } from '@tiptap/pm/state'
+import { cn } from '@/lib/utils'
 import supabase from './supabase/client'
+
 import { getCurrentUser } from './supabase/user'
 
 export const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
@@ -21,8 +23,6 @@ export const MAC_SYMBOLS: Record<string, string> = {
   escape: '⎋',
   capslock: '⇪',
 } as const
-
-import { cn } from '@/lib/utils'
 
 export { cn }
 

@@ -9,6 +9,20 @@ interface UseScrollingOptions {
   fallbackToDocument?: boolean
 }
 
+/**
+ * 监听目标容器的滚动状态，并在滚动期间返回 `true`。
+ *
+ * Hook 支持监听 `window`、元素 `ref` 或直接传入的 `Window` 对象。
+ * 在不支持 `scrollend` 的环境中，会通过防抖计时器推断滚动结束时机；
+ * 在移动端监听 `window` 时，也可以按需退回到 `document` 监听，
+ * 以兼容部分浏览器事件派发差异。
+ *
+ * @param target 需要监听的滚动目标；可省略，默认监听当前窗口
+ * @param options 滚动监听配置
+ * @param options.debounce 当环境不支持 `scrollend` 时，判定“停止滚动”的防抖时长，单位毫秒
+ * @param options.fallbackToDocument 监听 `window` 时是否改为绑定到 `document`
+ * @returns 当前是否处于滚动中
+ */
 export function useScrolling(
   target?: ScrollTarget,
   options: UseScrollingOptions = {},

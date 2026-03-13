@@ -1,6 +1,6 @@
 import type React from 'react'
-import { useCallback, useLayoutEffect, useRef } from 'react'
 import { MousePointer2 } from 'lucide-react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import { usePerfectCursor } from '@/hooks/use-perfect-cursor'
 import { cn } from '@/lib/utils'
 

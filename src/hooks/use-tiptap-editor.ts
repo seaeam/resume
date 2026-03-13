@@ -3,15 +3,18 @@ import { useCurrentEditor, useEditorState } from '@tiptap/react'
 import * as React from 'react'
 
 /**
- * Hook that provides access to a Tiptap editor instance.
+ * 统一获取可用的 Tiptap 编辑器实例及其派生状态。
  *
- * Accepts an optional editor instance directly, or falls back to retrieving
- * the editor from the Tiptap context if available. This allows components
- * to work both when given an editor directly and when used within a Tiptap
- * editor context.
+ * Hook 优先使用显式传入的 `providedEditor`；
+ * 如果没有提供，则退回到当前 Tiptap 上下文中的编辑器实例。
+ * 这样同一个组件既可以在外部直接传 editor 时工作，
+ * 也可以在 `EditorProvider` 上下文内部自动取到 editor。
  *
- * @param providedEditor - Optional editor instance to use instead of the context editor
- * @returns The provided editor or the editor from context, whichever is available
+ * 同时，Hook 还会借助 `useEditorState` 返回当前 editor 的状态对象和
+ * `can` 命令能力，方便调用方在不重复订阅的前提下读取编辑器状态。
+ *
+ * @param providedEditor 可选的编辑器实例；传入后会覆盖上下文中的 editor
+ * @returns 包含 editor、editorState 和 canCommand 的对象；当编辑器不存在时返回 `{ editor: null }`
  */
 export function useTiptapEditor(providedEditor?: Editor | null): {
   editor: Editor | null
