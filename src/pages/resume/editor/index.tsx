@@ -15,6 +15,7 @@ import useResumeStore from '@/store/resume/form'
 import { CollaborationControls } from './components/collaboration/CollaborationControls'
 import { CollaborationDialog } from './components/collaboration/CollaborationDialog'
 import { CollaborationPanelProvider } from './components/collaboration/CollaborationPanelProvider'
+import { CollaborationUISync } from './components/collaboration/CollaborationUISync'
 import { ResumePreview } from './components/preview/ResumePreview'
 import { SidebarEditor } from './components/sidebar/SidebarEditor'
 import { useResumeLoader } from './hooks/useResumeLoader'
@@ -26,6 +27,7 @@ function Editor() {
   const { loading, currentUser, activeResumeId } = useResumeLoader()
 
   const resumeRef = useRef<HTMLDivElement | null>(null)
+  const previewScrollRef = useRef<HTMLDivElement | null>(null)
 
   const resumeName = useResumeStore(state => state.basics.name)
   const setResumeRef = useResumeExportStore(state => state.setResumeRef)
@@ -54,6 +56,7 @@ function Editor() {
   } = useResumeStore()
 
   const roomName = useCollaborationStore(state => state.roomName)
+  const isSharing = useCollaborationStore(state => state.isSharing)
 
   const fill = theme === 'dark' ? '#0c0a09' : '#fafaf9'
   const stroke = theme === 'dark' ? '#3d3b3b' : '#e7e5e4'
@@ -79,6 +82,19 @@ function Editor() {
 
       {roomName && currentUser && (
         <RealtimeCursors roomName={roomName} username={userDisplayName || `用户-${currentUser.id.slice(0, 6)}`} />
+      )}
+
+      {/* 协作 UI 状态同步 */}
+      {roomName && isSharing && currentUser && (
+        <CollaborationUISync
+          roomName={roomName}
+          username={userDisplayName || `用户-${currentUser.id.slice(0, 6)}`}
+          drawerOpen={open}
+          setDrawerOpen={setOpen}
+          activeTabId={activeTabId}
+          onUpdateActiveTabId={updateActiveTabId}
+          scrollContainerRef={previewScrollRef}
+        />
       )}
 
       <DragProvider>
@@ -111,7 +127,7 @@ function Editor() {
           </DrawerContent>
         </Drawer>
         <div className="flex flex-col md:flex-row min-h-screen overflow-auto">
-          <ResumePreview resumeRef={resumeRef} />
+          <ResumePreview resumeRef={resumeRef} scrollContainerRef={previewScrollRef} />
         </div>
       </DragProvider>
       <CollaborationDialog />

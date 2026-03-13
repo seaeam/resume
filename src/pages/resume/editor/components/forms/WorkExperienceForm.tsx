@@ -5,7 +5,7 @@ import { IconDoorExit } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import { Laptop, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
+import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { DEFAULT_WORK_EXPERIENCE, workExperienceFormSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
@@ -41,12 +42,19 @@ function WorkExperienceForm({ className }: { className?: string }) {
     name: 'items',
   })
 
+  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
+  const storeFormData = useMemo(() => ({
+    items: workExperience.items || DEFAULT_WORK_EXPERIENCE.items,
+  }), [workExperience.items])
+  const isResettingRef = useFormRemoteSync(form, storeFormData)
+
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (isResettingRef.current) return
       updateForm('work_experience', value as ShallowPartial<WorkExperienceFormType>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateForm])
+  }, [form, updateForm, isResettingRef])
 
   function onAddItem() {
     append(DEFAULT_WORK_EXPERIENCE.items![0])

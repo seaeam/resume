@@ -7,15 +7,16 @@ import ResumeWrapper from './ResumeWrapper'
 
 interface ResumePreviewProps {
   resumeRef: RefObject<HTMLDivElement | null>
+  scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
-export function ResumePreview({ resumeRef }: ResumePreviewProps) {
+export function ResumePreview({ resumeRef, scrollContainerRef }: ResumePreviewProps) {
   const { font, spacing, theme } = useResumeStyles()
   const type = useResumeStore(state => state.type)
   const ResumeComponent = resumeComponents[type] || BasicResume
 
   return (
-    <div className="flex-1 overflow-auto p-4 md:p-8">
+    <div ref={scrollContainerRef} className="flex-1 overflow-auto p-4 md:p-8">
       <ResumeWrapper ref={resumeRef}>
         <ResumeComponent font={font} spacing={spacing} theme={theme} />
       </ResumeWrapper>

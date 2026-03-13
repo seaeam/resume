@@ -5,7 +5,7 @@ import { IconDoorExit } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import { Laptop, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
+import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { campusExperienceFormSchema, DEFAULT_CAMPUS_EXPERIENCE } from '@/lib/schema'
 import { cn } from '@/lib/utils'
@@ -41,12 +42,19 @@ function CampusExperienceForm({ className }: { className?: string }) {
     name: 'items',
   })
 
+  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
+  const storeFormData = useMemo(() => ({
+    items: campusExperience.items || DEFAULT_CAMPUS_EXPERIENCE.items,
+  }), [campusExperience.items])
+  const isResettingRef = useFormRemoteSync(form, storeFormData)
+
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (isResettingRef.current) return
       updateForm('campus_experience', value as ShallowPartial<CampusExperienceFormType>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateForm])
+  }, [form, updateForm, isResettingRef])
 
   function onAddItem() {
     append(DEFAULT_CAMPUS_EXPERIENCE.items![0])

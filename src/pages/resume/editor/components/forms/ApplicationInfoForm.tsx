@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { resumeSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
@@ -19,12 +20,16 @@ function ApplicationInfoForm({ className }: { className?: string }) {
     reValidateMode: 'onChange',
   })
 
+  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
+  const isResettingRef = useFormRemoteSync(form, applicationInfo)
+
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (isResettingRef.current) return
       updateForm('application_info', value)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateForm])
+  }, [form, updateForm, isResettingRef])
 
   return (
     <Form {...form}>

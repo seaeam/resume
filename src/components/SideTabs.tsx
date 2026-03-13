@@ -75,6 +75,11 @@ export function SideTabsWrapper({
 }: PropsWithChildren<Props>) {
   const [active, setActive] = useState<string>(defaultId)
 
+  // 当外部 defaultId 变化时同步内部 active 状态（用于协作 tab 同步等场景）
+  useEffect(() => {
+    setActive(prev => prev !== defaultId ? defaultId : prev)
+  }, [defaultId])
+
   const containerRef = useRef<HTMLDivElement | null>(null)
   const tabsRef = useRef<HTMLDivElement | null>(null)
   const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({})

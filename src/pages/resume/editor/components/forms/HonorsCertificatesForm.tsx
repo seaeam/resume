@@ -3,7 +3,7 @@ import type { ShallowPartial } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Trash2, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { honorsCertificatesFormSchema, PRESET_CERTIFICATES } from '@/lib/schema'
 import { cn } from '@/lib/utils'
@@ -37,12 +38,20 @@ function HonorsCertificatesForm({ className }: { className?: string }) {
     name: 'certificates',
   })
 
+  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
+  const storeFormData = useMemo(() => ({
+    description: honorsCertificates.description || '',
+    certificates: honorsCertificates.certificates || [],
+  }), [honorsCertificates.description, honorsCertificates.certificates])
+  const isResettingRef = useFormRemoteSync(form, storeFormData)
+
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (isResettingRef.current) return
       updateForm('honors_certificates', value as ShallowPartial<HonorsCertificatesFormType>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateForm])
+  }, [form, updateForm, isResettingRef])
 
   // 检查预设证书是否已添加
   const isPresetCertificateAdded = (certificate: string) => {
