@@ -15,10 +15,15 @@ export function Cursor({
 }) {
   return (
     <div className={cn('pointer-events-none', className)} style={style}>
-      <MousePointer2 color={color} fill={color} size={30} />
+      <MousePointer2
+        color={color}
+        fill={color}
+        size={30}
+        className="transition-transform duration-100"
+      />
 
       <div
-        className="mt-1 px-2 py-1 rounded text-xs font-bold text-white text-center"
+        className="mt-1 rounded px-2 py-1 text-center text-xs font-bold text-white transition-all duration-100"
         style={{ backgroundColor: color }}
       >
         {name}

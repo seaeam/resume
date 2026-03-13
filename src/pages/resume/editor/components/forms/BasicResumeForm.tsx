@@ -15,6 +15,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { resumeSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
@@ -46,12 +47,16 @@ function BasicResumeForm({ className }: { className?: string }) {
   }
   const [open, setOpen] = useState(false)
 
+  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
+  const isResettingRef = useFormRemoteSync(form, basics)
+
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (isResettingRef.current) return
       updateForm('basics', value as ShallowPartial<BasicFormType>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateForm])
+  }, [form, updateForm, isResettingRef])
 
   return (
     <Form {...form}>
@@ -75,7 +80,7 @@ function BasicResumeForm({ className }: { className?: string }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>性别</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="请选择性别" />
@@ -133,7 +138,7 @@ function BasicResumeForm({ className }: { className?: string }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>工作年限</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="不填" />
@@ -183,7 +188,7 @@ function BasicResumeForm({ className }: { className?: string }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>婚姻状况</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="不填" />
@@ -286,7 +291,7 @@ function BasicResumeForm({ className }: { className?: string }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>政治面貌</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="共青团员" />

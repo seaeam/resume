@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { jobIntentFormSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
@@ -25,12 +26,16 @@ function JobIntentForm({ className }: { className?: string }) {
     reValidateMode: 'onChange',
   })
 
+  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
+  const isResettingRef = useFormRemoteSync(form, jobIntent)
+
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (isResettingRef.current) return
       updateForm('job_intent', value)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateForm])
+  }, [form, updateForm, isResettingRef])
 
   return (
     <Form {...form}>
@@ -94,7 +99,7 @@ function JobIntentForm({ className }: { className?: string }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>到岗时间</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="不填" />

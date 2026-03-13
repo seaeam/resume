@@ -5,7 +5,7 @@ import { IconMichelinBibGourmand } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import { Baby, Plus, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { DEFAULT_EDU_BACKGROUND, eduBackgroundFormSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
@@ -44,12 +45,19 @@ function EduBackgroundForm({ className }: { className?: string }) {
     name: 'items',
   })
 
+  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
+  const storeFormData = useMemo(() => ({
+    items: eduBackground.items || DEFAULT_EDU_BACKGROUND.items,
+  }), [eduBackground.items])
+  const isResettingRef = useFormRemoteSync(form, storeFormData)
+
   useEffect(() => {
     const subscription = form.watch((value) => {
+      if (isResettingRef.current) return
       updateForm('edu_background', value as ShallowPartial<EduBackgroundFormType>)
     })
     return () => subscription.unsubscribe()
-  }, [form, updateForm])
+  }, [form, updateForm, isResettingRef])
 
   function onAddItem() {
     append(DEFAULT_EDU_BACKGROUND.items![0])
