@@ -26,32 +26,26 @@ export function useCollaborationPanelValue({
 
   const collabSessionParam = searchParams.get('collabSession')
 
-  const {
-    manualSync,
-    isSyncing,
-    pendingChanges,
-    lastSyncTime,
-    mode,
-    isInitialized: isDocumentInitialized,
-  } = useResumeStore()
+  const manualSync = useResumeStore(state => state.manualSync)
+  const isSyncing = useResumeStore(state => state.isSyncing)
+  const pendingChanges = useResumeStore(state => state.pendingChanges)
+  const lastSyncTime = useResumeStore(state => state.lastSyncTime)
+  const mode = useResumeStore(state => state.mode)
+  const isDocumentInitialized = useResumeStore(state => state.isInitialized)
 
-  const {
-    participants,
-    isSharing,
-    isConnecting: isCollabConnecting,
-    shareUrl,
-    role: collaborationRole,
-    startSharing,
-    stopSharing,
-    joinSession,
-    resumeHosting,
-    error: collaborationError,
-    sessionId,
-    shareEndedByRemote,
-    acknowledgeRemoteShareEnd,
-  } = useCollaborationStore()
-
-  const participantCount = Object.keys(participants).length
+  const participantCount = useCollaborationStore(state => Object.keys(state.participants).length)
+  const isSharing = useCollaborationStore(state => state.isSharing)
+  const isCollabConnecting = useCollaborationStore(state => state.isConnecting)
+  const shareUrl = useCollaborationStore(state => state.shareUrl)
+  const collaborationRole = useCollaborationStore(state => state.role)
+  const startSharing = useCollaborationStore(state => state.startSharing)
+  const stopSharing = useCollaborationStore(state => state.stopSharing)
+  const joinSession = useCollaborationStore(state => state.joinSession)
+  const resumeHosting = useCollaborationStore(state => state.resumeHosting)
+  const collaborationError = useCollaborationStore(state => state.error)
+  const sessionId = useCollaborationStore(state => state.sessionId)
+  const shareEndedByRemote = useCollaborationStore(state => state.shareEndedByRemote)
+  const acknowledgeRemoteShareEnd = useCollaborationStore(state => state.acknowledgeRemoteShareEnd)
 
   const collabDisabledReason = useMemo(() => {
     if (mode !== 'online')

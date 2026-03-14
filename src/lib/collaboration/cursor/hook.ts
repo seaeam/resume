@@ -72,7 +72,10 @@ export function useRealtimeCursors({
     lastSentAtRef.current = frameTime
     broadcastCursorPayload(channelRef.current, payload)
   }, [throttleMs, userId, username, color])
-  flushOutgoingCursorRef.current = flushOutgoingCursor
+
+  useEffect(() => {
+    flushOutgoingCursorRef.current = flushOutgoingCursor
+  }, [flushOutgoingCursor])
 
   const scheduleOutgoingCursorFlush = useCallback(() => {
     if (sendFrameRef.current !== null) {

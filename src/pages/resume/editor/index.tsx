@@ -46,16 +46,15 @@ function Editor() {
     setHandlePrint(handlePrint)
   }, [setHandlePrint, handlePrint])
 
-  const {
-    activeTabId,
-    order,
-    updateActiveTabId,
-    updateOrder,
-    toggleVisibility,
-    visibility: visibilityState,
-  } = useResumeStore()
+  const activeTabId = useResumeStore(state => state.activeTabId)
+  const order = useResumeStore(state => state.order)
+  const updateActiveTabId = useResumeStore(state => state.updateActiveTabId)
+  const updateOrder = useResumeStore(state => state.updateOrder)
+  const toggleVisibility = useResumeStore(state => state.toggleVisibility)
+  const visibilityState = useResumeStore(state => state.visibility)
 
-  const { roomName, isSharing } = useCollaborationStore()
+  const roomName = useCollaborationStore(state => state.roomName)
+  const isSharing = useCollaborationStore(state => state.isSharing)
 
   const fill = theme === 'dark' ? '#0c0a09' : '#fafaf9'
   const stroke = theme === 'dark' ? '#3d3b3b' : '#e7e5e4'

@@ -1,7 +1,7 @@
 import { PerfectCursor } from 'perfect-cursors'
 import { useCallback, useEffect, useRef } from 'react'
 
-// Force perfect-cursors into its immediate update path.
+// Keep the library's interpolation window enabled so remote cursors animate between sparse points.
 PerfectCursor.MAX_INTERVAL = 1
 
 /**

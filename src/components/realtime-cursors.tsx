@@ -1,12 +1,13 @@
 'use client'
 
+import { memo } from 'react'
 import { Cursor } from '@/components/cursor'
 import { RemoteClickRipple } from '@/components/remote-click-ripple'
 import { useCollaborationUIStore, useRealtimeCursors } from '@/lib/collaboration'
 
 const THROTTLE_MS = 12
 
-export function RealtimeCursors({ roomName, username }: { roomName: string, username: string }) {
+export const RealtimeCursors = memo(({ roomName, username }: { roomName: string, username: string }) => {
   const { cursors } = useRealtimeCursors({ roomName, username, throttleMs: THROTTLE_MS })
   const remoteClicks = useCollaborationUIStore(s => s.remoteClicks)
 
@@ -41,4 +42,5 @@ export function RealtimeCursors({ roomName, username }: { roomName: string, user
       ))}
     </div>
   )
-}
+})
+RealtimeCursors.displayName = 'RealtimeCursors'

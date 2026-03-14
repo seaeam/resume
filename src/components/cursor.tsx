@@ -1,10 +1,10 @@
 import type React from 'react'
 import { MousePointer2 } from 'lucide-react'
-import { useCallback, useLayoutEffect, useRef } from 'react'
+import { memo, useCallback, useLayoutEffect, useRef } from 'react'
 import { usePerfectCursor } from '@/hooks/use-perfect-cursor'
 import { cn } from '@/lib/utils'
 
-export function Cursor({
+export const Cursor = memo(({
   className,
   style,
   point,
@@ -16,7 +16,7 @@ export function Cursor({
   point: { x: number, y: number }
   color: string
   name: string
-}) {
+}) => {
   const cursorRef = useRef<HTMLDivElement | null>(null)
 
   const animateCursor = useCallback((nextPoint: number[]) => {
@@ -50,4 +50,5 @@ export function Cursor({
       </div>
     </div>
   )
-}
+})
+Cursor.displayName = 'Cursor'

@@ -16,7 +16,7 @@ export function useResumeLoader() {
   const navigate = useNavigate()
 
   const { resumeId, setCurrentResume } = useCurrentResumeStore()
-  const { loadResumeData } = useResumeStore()
+  const loadResumeData = useResumeStore(state => state.loadResumeData)
 
   const queryResumeId = searchParams.get('resumeId')
   const collabSessionParam = searchParams.get('collabSession')
