@@ -1,11 +1,11 @@
 import type { DocHandle } from '@automerge/automerge-repo'
 import type { StoreApi } from 'zustand'
-import type { AutomergeResumeDocument } from '@/lib/automerge/schema'
+import type { AutomergeResumeDocument } from '@/lib/automerge'
 import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { cloneDeepWith, get } from 'lodash'
 import { create } from 'zustand'
-import { DocumentManager } from '@/lib/automerge/document-manager'
+import { DocumentManager } from '@/lib/automerge'
 import { getOfflineResumeById, isOfflineResumeId, updateOfflineResume } from '@/lib/offline-resume-manager'
 import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility } from '@/lib/schema'
 import { updateResumeConfig } from '@/lib/supabase/resume'
@@ -338,7 +338,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     await get().syncToSupabase()
   },
 
-  loadResumeData: async (resumeId: string, _options?: { documentUrl?: string }) => {
+  loadResumeData: async (resumeId: string, options?: { documentUrl?: string }) => {
     const { docManager, cleanupFns } = get()
 
     if (cleanupFns.length > 0) {
@@ -386,7 +386,9 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     }
 
     try {
-      const manager = new DocumentManager(resumeId, user.id)
+      const manager = new DocumentManager(resumeId, user.id, {
+        sharedDocumentUrl: options?.documentUrl,
+      })
       const handle = await manager.initialize()
       const doc = handle.doc()
 

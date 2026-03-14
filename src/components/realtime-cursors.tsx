@@ -2,8 +2,7 @@
 
 import { Cursor } from '@/components/cursor'
 import { RemoteClickRipple } from '@/components/remote-click-ripple'
-import { useRealtimeCursors } from '@/hooks/use-realtime-cursors'
-import useCollaborationUIStore from '@/store/collaboration-ui'
+import { useCollaborationUIStore, useRealtimeCursors } from '@/lib/collaboration'
 
 const THROTTLE_MS = 12
 

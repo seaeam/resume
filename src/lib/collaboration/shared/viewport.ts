@@ -20,8 +20,9 @@ export function projectPointToViewport(
   sourceViewport: ViewportSize | undefined,
   targetViewport = getViewportSize(),
 ): ViewportPoint {
-  if (!sourceViewport?.width || !sourceViewport?.height)
+  if (!sourceViewport?.width || !sourceViewport?.height) {
     return point
+  }
 
   return {
     x: (point.x / sourceViewport.width) * targetViewport.width,

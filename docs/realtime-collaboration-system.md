@@ -1,131 +1,281 @@
-# 实时协作与 UI 同步系统说明
+# 实时协作系统实现说明
 
-本文档说明这个项目是如何实现：
+本文档基于当前代码实现，说明这套系统如何完成以下三类同步：
 
-1. 多人同时编辑同一份简历内容
-2. 编辑器 UI 状态的实时同步
+1. 简历正文的多人实时编辑
+2. 编辑器 UI 状态的广播与跟随
 3. 远程光标与点击反馈
-4. 协作数据的持久化与恢复
 
-本文基于当前代码实现，而不是泛泛而谈的协同编辑概念。
+这份文档不是协同编辑概念介绍，而是对照当前仓库里的真实代码路径展开说明。旧版文档里提到的平铺文件，例如 `src/lib/automerge/document-manager.ts`、`src/lib/collaboration/session-storage.ts`、`src/lib/collaboration/viewport.ts`，都已经被新的分层结构替代。
 
-## 1. 先看整体分层
+说明：
 
-这个系统实际上分成 4 层：
+- 标记为 `ts` / `tsx` 的代码块，都是补齐了必要上下文后的正规示例。
+- 如果只是为了说明一段表达式、返回值或局部逻辑，而不是完整 TypeScript 代码，则统一使用 `text` 代码块，避免 IDE 将其当成可直接运行的源码片段。
 
-### 1.1 会话层
+## 1. 当前目录结构
 
-负责“谁发起协作、谁加入、当前会话 ID 是什么、分享链接是什么、谁在线”。
+现在协作系统分成两组核心模块：
 
-核心文件：
+```text
+src/lib/automerge/
+  collaboration/
+    session-manager.ts
+    supabase-network-adapter.ts
+  document/
+    factory.ts
+    manager.ts
+    persistence.ts
+    schema.ts
+  repo/
+    repo-instance.ts
+  shared/
+    ...
+  index.ts
 
-- `src/store/collaboration/index.ts`
-- `src/lib/collaboration/session-storage.ts`
-- `src/pages/resume/editor/hooks/useCollaborationPanelValue.ts`
+src/lib/collaboration/
+  session/
+    callbacks.ts
+    service.ts
+    state.ts
+    storage.ts
+    store.ts
+    types.ts
+    index.ts
+  ui/
+    channel.ts
+    constants.ts
+    state.ts
+    store.ts
+    types.ts
+    index.ts
+  cursor/
+    channel.ts
+    constants.ts
+    hook.ts
+    state.ts
+    types.ts
+    index.ts
+  shared/
+    color.ts
+    realtime-user.ts
+    session.ts
+    viewport.ts
+    index.ts
+  index.ts
+```
 
-### 1.2 内容协作层
+它们的职责边界是：
 
-负责“简历正文如何多人同时编辑并自动合并”。
+| 层         | 位置                              | 负责内容                                                | 不负责内容             |
+| ---------- | --------------------------------- | ------------------------------------------------------- | ---------------------- |
+| 内容协作层 | `src/lib/automerge/*`             | CRDT 文档、快照加载、Automerge Repo、网络同步、控制消息 | UI 状态、远程鼠标展示  |
+| 会话层     | `src/lib/collaboration/session/*` | 开启/加入/恢复/关闭协作，会话状态，参与者列表，分享链接 | 文档存储细节、鼠标轨迹 |
+| UI 同步层  | `src/lib/collaboration/ui/*`      | 抽屉、Tab、滚动、主题配置、点击反馈                     | 正文 CRDT 合并         |
+| Cursor 层  | `src/lib/collaboration/cursor/*`  | 鼠标位置发送、接收、投影、批量刷新                      | 文档内容、业务配置     |
+| 共享工具层 | `src/lib/collaboration/shared/*`  | 房间名、分享链接、颜色、presence userId、视口投影       | 任何业务状态           |
 
-这里用的是：
+统一导出入口：
 
-- Zustand 维护本地表单状态
-- Automerge 维护 CRDT 文档
-- Supabase Realtime 作为网络传输层
+- `src/lib/automerge/index.ts`
+- `src/lib/collaboration/index.ts`
 
-核心文件：
+业务侧现在统一直接从 `@/lib/collaboration` 导入，不再保留兼容旧路径的桥接文件。
 
-- `src/store/resume/form.ts`
-- `src/lib/automerge/document-manager.ts`
-- `src/lib/automerge/supabase-network-adapter.ts`
-- `src/lib/automerge/repo.ts`
-- `src/lib/automerge/schema.ts`
+## 2. 先看三条同步通道
 
-### 1.3 UI 协作层
+这套系统不是“一个频道里同步所有东西”，而是明确拆成三条链路：
 
-负责“抽屉开关、当前 Tab、滚动位置、配置变化、点击反馈”等不是文档正文、但会影响协作体验的状态。
+| 同步内容 | 通道                                  | 触发位置                                                 | 接收后写入位置                      |
+| -------- | ------------------------------------- | -------------------------------------------------------- | ----------------------------------- |
+| 简历正文 | Supabase Realtime + Automerge message | `src/store/resume/form.ts` -> `DocumentManager.change()` | `DocHandle.on('change')` -> Zustand |
+| UI 状态  | Supabase broadcast                    | `src/hooks/use-realtime-collab-ui.ts`                    | `useCollaborationUIStore`           |
+| Cursor   | Supabase broadcast                    | `src/lib/collaboration/cursor/hook.ts`                   | React 本地 `cursors` state          |
 
-核心文件：
+这三个通道的关键差异是：
 
-- `src/store/collaboration-ui/index.ts`
-- `src/hooks/use-realtime-collab-ui.ts`
-- `src/pages/resume/editor/components/collaboration/CollaborationUISync.tsx`
+- 正文走 CRDT，不直接广播字段值。
+- UI 走事件广播，不做 CRDT 合并。
+- Cursor 走高频广播，但接收端按帧批量落地，减少抖动和重渲染。
 
-### 1.4 感知层
+## 3. 编辑器启动后的完整流程
 
-负责“看到别人鼠标在哪、别人刚点了哪里”。
+### 3.1 页面入口如何挂载协作能力
 
-核心文件：
+编辑器入口在 `src/pages/resume/editor/index.tsx`。它会根据当前会话状态挂载不同的协作能力：
 
-- `src/hooks/use-realtime-cursors.ts`
-- `src/components/realtime-cursors.tsx`
-- `src/components/cursor.tsx`
-- `src/hooks/use-perfect-cursor.ts`
-- `src/lib/collaboration/viewport.ts`
+```tsx
+import type { RefObject } from 'react'
+import type { ORDERType } from '@/lib/schema'
+import { Fragment } from 'react'
+import { RealtimeCursors } from '@/components/realtime-cursors'
+import { CollaborationUISync } from '@/pages/resume/editor/components/collaboration/CollaborationUISync'
 
----
+interface CollaborationMountProps {
+  roomName: string | null
+  isSharing: boolean
+  currentUser: { id: string } | null
+  userDisplayName: string
+  drawerOpen: boolean
+  setDrawerOpen: (open: boolean) => void
+  activeTabId: ORDERType
+  onUpdateActiveTabId: (id: ORDERType) => void
+  previewScrollRef: RefObject<HTMLDivElement | null>
+}
 
-## 2. 会话是怎么建立起来的
+export function CollaborationMounts({
+  roomName,
+  isSharing,
+  currentUser,
+  userDisplayName,
+  drawerOpen,
+  setDrawerOpen,
+  activeTabId,
+  onUpdateActiveTabId,
+  previewScrollRef,
+}: CollaborationMountProps) {
+  const username = userDisplayName || (currentUser ? `用户-${currentUser.id.slice(0, 6)}` : '匿名用户')
 
-### 2.1 发起协作
+  return (
+    <Fragment>
+      {roomName && currentUser
+        ? <RealtimeCursors roomName={roomName} username={username} />
+        : null}
 
-用户点击“开启协作”后，`useCollaborationPanelValue` 会调用 `useCollaborationStore().startSharing(...)`。
+      {roomName && isSharing && currentUser
+        ? (
+            <CollaborationUISync
+              roomName={roomName}
+              username={username}
+              drawerOpen={drawerOpen}
+              setDrawerOpen={setDrawerOpen}
+              activeTabId={activeTabId}
+              onUpdateActiveTabId={onUpdateActiveTabId}
+              scrollContainerRef={previewScrollRef}
+            />
+          )
+        : null}
+    </Fragment>
+  )
+}
+```
 
-`src/store/collaboration/index.ts` 里做了这些事：
+这里有两个重要点：
 
-1. 生成 `sessionId`
-2. 组合出分享链接
-3. 组合出 `roomName`
-4. 调用 `DocumentManager.enableCollaboration(sessionId, callbacks)`
-5. 把当前会话角色记到 `sessionStorage`
+1. 远程光标只要求 `roomName` 存在，所以 host 和 guest 都能看到彼此鼠标。
+2. UI 同步要求 `isSharing`，说明它只在协作会话激活后才会广播和消费 UI 状态。
 
-关键命名：
+### 3.2 `useResumeLoader` 先把文档加载起来
 
-- `sessionId`
-  - 一次协作会话的唯一标识
-- `shareUrl`
-  - 分享给别人的链接，里面带 `resumeId` 和 `collabSession`
-- `roomName`
-  - UI/光标同步用的房间名
-  - 规则：`resume-collab:${resumeId}:${sessionId}`
+`src/pages/resume/editor/hooks/useResumeLoader.ts` 是页面启动的第一步。它做的事情是：
 
-### 2.2 加入协作
+1. 从 URL 里解析 `resumeId`、`collabSession`、`docUrl`
+2. 决定当前要打开哪份简历
+3. 调用 `useResumeStore().loadResumeData(activeResumeId, { documentUrl })`
+4. 页面卸载时执行：
+   - `useResumeStore.getState().cleanup()`
+   - `useCollaborationStore.getState().stopSharing({ silent: true })`
 
-编辑器入口 `useResumeLoader` 会先把简历文档加载起来。
+也就是说，文档初始化先于会话初始化。这一点很关键，因为协作层依赖 `docManager` 已经可用。
 
-之后 `useCollaborationPanelValue` 会观察 URL 里的 `collabSession` 参数：
+### 3.3 `loadResumeData` 如何接上 `DocumentManager`
 
-- 如果当前用户曾经是 host，则调用 `resumeHosting`
-- 否则调用 `joinSession`
+`src/store/resume/form.ts` 的 `loadResumeData()` 是正文编辑的实际初始化入口。在线模式下，它会：
 
-这里借助 `src/lib/collaboration/session-storage.ts` 保存“这个用户在这个 resumeId/sessionId 下原本是 host 还是 guest”，这样刷新页面后可以恢复正确角色。
+1. 创建 `new DocumentManager(resumeId, user.id, { sharedDocumentUrl })`
+2. `await manager.initialize()`
+3. 拿到 `DocHandle`
+4. 监听 `handle.on('change')`
+5. 监听 `manager.onSaveStart()` 和 `manager.onSaveResult()`
+6. 把当前文档内容映射进 Zustand
 
-### 2.3 停止协作
+核心代码路径：
 
-当 host 停止协作时：
+```ts
+import type { AutomergeResumeDocument } from '@/lib/automerge'
+import { DocumentManager } from '@/lib/automerge'
 
-1. `useCollaborationStore.stopSharing()` 调用 `docManager.broadcastCollaborationEvent('share-ended')`
-2. guest 收到控制消息后触发 `handleRemoteShareEnd`
-3. 页面跳回 `/resume`
+type ResumeViewState = Record<string, unknown> & {
+  isInitialized: boolean
+}
 
-也就是说，这个系统不仅同步正文，还显式同步“会话结束”这类控制事件。
+interface BindResumeDocumentOptions {
+  resumeId: string
+  userId: string
+  documentUrl?: string
+  setState: (updater: (prev: ResumeViewState) => ResumeViewState) => void
+  mapDocToState: (doc: AutomergeResumeDocument) => Record<string, unknown>
+}
 
----
+export async function bindResumeDocument({
+  resumeId,
+  userId,
+  documentUrl,
+  setState,
+  mapDocToState,
+}: BindResumeDocumentOptions) {
+  const manager = new DocumentManager(resumeId, userId, {
+    sharedDocumentUrl: documentUrl,
+  })
+  const handle = await manager.initialize()
 
-## 3. 内容协作是怎么做到的
+  handle.on('change', ({ doc }: { doc: AutomergeResumeDocument | null }) => {
+    if (!doc) {
+      return
+    }
 
-内容协作的关键思想是：
+    setState(prev => ({
+      ...prev,
+      ...mapDocToState(doc),
+      isInitialized: true,
+    }))
+  })
 
-- 页面上编辑的是 Zustand store
-- 实际的多人合并由 Automerge 文档负责
-- Supabase Realtime 只负责“传 CRDT 消息”
-- 最后再把已合并结果持久化到数据库
+  return { manager, handle }
+}
+```
 
-## 3.1 本地编辑入口：`useResumeStore`
+这一段定义了正文协作的基本事实：
 
-`src/store/resume/form.ts` 是正文编辑的统一入口。
+- React UI 实际依赖的是 Zustand store。
+- Automerge 文档是多人协作的事实来源。
+- `handle.on('change')` 是 CRDT 结果回流到 UI 的桥。
 
-例如这些操作：
+### 3.4 URL 驱动自动加入协作
+
+文档加载完成后，`src/pages/resume/editor/hooks/useCollaborationPanelValue.ts` 会继续根据 URL 判断是否应该自动进入协作会话。
+
+判断条件包括：
+
+- URL 里是否有 `collabSession`
+- 文档是否初始化完成
+- 当前模式是否为 `online`
+- 当前用户是否存在
+- 当前用户曾经是不是这个 session 的 host
+
+host/guest 的恢复判断来自：
+
+- `src/lib/collaboration/session/storage.ts`
+- `getStoredSessionRole(sessionId, resumeId, userId)`
+
+流程是：
+
+1. 如果 `sessionRoleHint === 'host'`，调用 `resumeHosting(...)`
+2. 否则调用 `joinSession(...)`
+
+这意味着刷新页面时不会盲目把原 host 当成 guest。
+
+## 4. 内容协作层：Automerge 是怎么串起来的
+
+这一层的核心目标是：
+
+- 本地编辑立即响应
+- 远端修改可以自动合并
+- 合并结果能回写 UI 和数据库
+
+### 4.1 本地修改从哪里进入
+
+正文编辑统一从 `src/store/resume/form.ts` 进入，最终都汇聚到 `applyResumeChange(...)`。例如：
 
 - `updateForm`
 - `updateOrder`
@@ -133,525 +283,929 @@
 - `setVisibility`
 - `changeType`
 
-最终都会走到 `applyResumeChange(...)`。
+这些 action 的模式都一致：先改 Zustand，再改 Automerge，再异步持久化。
 
-`applyResumeChange(...)` 做了 4 件很重要的事：
+```text
+function applyResumeChange(set, get, stateUpdate, docUpdate?) {
+  set((prev) => {
+    const updates = typeof stateUpdate === 'function' ? stateUpdate(prev) : stateUpdate
+    return { ...updates, pendingChanges: true, syncError: null }
+  })
 
-1. 先更新 Zustand，本地 UI 立即响应
-2. 如果是在线文档，同时调用 `docManager.change(...)` 改 Automerge 文档
-3. 调度一个延时保存任务，而不是每次输入都立刻写库
-4. 离线模式和在线模式走不同持久化路径
+  const freshState = get()
 
-这就是这个系统的“乐观更新 + CRDT 合并 + 延时持久化”模型。
+  if (docUpdate) {
+    freshState.docManager?.change((doc) => {
+      docUpdate(doc)
+    })
+  }
 
-## 3.2 DocumentManager 的职责
+  scheduleOnlinePersist(() => get().syncToSupabase())
+}
+```
 
-`src/lib/automerge/document-manager.ts` 是内容协作的核心中枢。
+这里的职责拆分非常清楚：
 
-它主要负责：
+- Zustand 负责本地即时渲染
+- `docManager.change()` 负责进入 CRDT 文档
+- `scheduleOnlinePersist()` 负责延时落库
 
-- 初始化文档
-- 从 Supabase 或 IndexedDB 恢复文档
-- 持有当前 `DocHandle`
-- 开启/关闭网络协作
-- 保存快照到 Supabase
+因此它不是“直接把输入框内容写 Supabase”，而是一个三段式模型：
 
-### 初始化流程
+1. 乐观更新
+2. CRDT 合并
+3. 延时持久化
 
-`initialize()` 的顺序大致是：
+### 4.2 `DocumentManager` 的定位
 
-1. 通过 `getAutomergeRepo(...)` 拿到 Repo 单例
-2. 尝试从 `automerge_documents` 表加载已有快照
-3. 如果数据库里有 `documentUrl`，优先 `repo.find(documentUrl)`
-4. 如果找不到，再从二进制快照 `repo.import(...)`
-5. 如果数据库也没有，就从 `resume_config` 表加载普通业务数据，创建一份新的 Automerge 文档
-6. 给新文档写入 `_metadata / order / visibility`
-7. 把 `documentUrl` 再写回 `automerge_documents`
+`src/lib/automerge/document/manager.ts` 现在只做编排，不再把所有职责堆在一个文件里。
 
-这里有两个持久化表：
+它管理的内容有：
 
-- `resume_config`
-  - 面向业务层的普通简历数据
-- `automerge_documents`
-  - 面向协作层的 CRDT 快照和 `documentUrl`
+- 当前 `DocHandle`
+- 当前 `Repo`
+- 当前 `CollaborationSessionManager`
+- 保存监听器
+- 初始化流程
+- `change()` 的统一入口
 
-## 3.3 网络同步：Automerge + Supabase Realtime
+它不直接自己写所有数据库逻辑，也不自己处理所有网络协议，而是委托给：
 
-真正的多人同步不是直接广播“字段值”，而是广播 Automerge 的 CRDT 消息。
+- `AutomergeDocumentPersistence`
+- `CollaborationSessionManager`
 
-这部分由 `SupabaseNetworkAdapter` 完成。
+### 4.3 文档初始化如何工作
 
-核心文件：
+`DocumentManager.initialize()` 的顺序是：
 
-- `src/lib/automerge/supabase-network-adapter.ts`
+1. `getAutomergeRepo(this.resumeId)` 获取当前简历专属 Repo
+2. 创建 `CollaborationSessionManager`
+3. 调用 `this.persistence.loadHandle(repo)`
+4. 如果已经有文档，直接 `attachHandle(existingHandle)`
+5. 如果没有现成文档：
+   - `loadResumeConfig()`
+   - `createResumeDocument({ repo, resumeId, userId, seedData })`
+   - `attachHandle(handle)`
+   - 如果允许持久化，先尝试写一次快照到 Supabase
+
+关键代码：
+
+```text
+const existingHandle = await this.persistence.loadHandle(repo)
+if (existingHandle) {
+  return this.attachHandle(existingHandle)
+}
+
+const seedData = await this.persistence.loadResumeConfig()
+const handle = await createResumeDocument({
+  repo,
+  resumeId: this.resumeId,
+  userId: this.userId,
+  seedData,
+})
+```
+
+### 4.4 `factory.ts` 如何创建初始文档
+
+`src/lib/automerge/document/factory.ts` 负责文档的“出生过程”，包括：
+
+- 设置 `_metadata`
+- 合并业务层种子数据
+- 补齐 `order`
+- 补齐 `visibility`
+- 生成确定性的 actor
+
+```text
+const handle = repo.create<AutomergeResumeDocument>({
+  actor: generateDeterministicActor(resumeId),
+})
+
+handle.change((doc) => {
+  doc._metadata = buildMetadata(undefined, { resumeId, userId })
+  if (seedData)
+    Object.assign(doc, seedData)
+  if (!doc.order || doc.order.length === 0) {
+    doc.order = [...DEFAULT_ORDER]
+  }
+  if (!doc.visibility) {
+    doc.visibility = { ...DEFAULT_VISIBILITY }
+  }
+})
+```
+
+这里 `_metadata` 很重要，因为后续每次 `DocumentManager.change()` 都会调用 `touchDocumentMetadata()`，更新：
+
+- `updatedAt`
+- `version`
+
+### 4.5 数据持久化为什么拆成 `persistence.ts`
+
+`src/lib/automerge/document/persistence.ts` 负责所有快照读取与写入，不再让 `DocumentManager` 直接承担数据库细节。
+
+#### 读取策略
+
+`loadHandle(repo)` 的逻辑是：
+
+1. 如果分享链接带了 `sharedDocumentUrl`，优先 `repo.find(documentUrl)`
+2. 找不到再去查 `automerge_documents`
+3. 如果 `metadata.documentUrl` 存在，再次尝试 `repo.find(metadataDocumentUrl)`
+4. 如果还不行，就把数据库里的二进制 `document_data` 做 `repo.import(bytes)`
+
+#### 写入策略
+
+`saveHandle(handle)` 会写入 `automerge_documents`：
+
+- `document_data`
+- `heads`
+- `document_version`
+- `metadata.documentUrl`
+- `metadata.docMetadata`
+
+#### 为什么 `sharedDocumentUrl` 会关闭持久化
+
+构造函数里有这样一个判断：
+
+```text
+this.canPersistToSupabase = !sharedDocumentUrl
+```
+
+这表示：如果当前页面是通过分享链接里的 `docUrl` 直接接入文档，那么这一端默认不主动把快照写回 Supabase。这样能避免 guest 侧基于共享文档 URL 直接覆盖服务端快照。
+
+### 4.6 Repo 为什么要按简历切换重建
+
+`src/lib/automerge/repo/repo-instance.ts` 维护单例 Repo，但会在切换到另一份简历时主动销毁旧实例：
+
+```text
+if (repoInstance && resumeId && activeResumeId && activeResumeId !== resumeId) {
+  destroyAutomergeRepo()
+}
+```
+
+目的不是节省对象创建，而是避免上一份简历残留的网络 adapter、连接状态和文档引用继续污染新会话。
+
+### 4.7 开启协作时，内容协作链路如何接通
+
+会话入口在 `src/lib/collaboration/session/store.ts`。host 开启协作时：
+
+```text
+await activateSession({
+  sessionId: createCollaborationSessionId(),
+  resumeId,
+  userId,
+  userName,
+  role: 'host',
+  shouldSaveSnapshot: true,
+}, { get, set })
+```
+
+`activateSession()` 再调用 `enableCollaborationSession()`，后者做这些事：
+
+1. 取出 `docManager`
+2. 生成当前用户颜色
+3. 构造 `createSessionCallbacks(...)`
+4. `await docManager.enableCollaboration(sessionId, callbacks)`
+5. 如果是 host 且需要，先 `saveToSupabase()`
+6. 产出：
+   - `shareUrl`
+   - `roomName`
+   - `selfPeerId`
+
+`shareUrl` 来自 `src/lib/collaboration/shared/session.ts`：
+
+```ts
+export function buildExampleShareUrl(
+  origin: string,
+  resumeId: string,
+  sessionId: string,
+  documentUrl?: string,
+) {
+  const url = new URL('/resume/editor', origin)
+  url.searchParams.set('resumeId', resumeId)
+  url.searchParams.set('collabSession', sessionId)
+
+  if (documentUrl) {
+    url.searchParams.set('docUrl', documentUrl)
+  }
+
+  return url.toString()
+}
+```
+
+也就是说，当前分享链接包含三类信息：
+
+- 要打开哪份简历
+- 要加入哪个协作 session
+- 如果有共享文档 URL，就直接指向那份 Automerge 文档
+
+### 4.8 `CollaborationSessionManager` 只负责 adapter 生命周期
+
+`src/lib/automerge/collaboration/session-manager.ts` 的职责很单一：
+
+1. 创建 `SupabaseNetworkAdapter`
+2. 把 adapter 挂到 `repo.networkSubsystem`
+3. 用 `syncHandle()` 告诉 adapter 当前本地文档 id
+4. 切 session 时销毁旧 adapter
+
+它不关心 UI，也不关心业务表结构。
+
+### 4.9 `SupabaseNetworkAdapter` 才是正文同步的网络桥
+
+`src/lib/automerge/collaboration/supabase-network-adapter.ts` 负责把 Automerge Repo 的消息映射到 Supabase Realtime。
 
 频道命名规则：
 
-- `automerge:resume:${resumeId}:${sessionId}`
+```text
+this.channelName = `automerge:resume:${resumeId}:${sessionId}`
+```
 
-也就是说，正文协作和 UI/光标协作不在一个频道里。
+这和 UI/cursor 使用的 `roomName` 不是一回事。正文同步使用独立频道，避免高频 UI 消息干扰 CRDT 消息。
 
-### Adapter 做了什么
+它负责三类事件：
 
-当 `DocumentManager.enableCollaboration(sessionId)` 被调用时：
+1. `automerge-sync`
+2. `automerge-control`
+3. `presence join/leave`
 
-1. 创建 `SupabaseNetworkAdapter`
-2. 把当前本地文档信息 `documentUrl/documentId` 告诉 adapter
-3. 把 adapter 注册到 `repo.networkSubsystem`
+#### 发送正文消息
 
-之后 adapter 会：
+当 Repo 需要发消息时，adapter 的 `send(message)` 会把二进制数据编码成 base64 后广播：
 
-- 订阅 `automerge-sync` 广播消息
-- 订阅 `presence join/leave`
-- 订阅 `automerge-control`
-- 在 `SUBSCRIBED` 后调用 `track(...)` 宣告自己在线
+```text
+this.channel.send({
+  type: 'broadcast',
+  event: 'automerge-sync',
+  payload: {
+    senderId: this.peerId,
+    targetId: message.targetId,
+    messageType: message.type,
+    documentId: ...,
+    message: encodeBytesToBase64(message.data),
+    sessionId: this.sessionId,
+  },
+})
+```
 
-### 为什么需要 `setLocalDocumentInfo`
+#### 接收正文消息
 
-Automerge 的网络消息最终要映射回本地的 `DocHandle`。
+接收到 `automerge-sync` 后，adapter 不会立刻盲目发给 Repo，而是先判断本地是否已经知道 `documentId`：
 
-所以 adapter 需要知道：
+- 如果本地 `localDocumentId` 还没准备好，先进入 `pendingMessages`
+- 等 `setLocalDocumentId()` 后再 `flushPendingMessages()`
 
-- 当前 handle.url
-- 当前 handle.documentId
+这一步解决的是“网络消息先到了，但本地文档句柄还没 attach”的时序问题。
 
-如果本地文档还没准备好，adapter 会先把收到的消息放进 `pendingMessages` 队列，等本地文档信息就绪后再冲刷。
+#### 接收控制消息
 
-这就是它能处理“网络先到、本地 handle 后初始化”的原因。
+`automerge-control` 用来发会话控制事件，比如 host 关闭协作时的 `share-ended`。这一类消息不进 CRDT，而是走 `callbacks.onControlMessage`。
 
-## 3.4 内容变更如何从一个用户传播到另一个用户
+### 4.10 参与者列表是怎么更新的
 
-下面是正文编辑的主链路：
+会话层通过 `createSessionCallbacks()` 注入 adapter 回调，位置在 `src/lib/collaboration/session/callbacks.ts`。
+
+它把 peer 事件映射成业务可用的 session store 更新：
+
+- `onChannelReady` -> 记录 `channelName`
+- `onPeerJoin` -> `addParticipant(...)`
+- `onPeerLeave` -> `removeParticipant(...)`
+- `onControlMessage('share-ended')` -> guest 执行 `handleRemoteShareEnd()`
+
+注意这里的参与者 key 是 `peerId`，不是 Supabase 用户 id。
+
+## 5. 从一端输入到另一端看到内容变化的完整链路
+
+下面是正文编辑的真实时序：
 
 ```mermaid
 sequenceDiagram
-  participant UserA as 用户A
+  participant UserA as 用户 A
   participant StoreA as useResumeStore
   participant DocMgrA as DocumentManager
   participant RepoA as Automerge Repo
   participant RT as Supabase Realtime
   participant RepoB as Automerge Repo
+  participant HandleB as DocHandle B
   participant StoreB as useResumeStore
 
   UserA->>StoreA: updateForm / updateOrder / toggleVisibility
-  StoreA->>StoreA: 先更新 Zustand（乐观更新）
+  StoreA->>StoreA: 先更新 Zustand
   StoreA->>DocMgrA: change(doc => ...)
   DocMgrA->>RepoA: handle.change(...)
-  RepoA->>RT: 发送 automerge-sync CRDT 消息
-  RT->>RepoB: 广播 automerge-sync
-  RepoB->>RepoB: Automerge merge
-  RepoB->>StoreB: handle.on('change')
+  RepoA->>RT: broadcast automerge-sync
+  RT->>RepoB: 转发 automerge-sync
+  RepoB->>HandleB: merge CRDT message
+  HandleB->>StoreB: handle.on('change')
   StoreB->>StoreB: mapDocToState(doc)
 ```
 
-关键点：
+这条链路里，真正的“内容一致性保证”来自 Automerge merge，而不是来自双方自己约定字段覆盖顺序。
 
-- 远端不是直接“覆盖字段”，而是 Automerge merge
-- 本地 UI 更新和 CRDT 更新是两条连续但不同的步骤
-- 真正落库不是即时完成，而是防抖调度
+## 6. UI 同步层：为什么单独拆出来
 
-## 3.5 持久化策略
+UI 状态不是正文内容，但会明显影响协作体验。例如：
 
-`useResumeStore.syncToSupabase()` 在在线模式下会做两件事：
+- 抽屉开关
+- 当前 Tab
+- 主题、字体、间距配置
+- 当前滚动位置
+- 鼠标点击反馈
 
-1. `docManager.saveToSupabase(docHandle)` 保存 Automerge 快照到 `automerge_documents`
-2. 读取合并后的最终文档，再 `updateResumeConfig(...)` 写回 `resume_config`
+如果把这些也塞进 Automerge 文档，会有两个问题：
+
+1. 这些状态更新频率高、临时性强，不适合写入业务文档。
+2. 跟随行为需要的是事件和即时广播，不是 CRDT 历史合并。
+
+所以现在单独拆成 `src/lib/collaboration/ui/*`。
+
+### 6.1 UI 通道命名
+
+`src/lib/collaboration/ui/channel.ts` 里：
+
+```ts
+const COLLAB_UI_CHANNEL_SUFFIX = 'ui'
+
+export function buildCollaborationRoomName(resumeId: string, sessionId: string) {
+  return `resume-collab:${resumeId}:${sessionId}`
+}
+
+export function buildCollaborationUIChannelName(roomName: string) {
+  return `${roomName}:${COLLAB_UI_CHANNEL_SUFFIX}`
+}
+```
+
+所以 UI 通道实际长这样：
+
+```text
+resume-collab:<resumeId>:<sessionId>:ui
+```
+
+### 6.2 UI 广播分成三类 payload
+
+`src/lib/collaboration/ui/types.ts` 定义了三类消息：
+
+1. `UIStateBroadcastPayload`
+2. `UIActionBroadcastPayload`
+3. `ClickEventBroadcastPayload`
+
+它们分别承担不同职责：
+
+| 类型   | 目的                                   | 是否持有语义 |
+| ------ | -------------------------------------- | ------------ |
+| state  | 描述一个用户当前 UI 快照               | 是           |
+| action | 描述某次行为，例如切 tab、滚动、改主题 | 是           |
+| click  | 只用于提示用户“别人刚刚点了这里”       | 否           |
+
+### 6.3 `useRealtimeCollabUI` 如何组织 UI 通信
+
+`src/hooks/use-realtime-collab-ui.ts` 是 UI 层真正的编排 hook。
+
+它会：
+
+1. 生成本地 `userId`
+2. 生成本地展示颜色
+3. 建立 Supabase channel
+4. 绑定广播回调
+5. 订阅成功后 track presence
+6. 立即广播一次当前 UI 状态
+7. 监听全局 click 事件并广播点击位置
+8. 卸载时 reset UI store
+
+本地状态广播入口：
+
+```ts
+import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { CollaborationUIIdentity, SharedUIConfig } from '@/lib/collaboration'
+import type { ORDERType } from '@/lib/schema'
+import { COLLAB_UI_STATE_EVENT, createUIStatePayload } from '@/lib/collaboration'
+
+interface BroadcastUIStateOptions {
+  channel: RealtimeChannel | null
+  identity: CollaborationUIIdentity
+  drawerOpen: boolean
+  activeTabId: ORDERType | null
+  config?: SharedUIConfig
+  getScrollPosition?: () => number
+}
+
+export function broadcastCurrentUIState({
+  channel,
+  identity,
+  drawerOpen,
+  activeTabId,
+  config,
+  getScrollPosition,
+}: BroadcastUIStateOptions) {
+  if (!channel) {
+    return
+  }
+
+  channel.send({
+    type: 'broadcast',
+    event: COLLAB_UI_STATE_EVENT,
+    payload: createUIStatePayload({
+      identity,
+      drawerOpen,
+      activeTabId,
+      config,
+      getScrollPosition,
+    }),
+  })
+}
+```
+
+### 6.4 接收 UI 消息后落到哪里
+
+`bindCollaborationUIChannel(...)` 会把消息落到 `useCollaborationUIStore` 暴露的 action 上：
+
+- `onRemoteState` -> `updateRemoteUIState`
+- `onRemoteAction` -> `setLatestRemoteAction`
+- `onRemoteClick` -> `addRemoteClick`
+- `onRemoteUserLeave` -> `removeRemoteUser`
+
+这意味着 UI 层不是直接在 channel 回调里改组件 state，而是先进入专用 UI store。
+
+### 6.5 `CollaborationUISync` 如何把远程动作应用到本地
+
+`src/pages/resume/editor/components/collaboration/CollaborationUISync.tsx` 是 UI 同步和页面实际 UI 之间的桥。
+
+它做两件相反方向的事：
+
+#### 本地 -> 远程
+
+监听这些本地变化并广播：
+
+- `drawerOpen`
+- `activeTabId`
+- `spacing`
+- `font`
+- `theme`
+- `scroll`
+
+例如滚动同步使用了节流：
+
+```text
+const broadcastScroll = useThrottledCallback((target: ScrollTarget) => {
+  if (isApplyingRemote.current || shouldIgnoreScrollSync()) return
+  broadcastUIAction({
+    kind: 'scroll',
+    position: getScrollPositionByTarget(target),
+    target,
+  })
+}, 80, ...)
+```
+
+#### 远程 -> 本地
+
+当 `followMode` 开启时，消费 `latestRemoteAction`，并把动作反向应用到当前页面：
+
+- 打开/关闭抽屉
+- 切换 Tab
+- 更新 spacing/font/theme
+- 滚动到远端位置
+
+为了防止“收到远程动作 -> 本地更新 -> 又广播出去”的循环，它用了 `isApplyingRemote` 和 `suppressScrollSync()` 两层保护。
+
+### 6.6 点击波纹为什么不需要长期保存
+
+点击反馈只是一种感知增强，不是状态事实，所以 `useCollaborationUIStore` 会在 `CLICK_EXPIRE_MS` 后自动清理：
+
+- 过期时间定义在 `src/lib/collaboration/ui/constants.ts`
+- 清理调度逻辑在 `src/lib/collaboration/ui/store.ts`
+
+因此远程点击只会短暂显示，不会像正文一样长期存档。
+
+## 7. Cursor 层：为什么现在单独拆成 `cursor/`
+
+Cursor 是一条独立的高频同步链路，和正文、UI 都不同：
+
+- 发送频率更高
+- 只关心当前位置
+- 对“平滑感”要求更高
+- 不能每来一个包就立刻触发一次 React setState
+
+所以它现在独立放在 `src/lib/collaboration/cursor/*`。
+
+### 7.1 Cursor 用的频道
+
+Cursor 直接复用 `roomName` 本身：
+
+```text
+const channel = supabase.channel(roomName)
+```
 
 这意味着：
 
-- `automerge_documents` 保存“协作原始真相”
-- `resume_config` 保存“业务层最终可消费结果”
+- UI 通道是 `${roomName}:ui`
+- Cursor 通道是 `roomName`
+- 正文通道是 `automerge:resume:${resumeId}:${sessionId}`
+
+三者彻底分离。
+
+### 7.2 本地鼠标如何发送
 
-这样做的好处是：
+`src/lib/collaboration/cursor/hook.ts` 的发送链路是：
+
+1. 监听 `window.pointermove`
+2. 把最新坐标写到 `latestPointerPositionRef`
+3. 用 `requestAnimationFrame` 调度发送
+4. 在帧回调里检查 `throttleMs`
+5. 构造 payload 并广播
+
+核心逻辑：
+
+```text
+const handlePointerMove = useCallback((event: PointerEvent) => {
+  latestPointerPositionRef.current = {
+    x: event.clientX,
+    y: event.clientY,
+  }
+  scheduleOutgoingCursorFlush()
+}, [])
+
+const flushOutgoingCursor = useCallback((frameTime: number) => {
+  const latestPosition = latestPointerPositionRef.current
+  if (!latestPosition)
+    return
+
+  if (frameTime - lastSentAtRef.current < throttleMs) {
+    sendFrameRef.current = requestAnimationFrame((nextFrameTime) => {
+      flushOutgoingCursorRef.current(nextFrameTime)
+    })
+    return
+  }
+
+  const payload = createCursorPayload({
+    position: latestPosition,
+    viewport: getViewportSize(),
+    userId,
+    username,
+    color,
+  })
+
+  cursorPayloadRef.current = payload
+  latestPointerPositionRef.current = null
+  lastSentAtRef.current = frameTime
+  broadcastCursorPayload(channelRef.current, payload)
+}, [throttleMs, userId, username, color])
+```
+
+这段代码有两个非常重要的设计：
+
+1. 只发送“最新点”，不会把一帧内所有 pointermove 全发出去。
+2. 节流检查发生在 `requestAnimationFrame` 回调里，而不是直接在 DOM 事件里。
+
+`src/components/realtime-cursors.tsx` 当前把 `throttleMs` 设为 `12`，接近 60fps 节奏：
 
-- 协作恢复更准确
-- 普通页面和导出流程仍然可以直接使用结构化业务数据
+```text
+const THROTTLE_MS = 12
+const { cursors } = useRealtimeCursors({ roomName, username, throttleMs: THROTTLE_MS })
+```
 
----
+### 7.3 远端鼠标如何接收
 
-## 4. UI 状态为什么要单独同步
+接收端同样没有“来一条包就立刻 setState”，而是先放进 `pendingRemoteCursorsRef`，再一帧统一 flush：
+
+```text
+onRemoteCursor: (payload) => {
+  pendingRemoteCursorsRef.current[payload.user.id] = projectRealtimeCursor(
+    payload,
+    (point, viewport) => projectPointToViewport(point, viewport),
+  )
+  scheduleRemoteCursorFlush()
+}
+```
 
-正文协作用 CRDT 很合适，但抽屉开关、滚动位置、当前 Tab 这种状态不适合进 Automerge 文档。
+然后在下一帧里：
 
-原因是：
+```text
+const batch = Object.values(pendingRemoteCursorsRef.current)
+pendingRemoteCursorsRef.current = {}
+setCursors(prev => upsertRealtimeCursorBatch(prev, batch))
+```
 
-1. 它们不是文档内容
-2. 很短暂
-3. 有些是“命令”，不是“状态”
-4. 如果混进正文文档，会污染持久化数据
+这样做的直接收益是：
 
-所以项目单独做了一套 UI 协作层。
+- 高频网络消息不会把 React 渲染频率拖爆
+- 同一帧内来自多个用户的 cursor 更新可以合并处理
+- 远端视觉会比“每包一次 setState”更稳定
 
----
+### 7.4 为什么要做视口投影
 
-## 5. UI 同步的核心模型
+不同协作者的屏幕尺寸可能不同。如果直接使用对方的原始 `clientX/clientY`，鼠标会落在错误位置。
 
-UI 同步由三类消息组成：
+因此每个 cursor payload 都会带上发送端 viewport：
 
-### 5.1 UI 状态快照
+```text
+viewport: getViewportSize()
+```
 
-事件名：`collab-ui-state`
+接收端再调用 `projectPointToViewport()`：
 
-内容包括：
+```ts
+interface ViewportPoint {
+  x: number
+  y: number
+}
 
-- `drawerOpen`
-- `activeTabId`
-- `scrollPosition`
-- `config`（spacing/font/theme）
+interface ViewportSize {
+  width: number
+  height: number
+}
 
-用途：
+export function projectPointToViewport(
+  point: ViewportPoint,
+  sourceViewport: ViewportSize | undefined,
+  targetViewport: ViewportSize,
+): ViewportPoint {
+  if (!sourceViewport?.width || !sourceViewport?.height) {
+    return point
+  }
 
-- 展示“其他人当前在哪个 Tab、有没有打开抽屉”
-- 提供远程状态感知，而不是直接驱动本地界面
+  return {
+    x: (point.x / sourceViewport.width) * targetViewport.width,
+    y: (point.y / sourceViewport.height) * targetViewport.height,
+  }
+}
+```
 
-### 5.2 UI 动作
+UI 点击波纹也用了同一套投影逻辑。
 
-事件名：`collab-ui-action`
+### 7.5 为什么画面上看起来是平滑的
 
-动作类型定义在 `src/store/collaboration-ui/index.ts`：
+`src/components/cursor.tsx` 没有直接把点位塞进 style，而是通过 `usePerfectCursor()` 做插值平滑。
 
-- `drawer-toggle`
-- `tab-switch`
-- `scroll`
-- `config-spacing`
-- `config-font`
-- `config-theme`
+```text
+const moveCursor = usePerfectCursor(animateCursor)
 
-用途：
+useLayoutEffect(() => {
+  moveCursor([point.x, point.y])
+}, [moveCursor, point.x, point.y])
+```
 
-- 真的去驱动本地 UI 改变
+`src/hooks/use-perfect-cursor.ts` 内部用的是 `perfect-cursors`：
 
-### 5.3 点击反馈
+```text
+PerfectCursor.MAX_INTERVAL = 1
+cursorRef.current = new PerfectCursor(point => callbackRef.current(point))
+```
 
-事件名：`collab-mouse-click`
+所以视觉上的平滑来自三层组合：
 
-用途：
+1. 发送端按帧发送最新点
+2. 接收端按帧批量落地
+3. 渲染端用 `perfect-cursors` 做轨迹插值
 
-- 在远程界面显示点击波纹
-- 辅助理解“他刚刚点了哪里”
+### 7.6 新用户加入时为什么能立刻看到鼠标
 
----
+Cursor channel 监听了 `presence join`。一旦有新 peer 进入，如果本端已经有最近一次 cursor payload，就会立刻重发一次：
 
-## 6. UI 同步的数据流
+```text
+onPeerJoin: () => {
+  if (!cursorPayloadRef.current)
+    return
+  broadcastCursorPayload(channelRef.current, cursorPayloadRef.current)
+}
+```
 
-### 6.1 `CollaborationUISync` 是 UI 协作的编排层
+这样新加入的人不需要等对方再次移动鼠标，马上就能看到当前位置。
 
-`src/pages/resume/editor/components/collaboration/CollaborationUISync.tsx` 同时承担两种职责：
+## 8. UI、Cursor、正文三层之间如何配合
 
-1. 观察本地 UI 变化并广播
-2. 读取远程动作并应用到本地
-
-### 6.2 本地变化如何广播
-
-它监听了：
-
-- `drawerOpen`
-- `activeTabId`
-- `spacing/font/theme`
-- `window` 和 `preview` 的滚动
-
-一旦变化，就调用 `broadcastUIAction(...)`。
-
-同时，`useRealtimeCollabUI` 还会周期性广播一个当前 UI 快照 `broadcastState(...)`。
-
-所以这里是“动作”和“状态”双轨并行：
-
-- 动作用于驱动同步
-- 状态用于展示协作者感知
-
-### 6.3 远程动作如何应用到本地
-
-`useRealtimeCollabUI` 收到广播后，并不会直接改 React 本地 state，而是先写进 `useCollaborationUIStore`：
-
-- `updateRemoteUIState(payload)`
-- `setLatestRemoteAction(payload)`
-- `addRemoteClick(payload)`
-
-然后 `CollaborationUISync` 再观察：
-
-- `latestRemoteAction`
-- `followMode`
-
-如果 `followMode === true`，就调用 `applyRemoteAction(...)` 把动作真正应用到本地：
-
-- 打开/关闭抽屉
-- 切换 tab
-- 改配置
-- 滚动页面
-
-这个中间 store 很重要，因为它把“网络输入”和“UI 应用”解耦了。
-
-### 6.4 为什么要有 `followMode`
-
-不是所有远程动作都应该强行应用到本地。
-
-所以设计成：
-
-- 先把动作收下来
-- 只有开启 `followMode` 才跟随执行
-
-这使得系统同时支持：
-
-- 强跟随协作
-- 仅旁观感知，不被打断
-
----
-
-## 7. UI 同步里的防回环机制
-
-如果不做保护，会出现这种问题：
-
-1. 我收到远程“打开抽屉”
-2. 我本地执行 `setDrawerOpen(true)`
-3. 本地 `useEffect` 以为是我主动改的，又广播一次
-4. 形成回环
-
-这个项目用了两层保护：
-
-### 7.1 `isApplyingRemote`
-
-当 `applyRemoteAction(...)` 开始执行时，先把 `isApplyingRemote.current = true`。
-
-这样本地监听器在广播前会先判断：
-
-- 如果当前是在应用远程动作，就不要再往外广播
-
-### 7.2 `suppressScrollSync`
-
-滚动特别容易回环，因为 `scrollTo(...)` 会再次触发 scroll event。
-
-所以专门加了一个时间窗口：
-
-- `suppressScrollSyncUntilRef`
-
-收到远程滚动后，短时间内忽略本地滚动广播。
-
-这能避免“你滚一下，我回滚一下”的抖动。
-
----
-
-## 8. 远程光标是怎么做的
-
-远程光标是第三条单独链路。
-
-频道：
-
-- `roomName`
-
-事件：
-
-- `realtime-cursor-move`
-
-核心 Hook：
-
-- `src/hooks/use-realtime-cursors.ts`
-
-### 8.1 本地光标广播
-
-它监听 `window.pointermove`，并做节流：
-
-- 默认在组件 `RealtimeCursors` 里传入 `12ms`
-
-广播 payload 包含：
-
-- `position`
-- `viewport`
-- `user`
-- `color`
-- `timestamp`
-
-### 8.2 为什么要带 `viewport`
-
-不同协作者屏幕尺寸不一样，同一个 `clientX/clientY` 不能直接复用。
-
-所以接收方会调用：
-
-- `projectPointToViewport(point, sourceViewport, targetViewport)`
-
-把远端坐标投影到本地视口。
-
-这就是 `src/lib/collaboration/viewport.ts` 的作用。
-
-### 8.3 为什么光标移动看起来比较顺
-
-真正的动画不是简单直接 set `transform`，而是：
-
-1. `useRealtimeCursors` 收到远端点位
-2. `Cursor` 组件调用 `usePerfectCursor`
-3. `perfect-cursors` 根据点位做平滑插值
-4. 最后再更新 DOM transform
-
-所以远程光标不会显得太“跳”。
-
-### 8.4 离线清理怎么做
-
-这里不是依靠“最后一条广播”判断谁离线，而是依靠 Supabase presence：
-
-- `track({ userId, metadata... })`
-- `presence leave` 时删除对应 cursor
-
-这比靠超时猜测更稳定。
-
----
-
-## 9. 远程点击波纹是怎么做的
-
-点击反馈走的是 UI 协作层，不是光标层。
-
-原因是点击本质上不是“持续位置”，而是“瞬时事件”。
-
-流程：
-
-1. `useRealtimeCollabUI` 监听 `window.click`
-2. 提取点击点坐标和目标标签
-3. 广播 `collab-mouse-click`
-4. 远端写入 `useCollaborationUIStore.remoteClicks`
-5. `src/components/realtime-cursors.tsx` 渲染 `RemoteClickRipple`
-
-点击事件设置了自动过期：
-
-- `CLICK_EXPIRE_MS = 800`
-
-所以远端波纹是短暂存在的，不会在 store 里长期堆积。
-
----
-
-## 10. 当前系统为什么要拆成三种频道
-
-### 10.1 正文频道
-
-`automerge:resume:${resumeId}:${sessionId}`
-
-用途：
-
-- 传递 Automerge CRDT 消息
-- 传递控制事件（如 `share-ended`）
-
-### 10.2 UI 频道
-
-`${roomName}:ui`
-
-用途：
-
-- 抽屉状态
-- 当前 tab
-- 远程滚动
-- 配置变化
-- 点击反馈
-
-### 10.3 光标频道
-
-`${roomName}`
-
-用途：
-
-- 高频 pointer move
-
-这样的拆分是合理的，因为三类数据的特征完全不同：
-
-- 正文：可靠合并、可持久化
-- UI：短状态、命令型
-- 光标：高频、纯感知
-
----
-
-## 11. 一次完整协作的时序
+下面这张图能更清楚地看出三条链路的关系：
 
 ```mermaid
 flowchart TD
-  A[用户打开编辑器] --> B[useResumeLoader 加载 resume]
-  B --> C[DocumentManager.initialize]
-  C --> D[从 IndexedDB / automerge_documents / resume_config 恢复文档]
-  D --> E[useResumeStore 订阅 DocHandle change]
-  E --> F[用户点击开启协作]
-  F --> G[useCollaborationStore.startSharing]
-  G --> H[DocumentManager.enableCollaboration]
-  H --> I[SupabaseNetworkAdapter 注册到 Repo]
-  I --> J[Supabase Realtime 建立正文频道]
-  J --> K[CollaborationUISync 建立 UI 频道]
-  K --> L[RealtimeCursors 建立光标频道]
-  L --> M[多人同时编辑与广播]
-  M --> N[Automerge merge]
-  N --> O[Store 更新]
-  O --> P[延时保存到 automerge_documents + resume_config]
+  A[Sidebar / Preview / Controls] --> B[useResumeStore]
+  A --> C[CollaborationUISync]
+  A --> D[window.pointermove]
+
+  B --> E[DocumentManager.change]
+  E --> F[Automerge Repo]
+  F --> G[SupabaseNetworkAdapter]
+  G --> H[Supabase Realtime]
+
+  C --> I[useRealtimeCollabUI]
+  I --> H
+  I --> J[useCollaborationUIStore]
+
+  D --> K[useRealtimeCursors]
+  K --> H
+  K --> L[Cursor local state]
+
+  H --> F
+  H --> J
+  H --> L
+
+  F --> M[DocHandle.on change]
+  M --> B
 ```
 
----
+如果把这三层混在一起，后续扩展会很痛苦。现在分层后，每层都可以单独替换协议或行为，而不用同时改动所有逻辑。
 
-## 12. 这套实现里我认为最关键的设计点
+## 9. 会话层：开启、加入、恢复、关闭
 
-### 12.1 正文协作和 UI 协作分离
+### 9.1 开启协作
 
-这是对的。
+`src/lib/collaboration/session/store.ts` 中的 `startSharing()` 负责 host 发起协作。流程是：
 
-正文用 CRDT，UI 用事件广播，各自解决各自的问题。
+1. 如果已存在旧 session，先 `stopSharing({ silent: true })`
+2. 生成新的 `sessionId`
+3. 调用 `activateSession(...)`
+4. 成功后 toast 提示
 
-### 12.2 先写 Zustand，再写 Automerge
+### 9.2 加入协作
 
-这让本地输入手感更直接，不需要等待网络或 CRDT merge 才看到变化。
+`joinSession()` 不会重新生成 sessionId，而是使用分享链接里现成的 `sessionId`。它同样走 `activateSession(...)`，但 role 是 `guest`，且：
 
-### 12.3 通过 `DocHandle.on('change')` 回填 store
+```text
+shouldSaveSnapshot: false
+```
 
-说明最终以合并后的文档为准，而不是只信本地输入。
+也就是说，guest 加入时不会主动触发快照保存。
 
-### 12.4 presence 和 broadcast 分开用
+### 9.3 恢复 host
 
-- presence 用来感知在线/离线
-- broadcast 用来传动作和位置
+刷新页面后，如果 `sessionStorage` 里记录当前用户曾是 host，则 `useCollaborationPanelValue.ts` 会调用 `resumeHosting()` 而不是 `joinSession()`。
 
-这是实时系统里非常常见且合理的模式。
+这个行为保证了：
 
-### 12.5 数据库里同时保留 CRDT 快照和业务表
+- host 刷新后仍然是 host
+- 不会把 host 错误降级成 guest
 
-这让系统既能做协作恢复，也不影响普通业务读写。
+### 9.4 关闭协作
 
----
+当 host 主动关闭协作时，`stopSharing()` 会执行：
 
-## 13. 你后续维护时最值得关注的点
+```text
+if (state.role === 'host' && state.sessionId && docManager) {
+  docManager.broadcastCollaborationEvent('share-ended', { reason: 'host_closed' })
+}
 
-### 13.1 `useCollaborationUIStore` 同时承担“状态镜像”和“动作总线”
+docManager?.disableCollaboration()
+clearStoredSession(...)
+set(createStoppedSessionState(state))
+```
 
-这是方便的，但后续如果 UI 复杂度继续上升，可以考虑拆成：
+guest 收到 `share-ended` 后，会在 `handleRemoteShareEnd()` 中：
 
-- awareness store
-- imperative action store
+1. `docManager.disableCollaboration()`
+2. 清理 sessionStorage
+3. 把 `shareEndedByRemote` 设为 `true`
+4. 由 `useCollaborationPanelValue.ts` 监听后跳回 `/resume`
 
-### 13.2 `CollaborationUISync` 目前职责较多
+## 10. 持久化、恢复和容错
 
-它现在同时负责：
+### 10.1 持久化分成两张表
 
-- 监听本地变化
-- 广播动作
-- 监听远程动作
-- 应用远程动作
-- 管理 follow mode
+这套系统使用两类数据表：
 
-后面如果继续扩展，可以拆成：
+#### `resume_config`
 
-- local broadcaster
-- remote action applier
-- awareness panel
+面向业务层，存的是最终简历内容，便于普通读取、列表展示、非协作场景恢复。
 
-### 13.3 `JSON.stringify` 用于比较配置对象
+#### `automerge_documents`
 
-现在能跑，但配置项变复杂后，最好改成更明确的 diff 策略。
+面向协作层，存的是：
 
-### 13.4 正文和 UI 都依赖 Supabase Realtime
+- Automerge 二进制快照
+- heads
+- document metadata
+- `documentUrl`
 
-如果未来要支持断线重连可视化、冲突分析、编辑历史回放，就需要把连接状态和重试状态显式建模出来。
+二者关系是：
 
----
+- `automerge_documents` 负责协作过程中的 CRDT 快照
+- `resume_config` 负责最终业务数据展示和普通编辑读取
 
-## 14. 总结
+### 10.2 为什么在线同步时要同时写两处
 
-一句话概括这套系统：
+`src/store/resume/form.ts` 的 `syncToSupabase()` 在线模式下会：
 
-> 正文协作走 Automerge CRDT，UI 状态走 Supabase 广播事件，在线感知走 presence，高频交互如光标和点击再单独拆出来做轻量同步。
+1. `await state.docManager.saveToSupabase(state.docHandle)`
+2. 从 `state.docHandle.doc()` 取出冲突解决后的最终文档
+3. `await updateResumeConfig(resumeId, resolvedFormData)`
 
-如果你把它记成三个问题，会更容易维护：
+这里的顺序是有意义的：
 
-1. 文档内容怎么合并
-2. UI 行为怎么广播
-3. 协作者怎么被感知
+- 先保存 CRDT 快照，保证协作态可恢复
+- 再把 merge 后的最终结果写回业务表
 
-这个项目对这三个问题分别给了三套实现，因此整体结构是清楚的，而且扩展性也还不错。
+### 10.3 权限和不可持久化场景
+
+`AutomergeDocumentPersistence` 里一旦遇到这些情况，会关闭继续持久化：
+
+- 通过分享链接加载了 `sharedDocumentUrl`
+- 读取或写入返回权限错误，例如 `42501` / `403`
+- `resume_config` 查询不到数据
+
+这套设计避免了在没有可靠持久化能力时继续写库导致报错连锁。
+
+### 10.4 会话角色为什么放 `sessionStorage`
+
+`src/lib/collaboration/session/storage.ts` 只存很小的一份状态：
+
+- `sessionId`
+- `resumeId`
+- `userId`
+- `role`
+
+目的是在刷新页面时恢复“我原来是 host 还是 guest”。它不承担任何正文或 UI 数据恢复职责。
+
+## 11. 一次真实协作会话的完整时序
+
+```mermaid
+sequenceDiagram
+  participant Page as Editor Page
+  participant Loader as useResumeLoader
+  participant Resume as useResumeStore
+  participant DocMgr as DocumentManager
+  participant Panel as useCollaborationPanelValue
+  participant Session as useCollaborationStore
+  participant UI as useRealtimeCollabUI
+  participant Cursor as useRealtimeCursors
+
+  Page->>Loader: 读取 resumeId/collabSession/docUrl
+  Loader->>Resume: loadResumeData()
+  Resume->>DocMgr: initialize()
+  DocMgr-->>Resume: handle + doc
+  Resume-->>Page: isInitialized = true
+
+  Page->>Panel: 初始化协作面板
+  Panel->>Session: joinSession() / resumeHosting() / startSharing()
+  Session->>DocMgr: enableCollaboration(sessionId)
+  DocMgr-->>Session: peerId/channel ready
+  Session-->>Page: roomName/shareUrl/participants
+
+  Page->>UI: 挂载 CollaborationUISync
+  Page->>Cursor: 挂载 RealtimeCursors
+
+  UI->>UI: 广播 drawer/tab/theme/scroll/click
+  Cursor->>Cursor: 广播 cursor move
+  Resume->>DocMgr: change(doc => ...)
+```
+
+## 12. 当前设计的扩展点
+
+现在的结构已经比较适合继续扩展。后面如果要新增能力，建议沿着现有边界做：
+
+### 12.1 新增会话控制事件
+
+例如：
+
+- host 临时锁定编辑
+- 只读模式
+- 指定跟随某个协作者
+
+建议接入位置：
+
+- `src/lib/automerge/collaboration/supabase-network-adapter.ts`
+- `src/lib/collaboration/session/callbacks.ts`
+
+### 12.2 新增 UI 协作类型
+
+例如：
+
+- 选中某个模块高亮
+- 远程打开某个弹窗
+- 标记“我正在编辑这一段”
+
+建议接入位置：
+
+- `src/lib/collaboration/ui/types.ts`
+- `src/lib/collaboration/ui/channel.ts`
+- `src/pages/resume/editor/components/collaboration/CollaborationUISync.tsx`
+
+### 12.3 新增 cursor 元信息
+
+例如：
+
+- 当前正在拖拽
+- 当前处于文本选择态
+- 当前聚焦的区域
+
+建议接入位置：
+
+- `src/lib/collaboration/cursor/types.ts`
+- `src/lib/collaboration/cursor/channel.ts`
+- `src/components/cursor.tsx`
+
+### 12.4 替换存储后端
+
+如果后续不再用 Supabase 存快照，只需要重点替换：
+
+- `src/lib/automerge/document/persistence.ts`
+
+而不会影响 UI sync、cursor sync、session store 的结构。
+
+## 13. 总结：这套系统现在的职责边界
+
+用一句话概括当前实现：
+
+- `useResumeStore` 负责编辑器正文状态
+- `DocumentManager` 负责 Automerge 文档编排
+- `SupabaseNetworkAdapter` 负责正文 CRDT 消息通道
+- `useCollaborationStore` 负责会话状态和参与者
+- `useRealtimeCollabUI` + `useCollaborationUIStore` 负责 UI 广播与跟随
+- `useRealtimeCursors` 负责高频 cursor 同步
+- `RealtimeCursors` / `Cursor` 负责远端鼠标的最终呈现
+
+这也是这次分层重构后最重要的收益：每一层都只处理自己该处理的东西，阅读、定位问题和继续扩展都会比之前的平铺实现清晰得多。

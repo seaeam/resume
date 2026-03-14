@@ -28,17 +28,10 @@ export interface AutomergeResumeDocument extends ResumeSchema {
       avatarUrl?: string
       color: string
       lastSeen: string
-      currentlyEditing?: string[] // 正在编辑的字段路径
+      currentlyEditing?: string[]
     }
   }
 }
 
-/**
- * Automerge 变更函数类型
- */
 export type ChangeFn<T> = (doc: T) => void
-
-/**
- * 字段路径类型（用于协作光标定位）
- */
-export type FieldPath = string[] // 例如: ['basics', 'name']
+export type FieldPath = string[]

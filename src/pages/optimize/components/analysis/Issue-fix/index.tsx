@@ -9,7 +9,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { Spinner } from '@/components/ui/spinner'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { DocumentManager } from '@/lib/automerge/document-manager'
+import { syncAutomergeDocument } from '@/lib/automerge'
 import { updateAtsConfig } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
 import { startConfetti } from '@/utils'
@@ -65,8 +65,7 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
       })
 
       if (updatedSuggestions && updatedSuggestions.length > 0) {
-        // 使用静态方法同步文档和配置
-        await DocumentManager.syncAutomergeDocument(
+        await syncAutomergeDocument(
           currentAtsConfig.resume_id,
           updatedSuggestions,
           { syncToResumeConfig: true },

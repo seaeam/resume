@@ -1,5 +1,5 @@
 import type { AnalysisAction, AnalysisState, AnalysisStatus, StepConfig, ValueType } from './types'
-import type { AutomergeResumeDocument } from '@/lib/automerge/schema'
+import type { AutomergeResumeDocument } from '@/lib/automerge'
 import type { ResumeSchema } from '@/lib/schema'
 import { getOfflineResumeById } from '@/lib/offline-resume-manager'
 import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_WORK_EXPERIENCE } from '@/lib/schema'

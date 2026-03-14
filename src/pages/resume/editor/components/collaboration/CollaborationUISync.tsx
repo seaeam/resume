@@ -8,8 +8,8 @@
  * 4. 同步工具栏配置（间距/字体/主题）
  */
 import type { RefObject } from 'react'
+import type { UIAction } from '@/lib/collaboration'
 import type { ORDERType } from '@/lib/schema'
-import type { UIAction } from '@/store/collaboration-ui'
 import { Eye, EyeOff, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRealtimeCollabUI } from '@/hooks/use-realtime-collab-ui'
 import { useThrottledCallback } from '@/hooks/use-throttled-callback'
-import useCollaborationUIStore from '@/store/collaboration-ui'
+import { useCollaborationUIStore } from '@/lib/collaboration'
 import useResumeConfigStore from '@/store/resume/config'
 
 type ScrollTarget = 'window' | 'preview'

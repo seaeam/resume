@@ -3,8 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { getStoredSessionRole } from '@/lib/collaboration/session-storage'
-import useCollaborationStore from '@/store/collaboration'
+import { getStoredSessionRole, useCollaborationStore } from '@/lib/collaboration'
 import useResumeStore from '@/store/resume/form'
 
 interface UseCollaborationPanelValueParams {

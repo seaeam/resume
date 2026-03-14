@@ -1,8 +1,10 @@
 interface PresenceLike {
+  [key: string]: unknown
   userId?: unknown
   metadata?: {
     userId?: unknown
-  }
+    [key: string]: unknown
+  } | null
 }
 
 export function createRealtimeUserId(): number {

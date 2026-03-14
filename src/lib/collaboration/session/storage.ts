@@ -14,13 +14,19 @@ function isSupported() {
 }
 
 function readStore(): StoredSession[] {
-  if (!isSupported())
+  if (!isSupported()) {
     return []
+  }
+
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (!raw)
+
+    if (!raw) {
       return []
+    }
+
     const parsed = JSON.parse(raw)
+
     if (Array.isArray(parsed)) {
       return parsed.filter(
         (entry): entry is StoredSession =>
@@ -31,6 +37,7 @@ function readStore(): StoredSession[] {
           && (entry.role === 'host' || entry.role === 'guest'),
       )
     }
+
     return []
   }
   catch {
@@ -39,8 +46,10 @@ function readStore(): StoredSession[] {
 }
 
 function writeStore(entries: StoredSession[]) {
-  if (!isSupported())
+  if (!isSupported()) {
     return
+  }
+
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
   }
@@ -54,6 +63,7 @@ export function rememberSessionRole(entry: StoredSession) {
   const filtered = entries.filter(
     item => item.sessionId !== entry.sessionId || item.resumeId !== entry.resumeId || item.userId !== entry.userId,
   )
+
   filtered.push(entry)
   writeStore(filtered)
 }
@@ -63,6 +73,7 @@ export function getStoredSessionRole(sessionId: string, resumeId: string, userId
   const matched = entries.find(
     item => item.sessionId === sessionId && item.resumeId === resumeId && item.userId === userId,
   )
+
   return matched?.role ?? null
 }
 
@@ -71,5 +82,6 @@ export function clearStoredSession(sessionId: string, resumeId: string, userId: 
   const filtered = entries.filter(
     item => item.sessionId !== sessionId || item.resumeId !== resumeId || item.userId !== userId,
   )
+
   writeStore(filtered)
 }
