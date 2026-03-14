@@ -39,7 +39,16 @@ export type SuggestionKind
     | 'fill_field'
     | 'normalize_date'
 
-export type ValueType = 'string' | 'html_string' | 'string_array' | 'object_array'
+export type ValueType
+  = | 'string'
+    | 'html_string'
+    | 'string_array'
+    | 'object_array'
+    | 'object'
+    | 'date_range'
+    | 'skill_list'
+    | 'skill_item'
+    | 'certificate_list'
 
 export type RawValue
   = | string
