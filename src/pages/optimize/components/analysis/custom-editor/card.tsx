@@ -43,7 +43,7 @@ const EDITOR_MAP: Record<string, (props: { value: AfterValue, onChange: (newValu
     <div className="space-y-2">
       {(value as Array<Record<string, unknown>>).map((item, index) => (
         <ObjectEditor
-          key={`obj-edit-${JSON.stringify(item).slice(0, 30)}`}
+          key={`obj-edit-${JSON.stringify(item)}`}
           value={item}
           onChange={(newItem) => {
             const newArray = [...(value as Array<Record<string, unknown>>)]

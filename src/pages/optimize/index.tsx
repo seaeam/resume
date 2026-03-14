@@ -26,11 +26,11 @@ function Optimize() {
         <div className="grid gap-8 lg:grid-cols-12 items-start">
           <div className="lg:col-span-8 space-y-8">
             <IssueAnalysis />
+            <AdvancedTools />
           </div>
 
           <div className="lg:col-span-4 space-y-8">
             <RepairChecklist />
-            <AdvancedTools />
           </div>
         </div>
       </div>

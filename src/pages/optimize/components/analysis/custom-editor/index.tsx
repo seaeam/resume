@@ -12,10 +12,11 @@ interface SuggestionEditorProps {
 
 function CustomEditor({ suggestions: initialSuggestions, onChange, onOk }: SuggestionEditorProps) {
   const [currentSuggestions, setCurrentSuggestions] = useState(initialSuggestions)
-  const [originalSuggestions] = useState(initialSuggestions)
+  const [originalSuggestions, setOriginalSuggestions] = useState(initialSuggestions)
 
   useEffect(() => {
     setCurrentSuggestions(initialSuggestions)
+    setOriginalSuggestions(initialSuggestions)
   }, [initialSuggestions])
 
   const handleSuggestionChange = useCallback((index: number, updatedSuggestion: Suggestion) => {
@@ -85,7 +86,7 @@ function CustomEditor({ suggestions: initialSuggestions, onChange, onOk }: Sugge
       <div className="space-y-3">
         {currentSuggestions.map((suggestion, index) => (
           <SuggestionEditCard
-            key={`edit-${suggestion.reason}-${suggestion.kind}`}
+            key={`edit-${suggestion.locate.path || 'unknown'}-${suggestion.kind}-${suggestion.reason}`}
             suggestion={suggestion}
             onChange={updatedSuggestion => handleSuggestionChange(index, updatedSuggestion)}
             onReset={() => handleReset(index)}

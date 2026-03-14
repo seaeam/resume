@@ -222,7 +222,7 @@ function ObjectArrayValue({ value, variant }: { value: Array<Record<string, unkn
   return (
     <div className="space-y-2">
       {value.map(item => (
-        <ObjectValue key={`obj-${JSON.stringify(item).slice(0, 50)}`} value={item} variant={variant} />
+        <ObjectValue key={`obj-${JSON.stringify(item)}`} value={item} variant={variant} />
       ))}
     </div>
   )
