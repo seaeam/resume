@@ -6,13 +6,6 @@
 2. 编辑器 UI 状态的广播与跟随
 3. 远程光标与点击反馈
 
-这份文档不是协同编辑概念介绍，而是对照当前仓库里的真实代码路径展开说明。旧版文档里提到的平铺文件，例如 `src/lib/automerge/document-manager.ts`、`src/lib/collaboration/session-storage.ts`、`src/lib/collaboration/viewport.ts`，都已经被新的分层结构替代。
-
-说明：
-
-- 标记为 `ts` / `tsx` 的代码块，都是补齐了必要上下文后的正规示例。
-- 如果只是为了说明一段表达式、返回值或局部逻辑，而不是完整 TypeScript 代码，则统一使用 `text` 代码块，避免 IDE 将其当成可直接运行的源码片段。
-
 ## 1. 当前目录结构
 
 现在协作系统分成两组核心模块：
