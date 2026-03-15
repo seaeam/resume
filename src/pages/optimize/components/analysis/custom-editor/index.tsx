@@ -57,7 +57,7 @@ function CustomEditor({ suggestions: initialSuggestions, onChange, onOk }: Sugge
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       {/* 操作栏 */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
@@ -83,7 +83,7 @@ function CustomEditor({ suggestions: initialSuggestions, onChange, onOk }: Sugge
       </div>
 
       {/* 建议卡片列表 */}
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         {currentSuggestions.map((suggestion, index) => (
           <SuggestionEditCard
             key={`edit-${suggestion.locate.path || 'unknown'}-${suggestion.kind}-${suggestion.reason}`}

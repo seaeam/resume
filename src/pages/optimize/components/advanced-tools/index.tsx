@@ -1,9 +1,13 @@
 import type { AdvancedToolKey, ResumeToolContext } from './shared/types'
+import { DialogClose } from '@radix-ui/react-dialog'
 import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DialogFooter } from '@/components/ui/dialog'
+import { DrawerClose, DrawerFooter } from '@/components/ui/drawer'
+import { useIsMobile } from '@/hooks/use-mobile'
 import useAtsStore from '../../store'
 import AtsPreviewTool from './ats-preview'
 import BenchmarkTool from './benchmark'
@@ -17,6 +21,7 @@ import { ToolCard } from './shared/tool-card'
 
 function AdvancedTools() {
   const { currentAtsConfig, selectedResumeId, selectedResumeType } = useAtsStore()
+  const isMobile = useIsMobile()
 
   const [activeTool, setActiveTool] = useState<AdvancedToolKey | null>(null)
   const [loadingContext, setLoadingContext] = useState(false)
@@ -197,7 +202,7 @@ function AdvancedTools() {
         </CardHeader>
 
         <CardContent className="p-4 md:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {TOOL_DEFINITIONS.map(tool => (
               <ToolCard
                 key={tool.key}
@@ -238,21 +243,29 @@ function AdvancedTools() {
             )}
           </div>
         )}
-        footer={(
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs leading-5 text-muted-foreground">
-              只有中间内容区域会滚动，顶部信息和底部操作会保持固定。
-            </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => void handleRefreshContext()} disabled={!activeTool || loadingContext}>
-                刷新数据
-              </Button>
-              <Button size="sm" onClick={() => handleOpenChange(false)}>
-                关闭
-              </Button>
-            </div>
-          </div>
-        )}
+        footer={
+          isMobile
+            ? (
+                <DrawerFooter className="px-4 py-3 shrink-0 border-t bg-muted/30 md:flex md:flex-row md:gap-2 md:justify-end">
+                  <DrawerClose asChild>
+                    <Button variant="outline">取消</Button>
+                  </DrawerClose>
+                  <Button onClick={() => void handleRefreshContext()} disabled={!activeTool || loadingContext}>
+                    刷新数据
+                  </Button>
+                </DrawerFooter>
+              )
+            : (
+                <DialogFooter className="px-4 py-3 shrink-0 border-t bg-muted/30">
+                  <DialogClose asChild>
+                    <Button variant="outline">取消</Button>
+                  </DialogClose>
+                  <Button onClick={() => void handleRefreshContext()} disabled={!activeTool || loadingContext}>
+                    刷新数据
+                  </Button>
+                </DialogFooter>
+              )
+        }
         onOpenChange={handleOpenChange}
         open={open}
         title={activeToolDefinition?.title || '高级工具箱'}

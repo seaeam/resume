@@ -95,7 +95,7 @@ function SuggestionEditCard({ suggestion, onChange, onOk, onReset, isModified }:
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'rounded-xl border bg-card overflow-hidden transition-shadow',
+        'min-w-0 max-w-full overflow-hidden rounded-xl border bg-card transition-shadow',
         isEditing && 'ring-2 ring-primary/20 shadow-md',
         isModified && 'border-primary/50',
       )}
@@ -173,7 +173,7 @@ function SuggestionEditCard({ suggestion, onChange, onOk, onReset, isModified }:
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="p-4"
+                className="min-w-0 p-4"
               >
                 <ValueEditor
                   value={internalValue}
@@ -188,7 +188,7 @@ function SuggestionEditCard({ suggestion, onChange, onOk, onReset, isModified }:
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-4 space-y-3"
+                className="min-w-0 space-y-3 p-4"
               >
                 {/* 修改前 */}
                 {!isEmptyValue(suggestion.before) && (

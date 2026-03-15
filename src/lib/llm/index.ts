@@ -2,7 +2,7 @@ import type { ChatCompletionCreateParamsBase } from 'openai/resources/chat/compl
 import type { ResumeSchema } from '../schema'
 import { throttle } from 'lodash'
 import { callLLM } from './call'
-import prompt from './prompt'
+import { optimize_prompt } from './prompt'
 
 export async function runAtsStructured(
   resumeConfig: ResumeSchema,
@@ -11,7 +11,7 @@ export async function runAtsStructured(
 ) {
   const { throttleMs = 100 } = options || {}
 
-  const promptText = prompt.replace('<<<RESUME_JSON>>>', JSON.stringify(resumeConfig, null, 2))
+  const promptText = optimize_prompt.replace('<<<RESUME_JSON>>>', JSON.stringify(resumeConfig, null, 2))
   const req = {
     messages: [
       {

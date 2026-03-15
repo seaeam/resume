@@ -7,6 +7,7 @@ import {
 } from '@shikijs/transformers'
 import { FileIcon } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
+import { parseSanitizedHtml } from '@/lib/safe-html'
 import { cn } from '@/lib/utils'
 
 interface CodeComparisonProps {
@@ -97,8 +98,9 @@ export function CodeComparison({
             'group-hover/left:[&>pre>code>:not(.focused)]:transition-all group-hover/left:[&>pre>code>:not(.focused)]:duration-300',
             'group-hover/right:[&>pre>code>:not(.focused)]:transition-all group-hover/right:[&>pre>code>:not(.focused)]:duration-300',
           )}
-          dangerouslySetInnerHTML={{ __html: highlighted }}
-        />
+        >
+          {parseSanitizedHtml(highlighted)}
+        </div>
       )
     } else {
       return (

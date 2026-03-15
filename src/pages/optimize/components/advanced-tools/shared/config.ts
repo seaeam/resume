@@ -22,7 +22,7 @@ export const TOOL_DEFINITIONS: ToolVisualDefinition[] = [
   {
     key: 'formatter',
     title: '一键格式化',
-    description: '统一空白、日期和重复条目，先预览再应用到简历。',
+    description: '复用简历问题分析中的自动修复建议，一次应用当前可直接落地的优化。',
     badge: 'Clean Pass',
     badgeClassName: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
     icon: RefreshCcw,

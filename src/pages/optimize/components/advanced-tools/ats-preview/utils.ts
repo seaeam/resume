@@ -1,18 +1,6 @@
+import type { AtsPreviewResult } from './types'
 import type { ResumeSchema } from '@/lib/schema'
 import { countQuantifiedEntries, extractKeywords, getResumeSections } from '../shared/helpers'
-
-export interface AtsPreviewStats {
-  sectionCount: number
-  lineCount: number
-  characterCount: number
-  keywordCount: number
-}
-
-export interface AtsPreviewResult {
-  plainText: string
-  stats: AtsPreviewStats
-  warnings: string[]
-}
 
 export function buildAtsPreview(resume: ResumeSchema): AtsPreviewResult {
   const sections = getResumeSections(resume)
