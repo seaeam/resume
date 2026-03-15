@@ -4,6 +4,7 @@ import { type FC, useEffect, useState } from "react";
 import { type BundledLanguage, codeToHtml } from "shiki";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Copy01Icon, Download01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { parseSanitizedHtml } from "@/lib/safe-html";
 import { cn } from "@/lib/utils";
 
 // Devicon class mapping for language icons
@@ -232,9 +233,9 @@ export const CodeBlock: FC<CodeBlockProps> = ({
 						)}
 						<div
 							className="flex-1 p-4 text-sm [&>pre]:!bg-transparent [&>pre]:!p-0 [&>pre]:!m-0"
-							// biome-ignore lint/security/noDangerouslySetInnerHtml: Shiki output is saf
-							dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-						/>
+						>
+							{parseSanitizedHtml(highlightedHtml)}
+						</div>
 					</div>
 				) : (
 					<pre className="p-4">

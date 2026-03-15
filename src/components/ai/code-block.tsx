@@ -4,6 +4,7 @@ import { CheckIcon, CopyIcon } from 'lucide-react'
 import { createContext, use, useEffect, useMemo, useState } from 'react'
 import { codeToHtml } from 'shiki'
 import { Button } from '@/components/ui/button'
+import { parseSanitizedHtml } from '@/lib/safe-html'
 import { cn } from '@/lib/utils'
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -103,12 +104,14 @@ export function CodeBlock({
         <div className="relative">
           <div
             className="overflow-auto dark:hidden [&>pre]:m-0 [&>pre]:bg-background! [&>pre]:p-4 [&>pre]:text-foreground! [&>pre]:text-sm [&_code]:font-mono [&_code]:text-sm"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          >
+            {parseSanitizedHtml(html)}
+          </div>
           <div
             className="hidden overflow-auto dark:block [&>pre]:m-0 [&>pre]:bg-background! [&>pre]:p-4 [&>pre]:text-foreground! [&>pre]:text-sm [&_code]:font-mono [&_code]:text-sm"
-            dangerouslySetInnerHTML={{ __html: darkHtml }}
-          />
+          >
+            {parseSanitizedHtml(darkHtml)}
+          </div>
           {children && (
             <div className="absolute top-2 right-2 flex items-center gap-2">
               {children}

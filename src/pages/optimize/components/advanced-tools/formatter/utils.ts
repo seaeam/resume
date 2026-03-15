@@ -1,222 +1,257 @@
-import type { Suggestion } from '../../../types'
+import type { Finding, FindingsGroup, Suggestion } from '../../../types'
+import type { BatchOptimizationItem, BatchOptimizationResult } from './types'
 import type { ResumeSchema } from '@/lib/schema'
 import { toPath } from 'lodash'
 import { setLeaf } from '../../../utils'
-import {
-  cloneJson,
-  dedupeBy,
-  isPlainObject,
-  isStructurallyEmpty,
-  normalizeDateRange,
-  normalizeDateToken,
-  normalizeInlineText,
-  normalizeMultilineText,
-  pickSuggestionKind,
-  toSuggestionLocate,
-  toSuggestionValueType,
-} from '../shared/helpers'
+import { SEVERITY_ORDER } from './const'
 
-type PathSegment = string | number
+function buildLocationText(finding: Finding) {
+  const locate = finding.why.evidence[0]?.locate ?? finding.locate
 
-export interface FormattingScanResult {
-  formattedResume: ResumeSchema
-  suggestions: Suggestion[]
-  summary: string[]
-  changeCount: number
+  return [locate?.sectionLabel, locate?.itemLabel, locate?.fieldLabel]
+    .filter(Boolean)
+    .join(' / ') || '未定位到具体位置'
 }
 
-function collectFormattingSuggestions(before: unknown, after: unknown, path: PathSegment[] = []): Suggestion[] {
-  if (JSON.stringify(before) === JSON.stringify(after)) {
-    return []
-  }
-
-  if (path.length === 0 && isPlainObject(before) && isPlainObject(after)) {
-    const keys = new Set([...Object.keys(before), ...Object.keys(after)])
-    return [...keys].flatMap(key => collectFormattingSuggestions(before[key], after[key], [key]))
-  }
-
-  if (Array.isArray(before) || Array.isArray(after)) {
-    const beforeValue = Array.isArray(before) ? before : []
-    const afterValue = Array.isArray(after) ? after : []
-    const locate = toSuggestionLocate(path)
-    const valueTypeSource = !isStructurallyEmpty(afterValue) ? afterValue : beforeValue
-
-    return [{
-      kind: pickSuggestionKind(beforeValue, afterValue, locate.path),
-      valueType: toSuggestionValueType(valueTypeSource),
-      locate,
-      before: cloneJson(beforeValue),
-      after: cloneJson(afterValue),
-      reason: '统一格式并移除冗余空白或重复条目',
-      fixed: false,
-    }]
-  }
-
-  if (isPlainObject(before) && isPlainObject(after)) {
-    const keys = new Set([...Object.keys(before), ...Object.keys(after)])
-    const childSuggestions = [...keys].flatMap(key => collectFormattingSuggestions(before[key], after[key], [...path, key]))
-    if (childSuggestions.length > 0) {
-      return childSuggestions
-    }
-  }
-
-  const locate = toSuggestionLocate(path)
-  const valueTypeSource = !isStructurallyEmpty(after) ? after : before
-
-  return [{
-    kind: pickSuggestionKind(before, after, locate.path),
-    valueType: toSuggestionValueType(valueTypeSource),
-    locate,
-    before: cloneJson(before),
-    after: cloneJson(after),
-    reason: '统一格式并移除冗余空白或重复条目',
-    fixed: false,
-  }]
+function getPendingSuggestionEntries(finding: Finding) {
+  return (finding.fix.suggestions ?? [])
+    .map((suggestion, index) => ({
+      id: `${finding.id}:${index}`,
+      suggestion,
+    }))
+    .filter(({ suggestion }) => !suggestion.fixed && suggestion.locate.path)
 }
 
-export function buildFormattingScanResult(resume: ResumeSchema): FormattingScanResult {
-  const formattedResume: ResumeSchema = {
-    basics: {
-      ...resume.basics,
-      name: normalizeInlineText(resume.basics.name),
-      birthMonth: normalizeDateToken(resume.basics.birthMonth),
-      phone: normalizeInlineText(resume.basics.phone).replace(/\s+/g, ''),
-      email: normalizeInlineText(resume.basics.email).toLowerCase(),
-      nation: normalizeInlineText(resume.basics.nation),
-      nativePlace: normalizeInlineText(resume.basics.nativePlace),
-      customFields: dedupeBy(
-        (resume.basics.customFields ?? [])
-          .filter((item): item is NonNullable<typeof item> => Boolean(item))
-          .map(item => ({
-            label: normalizeInlineText(item.label),
-            value: normalizeInlineText(item.value),
-          }))
-          .filter(item => item.label || item.value),
-        item => `${item.label}:${item.value}`,
-      ),
-    },
-    job_intent: {
-      ...resume.job_intent,
-      jobIntent: normalizeInlineText(resume.job_intent.jobIntent),
-      intentionalCity: normalizeInlineText(resume.job_intent.intentionalCity),
-      expectedSalary: Number.isFinite(resume.job_intent.expectedSalary) ? Math.max(0, resume.job_intent.expectedSalary) : 0,
-    },
-    application_info: {
-      applicationSchool: normalizeInlineText(resume.application_info.applicationSchool),
-      applicationMajor: normalizeInlineText(resume.application_info.applicationMajor),
-    },
-    edu_background: {
-      items: resume.edu_background.items
-        .map(item => ({
-          schoolName: normalizeInlineText(item.schoolName),
-          professional: normalizeInlineText(item.professional),
-          degree: item.degree,
-          duration: normalizeDateRange(item.duration),
-          eduInfo: normalizeMultilineText(item.eduInfo),
-        }))
-        .filter(item => !isStructurallyEmpty(item)),
-    },
-    work_experience: {
-      items: resume.work_experience.items
-        .map(item => ({
-          companyName: normalizeInlineText(item.companyName),
-          position: normalizeInlineText(item.position),
-          workDuration: normalizeDateRange(item.workDuration),
-          workInfo: normalizeMultilineText(item.workInfo),
-        }))
-        .filter(item => !isStructurallyEmpty(item)),
-    },
-    internship_experience: {
-      items: resume.internship_experience.items
-        .map(item => ({
-          companyName: normalizeInlineText(item.companyName),
-          position: normalizeInlineText(item.position),
-          internshipDuration: normalizeDateRange(item.internshipDuration),
-          internshipInfo: normalizeMultilineText(item.internshipInfo),
-        }))
-        .filter(item => !isStructurallyEmpty(item)),
-    },
-    campus_experience: {
-      items: resume.campus_experience.items
-        .map(item => ({
-          experienceName: normalizeInlineText(item.experienceName),
-          role: normalizeInlineText(item.role),
-          duration: normalizeDateRange(item.duration),
-          campusInfo: normalizeMultilineText(item.campusInfo),
-        }))
-        .filter(item => !isStructurallyEmpty(item)),
-    },
-    project_experience: {
-      items: resume.project_experience.items
-        .map(item => ({
-          projectName: normalizeInlineText(item.projectName),
-          participantRole: normalizeInlineText(item.participantRole),
-          projectDuration: normalizeDateRange(item.projectDuration),
-          projectInfo: normalizeMultilineText(item.projectInfo),
-        }))
-        .filter(item => !isStructurallyEmpty(item)),
-    },
-    skill_specialty: {
-      description: normalizeMultilineText(resume.skill_specialty.description),
-      skills: dedupeBy(
-        resume.skill_specialty.skills
-          .map(skill => ({
-            label: normalizeInlineText(skill.label),
-            proficiencyLevel: skill.proficiencyLevel,
-            displayType: skill.displayType,
-          }))
-          .filter(skill => skill.label),
-        skill => skill.label,
-      ),
-    },
-    honors_certificates: {
-      description: normalizeMultilineText(resume.honors_certificates.description),
-      certificates: dedupeBy(
-        resume.honors_certificates.certificates
-          .map(item => ({ name: normalizeInlineText(item.name) }))
-          .filter(item => item.name),
-        item => item.name,
-      ),
-    },
-    self_evaluation: {
-      content: normalizeMultilineText(resume.self_evaluation.content),
-    },
-    hobbies: {
-      description: normalizeMultilineText(resume.hobbies.description),
-      hobbies: dedupeBy(
-        resume.hobbies.hobbies
-          .map(item => ({ name: normalizeInlineText(item.name) }))
-          .filter(item => item.name),
-        item => item.name,
-      ),
-    },
-  }
+export function buildBatchOptimizationResult(findings: FindingsGroup | null | undefined): BatchOptimizationResult {
+  const items: BatchOptimizationItem[] = []
+  const suggestionsToApply: Suggestion[] = []
+  const appliedSuggestionIds: string[] = []
+  const appliedAfterByPath = new Map<string, string>()
 
-  const suggestions = collectFormattingSuggestions(resume, formattedResume)
-  const removedEmptyEntries = Math.max(resume.edu_background.items.length - formattedResume.edu_background.items.length, 0)
-    + Math.max(resume.work_experience.items.length - formattedResume.work_experience.items.length, 0)
-    + Math.max(resume.internship_experience.items.length - formattedResume.internship_experience.items.length, 0)
-    + Math.max(resume.campus_experience.items.length - formattedResume.campus_experience.items.length, 0)
-    + Math.max(resume.project_experience.items.length - formattedResume.project_experience.items.length, 0)
+  let totalIssueCount = 0
+  let pendingIssueCount = 0
+  let fixedIssueCount = 0
+  let pendingSuggestionCount = 0
+  let autoApplicableSuggestionCount = 0
+  let conflictedSuggestionCount = 0
+  let autoApplicableIssueCount = 0
 
-  const summary = [
-    suggestions.length > 0 ? `共识别出 ${suggestions.length} 处可直接规范化的字段。` : '当前简历格式已经比较规整，没有扫描到明显的冗余格式问题。',
-    removedEmptyEntries > 0 ? `移除了 ${removedEmptyEntries} 个完全空白的经历条目。` : '',
-    formattedResume.skill_specialty.skills.length < resume.skill_specialty.skills.length ? '技能列表中存在重复项，已按技能名去重。' : '',
-    formattedResume.honors_certificates.certificates.length < resume.honors_certificates.certificates.length ? '证书列表中存在重复项，已按证书名称去重。' : '',
-    formattedResume.hobbies.hobbies.length < resume.hobbies.hobbies.length ? '兴趣爱好列表中存在重复项，已按名称去重。' : '',
-  ].filter(Boolean)
+  SEVERITY_ORDER.forEach((severity) => {
+    const findingsInSeverity = findings?.[severity] ?? []
+
+    findingsInSeverity.forEach((finding) => {
+      totalIssueCount += 1
+
+      const suggestions = finding.fix.suggestions ?? []
+      const pendingSuggestions = getPendingSuggestionEntries(finding)
+
+      if (pendingSuggestions.length === 0) {
+        if (suggestions.length > 0 && suggestions.every(suggestion => suggestion.fixed)) {
+          fixedIssueCount += 1
+        }
+        return
+      }
+
+      pendingIssueCount += 1
+
+      let autoApplicableInFinding = 0
+      let conflictedInFinding = 0
+
+      pendingSuggestions.forEach(({ id, suggestion }) => {
+        const nextAfterKey = JSON.stringify(suggestion.after)
+        const existingAfterKey = appliedAfterByPath.get(suggestion.locate.path)
+
+        pendingSuggestionCount += 1
+
+        if (!existingAfterKey) {
+          suggestionsToApply.push(suggestion)
+          appliedSuggestionIds.push(id)
+          appliedAfterByPath.set(suggestion.locate.path, nextAfterKey)
+          autoApplicableSuggestionCount += 1
+          autoApplicableInFinding += 1
+          return
+        }
+
+        if (existingAfterKey === nextAfterKey) {
+          appliedSuggestionIds.push(id)
+          autoApplicableSuggestionCount += 1
+          autoApplicableInFinding += 1
+          return
+        }
+
+        conflictedSuggestionCount += 1
+        conflictedInFinding += 1
+      })
+
+      if (conflictedInFinding === 0) {
+        autoApplicableIssueCount += 1
+      }
+
+      items.push({
+        autoApplicableSuggestionCount: autoApplicableInFinding,
+        conflictedSuggestionCount: conflictedInFinding,
+        findingId: finding.id,
+        fixSummary: finding.fix.summary,
+        locationText: buildLocationText(finding),
+        pendingSuggestionCount: pendingSuggestions.length,
+        pendingSuggestions: pendingSuggestions.map(item => item.suggestion),
+        severity,
+        steps: finding.fix.steps,
+        title: finding.title,
+      })
+    })
+  })
+
+  const summary = !findings
+    ? ['当前简历还没有问题分析结果，一键优化需要先复用“简历问题分析”中的结构化修复建议。']
+    : totalIssueCount === 0
+      ? ['当前分析结果没有检测到需要处理的问题。']
+      : pendingIssueCount === 0
+        ? ['当前问题分析中的自动修复建议都已处理完成，无需再次一键应用。']
+        : [
+            `当前共有 ${pendingIssueCount} 个待处理问题，包含 ${pendingSuggestionCount} 条未执行建议。`,
+            `本次可直接一键应用 ${autoApplicableSuggestionCount} 条建议，预计完成 ${autoApplicableIssueCount} 个问题。`,
+            conflictedSuggestionCount > 0
+              ? `另有 ${conflictedSuggestionCount} 条建议与更高优先级问题修改同一字段，已保留为待处理。`
+              : '所有待处理建议都可以直接批量应用。',
+            fixedIssueCount > 0 ? `另外已有 ${fixedIssueCount} 个问题在此前完成修复。` : '',
+          ].filter(Boolean)
 
   return {
-    formattedResume,
-    suggestions,
+    appliedSuggestionIds,
+    autoApplicableIssueCount,
+    autoApplicableSuggestionCount,
+    conflictedSuggestionCount,
+    fixedIssueCount,
+    items,
+    pendingIssueCount,
+    pendingSuggestionCount,
+    suggestionsToApply,
     summary,
-    changeCount: suggestions.length,
+    totalIssueCount,
+  }
+}
+
+export function markAppliedSuggestionsAsFixed(findings: FindingsGroup, appliedSuggestionIds: string[]): FindingsGroup {
+  const appliedSet = new Set(appliedSuggestionIds)
+
+  return {
+    high: findings.high.map(finding => ({
+      ...finding,
+      fix: {
+        ...finding.fix,
+        suggestions: (finding.fix.suggestions ?? []).map((suggestion, index) => (
+          appliedSet.has(`${finding.id}:${index}`)
+            ? { ...suggestion, fixed: true }
+            : suggestion
+        )),
+      },
+    })),
+    medium: findings.medium.map(finding => ({
+      ...finding,
+      fix: {
+        ...finding.fix,
+        suggestions: (finding.fix.suggestions ?? []).map((suggestion, index) => (
+          appliedSet.has(`${finding.id}:${index}`)
+            ? { ...suggestion, fixed: true }
+            : suggestion
+        )),
+      },
+    })),
+    low: findings.low.map(finding => ({
+      ...finding,
+      fix: {
+        ...finding.fix,
+        suggestions: (finding.fix.suggestions ?? []).map((suggestion, index) => (
+          appliedSet.has(`${finding.id}:${index}`)
+            ? { ...suggestion, fixed: true }
+            : suggestion
+        )),
+      },
+    })),
+  }
+}
+
+export function updateFindingPendingSuggestions(
+  findings: FindingsGroup,
+  findingId: string,
+  nextPendingSuggestions: Suggestion[],
+) {
+  return {
+    high: findings.high.map((finding) => {
+      if (finding.id !== findingId) {
+        return finding
+      }
+
+      let pendingIndex = 0
+
+      return {
+        ...finding,
+        fix: {
+          ...finding.fix,
+          suggestions: (finding.fix.suggestions ?? []).map((suggestion) => {
+            if (suggestion.fixed || !suggestion.locate.path) {
+              return suggestion
+            }
+
+            const nextSuggestion = nextPendingSuggestions[pendingIndex]
+            pendingIndex += 1
+            return nextSuggestion ?? suggestion
+          }),
+        },
+      }
+    }),
+    medium: findings.medium.map((finding) => {
+      if (finding.id !== findingId) {
+        return finding
+      }
+
+      let pendingIndex = 0
+
+      return {
+        ...finding,
+        fix: {
+          ...finding.fix,
+          suggestions: (finding.fix.suggestions ?? []).map((suggestion) => {
+            if (suggestion.fixed || !suggestion.locate.path) {
+              return suggestion
+            }
+
+            const nextSuggestion = nextPendingSuggestions[pendingIndex]
+            pendingIndex += 1
+            return nextSuggestion ?? suggestion
+          }),
+        },
+      }
+    }),
+    low: findings.low.map((finding) => {
+      if (finding.id !== findingId) {
+        return finding
+      }
+
+      let pendingIndex = 0
+
+      return {
+        ...finding,
+        fix: {
+          ...finding.fix,
+          suggestions: (finding.fix.suggestions ?? []).map((suggestion) => {
+            if (suggestion.fixed || !suggestion.locate.path) {
+              return suggestion
+            }
+
+            const nextSuggestion = nextPendingSuggestions[pendingIndex]
+            pendingIndex += 1
+            return nextSuggestion ?? suggestion
+          }),
+        },
+      }
+    }),
   }
 }
 
 export function applySuggestionsToResume(resume: ResumeSchema, suggestions: Suggestion[]) {
-  const nextResume = cloneJson(resume)
+  const nextResume = JSON.parse(JSON.stringify(resume)) as ResumeSchema
 
   suggestions.forEach((suggestion) => {
     if (!suggestion.locate.path) {

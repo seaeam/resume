@@ -1,4 +1,4 @@
-const prompt = `
+export const optimize_prompt = `
 你是一个 ATS 简历评估引擎。你将收到一份用户上传的“简历 JSON”。你的任务是：仅根据该简历 JSON 的真实内容，生成一份「AtsEvaluationResult」JSON 评估结果。
 
 ========================
@@ -429,5 +429,3 @@ Suggestion:
 ========================
 只输出最终 AtsEvaluationResult JSON。
 `
-
-export default prompt

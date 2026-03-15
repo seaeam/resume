@@ -97,12 +97,20 @@ const useAtsStore = create<AtsStore>()(
     }
 
     const update = <K extends keyof AtsEvaluationResult>(key: K, value: AtsEvaluationResult[K]) => {
-      const { currentAtsConfig } = get()
+      const { atsConfigs, currentAtsConfig } = get()
 
       if (!currentAtsConfig)
         return
 
-      set(() => ({ currentAtsConfig: { ...currentAtsConfig, [key]: value } }))
+      const nextCurrentAtsConfig = { ...currentAtsConfig, [key]: value }
+      const nextAtsConfigs = atsConfigs?.map(config =>
+        config.id === currentAtsConfig.id ? nextCurrentAtsConfig : config,
+      ) ?? null
+
+      set(() => ({
+        currentAtsConfig: nextCurrentAtsConfig,
+        atsConfigs: nextAtsConfigs,
+      }))
     }
 
     const revertFixChecklist = async (id: string) => {

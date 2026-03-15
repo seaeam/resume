@@ -3,7 +3,6 @@ import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { useIsMobile } from '@/hooks/use-mobile'
 
 interface AdvancedToolsModalProps extends PropsWithChildren {
@@ -28,26 +27,23 @@ function ModalShell({
   title: string
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
       <div className="shrink-0 border-b border-border/60 px-5 py-4 md:px-6 md:py-5 lg:px-8">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-2">
             <div className="text-lg font-semibold tracking-tight">{title}</div>
-            <div className="text-sm leading-6 text-muted-foreground">{description}</div>
+            <div className="wrap-break-word text-sm leading-6 text-muted-foreground">{description}</div>
           </div>
           {closeButton}
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <ScrollArea className="h-full px-5 py-5 md:px-6 md:py-5 lg:px-8 lg:py-6">
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+        <div className="h-full min-w-0 overflow-x-hidden overflow-y-auto px-5 py-5 md:px-6 md:py-5 lg:px-8 lg:py-6">
           {children}
-        </ScrollArea>
-      </div>
-      {footer && (
-        <div className="shrink-0 border-t border-border/60 px-5 py-4 md:px-6 lg:px-8">
-          {footer}
         </div>
-      )}
+      </div>
+
+      {footer}
     </div>
   )
 }
@@ -65,7 +61,7 @@ export function AdvancedToolsModal({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="h-[92vh] overflow-hidden rounded-t-3xl border-border/70 bg-background/95 p-0 backdrop-blur">
+        <DrawerContent className="flex h-[92vh] min-w-0 flex-col overflow-hidden rounded-t-3xl border-border/70 bg-background/95 p-0 backdrop-blur">
           <DrawerHeader className="sr-only">
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription>{typeof description === 'string' ? description : '高级工具箱弹窗'}</DrawerDescription>
@@ -92,7 +88,7 @@ export function AdvancedToolsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="h-[min(90vh,920px)] max-w-[calc(70vw)] overflow-hidden border-border/70 bg-background/95 p-0 shadow-xl backdrop-blur sm:max-w-[min(1320px,calc(70vw))] lg:max-w-[min(1480px,calc(70vw))]"
+        className="flex h-[min(90vh,920px)] w-[calc(70vw)] min-w-0 max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden border-border/70 bg-background/95 p-0 shadow-xl backdrop-blur sm:max-w-[min(1320px,calc(70vw))] lg:max-w-[min(1480px,calc(70vw))]"
         showCloseButton={false}
       >
         <DialogHeader className="sr-only">

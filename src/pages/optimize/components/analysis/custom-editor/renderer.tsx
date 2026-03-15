@@ -4,6 +4,7 @@ import type { SkillItem } from '@/lib/schema/resume/form/skillSpecialty'
 import { ArrowRight, Calendar, Check, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { parseSanitizedHtml } from '@/lib/safe-html'
 import { cn } from '@/lib/utils'
 import { KIND_LABEL_MAP, PROFICIENCY_MAP } from '../../../const'
 import { detectValueType, getFieldLabel, isEmptyValue, renderValue } from '../../../utils'
@@ -22,7 +23,7 @@ function StringValue({ value, variant }: { value: string, variant?: 'before' | '
 
   return (
     <span className={cn(
-      'text-sm',
+      'wrap-break-word whitespace-pre-wrap text-sm',
       variant === 'before' && 'text-muted-foreground line-through decoration-destructive/50 dark:decoration-red-400/50',
       variant === 'after' && 'text-foreground font-medium',
     )}
@@ -32,7 +33,6 @@ function StringValue({ value, variant }: { value: string, variant?: 'before' | '
   )
 }
 
-// TODO 使用安全的转换 HTML 字符串
 function HtmlStringValue({ value, variant }: { value: string, variant?: 'before' | 'after' }) {
   if (isEmptyValue(value))
     return <EmptyValue />
@@ -40,12 +40,13 @@ function HtmlStringValue({ value, variant }: { value: string, variant?: 'before'
   return (
     <div
       className={cn(
-        'prose prose-sm dark:prose-invert max-w-none text-xs',
+        'prose prose-sm max-w-none wrap-break-word text-xs dark:prose-invert',
         '[&_p]:my-1 [&_ul]:my-1 [&_li]:my-0.5',
         variant === 'before' && 'opacity-60',
       )}
-      dangerouslySetInnerHTML={{ __html: value }}
-    />
+    >
+      {parseSanitizedHtml(value)}
+    </div>
   )
 }
 
@@ -202,7 +203,7 @@ function ObjectValue({ value, variant }: { value: Record<string, unknown>, varia
             :
           </span>
           <span className={cn(
-            'flex-1',
+            'min-w-0 flex-1 wrap-break-word whitespace-pre-wrap',
             variant === 'after' && 'text-foreground font-medium',
           )}
           >
@@ -280,7 +281,7 @@ export function SuggestionCompareCard({ before, after, valueType, reason, kind, 
 
   return (
     <div className={cn(
-      'space-y-3 rounded-xl p-3 sm:p-4 border transition-all duration-200',
+      'min-w-0 max-w-full space-y-3 rounded-xl border p-3 transition-all duration-200 sm:p-4',
       fixed
         ? 'bg-primary/5 border-primary/20 shadow-sm'
         : 'bg-muted/10 border-border/50 hover:bg-muted/20',
@@ -311,9 +312,9 @@ export function SuggestionCompareCard({ before, after, valueType, reason, kind, 
       </div>
 
       {/* Compare */}
-      <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-1 lg:grid-cols-2">
         {/* Before */}
-        <div className={cn('space-y-1.5', fixed && 'opacity-60 grayscale')}>
+        <div className={cn('min-w-0 space-y-1.5', fixed && 'opacity-60 grayscale')}>
           <div className="text-[10px] font-medium text-destructive/80 dark:text-red-400 flex items-center gap-1">
             <span className="size-4 rounded bg-destructive/10 dark:bg-red-500/10 flex items-center justify-center">✕</span>
             修改前
@@ -324,7 +325,7 @@ export function SuggestionCompareCard({ before, after, valueType, reason, kind, 
         </div>
 
         {/* After */}
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <div className="text-[10px] font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
             <span className="size-4 rounded bg-green-500/10 dark:bg-green-500/20 flex items-center justify-center">
               <ArrowRight className="size-2.5" />
