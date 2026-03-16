@@ -1,6 +1,14 @@
 import type { JobApplication } from '../../types'
-import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Building2, DollarSign, MapPin, MoreVertical, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG } from '../../const'
 import useTrackerStore from '../../store'
@@ -10,9 +18,19 @@ interface JobCardProps {
   job: JobApplication
 }
 
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 export function JobCard({ job }: JobCardProps) {
   const { isSelectMode, selectedIds, toggleSelect, openJobDrawer, changeJobStatus } = useTrackerStore()
   const isSelected = selectedIds.has(job.id)
+
+  const statusConfig = APPLICATION_STATUS_CONFIG[job.status]
+  const currentStage = job.stage_details.find(s => s.stage === job.status)
+  const stageDate = currentStage?.start_date ? formatDate(currentStage.start_date) : formatDate(job.updated_at)
 
   const handleClick = () => {
     if (isSelectMode) {
@@ -23,66 +41,111 @@ export function JobCard({ job }: JobCardProps) {
     }
   }
 
-  const statusConfig = APPLICATION_STATUS_CONFIG[job.status]
+  const handleDelete = () => {
+    const store = useTrackerStore.getState()
+    store.enterSelectMode()
+    store.toggleSelect(job.id)
+    store.deleteSelectedJobs()
+  }
 
   return (
     <Card
       className={cn(
-        'p-4 cursor-pointer transition-all hover:shadow-md',
-        isSelectMode && 'border-2',
+        'cursor-pointer transition-all hover:shadow-md flex flex-col gap-0 py-0 overflow-hidden',
         isSelected && 'border-primary bg-primary/5',
       )}
       onClick={handleClick}
     >
-      <div className="flex items-center gap-4">
-        {/* Checkbox */}
-        {isSelectMode && (
-          <Checkbox
-            checked={isSelected}
-            className="size-5"
-            onClick={e => e.stopPropagation()}
-            onCheckedChange={() => toggleSelect(job.id)}
-          />
-        )}
+      <CardContent className="flex-1 p-4 pb-3 flex flex-col justify-center space-y-3">
+        {/* 顶部：Logo + 状态 Badge + 日期 + 菜单 */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+              {job.company_logo
+                ? <img src={job.company_logo} alt={job.company} className="size-6 object-contain" />
+                : <Building2 className="size-5 text-blue-500" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                statusConfig.bgColor,
+                statusConfig.color,
+              )}>
+                {statusConfig.label}
+              </span>
+              <span className="text-xs text-muted-foreground">{stageDate}</span>
+            </div>
+          </div>
 
-        {/* Logo */}
-        <div className="size-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-          {job.company_logo
-            ? (
-                <img src={job.company_logo} alt={job.company} className="size-6 object-contain" />
-              )
-            : (
-                <span className="text-sm font-bold">{job.company[0]}</span>
-              )}
-        </div>
-
-        {/* 职位信息 */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm truncate">{job.position}</h3>
-          <p className="text-xs text-muted-foreground truncate">
-            {job.company}
-            {' · '}
-            {job.location}
-          </p>
-        </div>
-
-        {/* Desktop: 状态标签 + 选择器并排 */}
-        <div className="flex items-center gap-3">
-          {/* 桌面端显示状态标签 */}
-          <span className={cn(
-            'hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-            statusConfig.bgColor,
-            statusConfig.color,
-          )}
-          >
-            {statusConfig.label}
-          </span>
-          {/* 状态选择器 */}
-          <div onClick={e => e.stopPropagation()}>
-            <StatusSelect value={job.status} onChange={newStatus => changeJobStatus(job.id, newStatus)} />
+          <div className="flex items-center gap-1">
+            {isSelectMode
+              ? (
+                  <Checkbox
+                    checked={isSelected}
+                    className="size-5"
+                    onClick={e => e.stopPropagation()}
+                    onCheckedChange={() => toggleSelect(job.id)}
+                  />
+                )
+              : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-muted-foreground"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <MoreVertical className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
+                      <DropdownMenuItem onClick={() => openJobDrawer(job)}>
+                        查看详情
+                      </DropdownMenuItem>
+                      <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                        <Trash2 className="size-4" />
+                        删除
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
           </div>
         </div>
-      </div>
+
+        {/* 职位名称 */}
+        <div>
+          <h3 className="font-semibold text-base truncate">{job.position}</h3>
+        </div>
+
+        {/* 公司 / 地点 / 薪资 */}
+        <div className="space-y-1.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Building2 className="size-4 shrink-0" />
+            <span className="truncate">{job.company}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="size-4 shrink-0" />
+            <span className="truncate">{job.location}</span>
+          </div>
+          {job.salary && (
+            <div className="flex items-center gap-2">
+              <DollarSign className="size-4 shrink-0" />
+              <span className="truncate">{job.salary}</span>
+            </div>
+          )}
+        </div>
+      </CardContent>
+
+      {/* 底部：更改状态按钮 */}
+      <CardFooter className="px-4 py-3 border-t">
+        <div className="w-full" onClick={e => e.stopPropagation()}>
+          <StatusSelect
+            value={job.status}
+            onChange={newStatus => changeJobStatus(job.id, newStatus)}
+          />
+        </div>
+      </CardFooter>
     </Card>
   )
 }

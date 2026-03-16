@@ -5,6 +5,7 @@ import JobDrawer from './components/drawer'
 import AddJobDrawer from './components/drawer/add-job'
 import TrackerHeader from './components/header'
 import ListView from './components/list'
+import { StatusFilter } from './components/status-filter'
 import useTrackerStore from './store'
 
 function Tracker() {
@@ -18,6 +19,8 @@ function Tracker() {
     <>
       <div className="flex flex-col gap-6 p-4 md:p-8 w-full max-w-7xl mx-auto">
         <TrackerHeader />
+
+        <StatusFilter />
 
         {/* 主内容区 */}
         <main className="w-full overflow-hidden">

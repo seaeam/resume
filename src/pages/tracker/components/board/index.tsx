@@ -1,20 +1,74 @@
 import type { DropResult } from '@hello-pangea/dnd'
 import type { ApplicationStatus } from '../../types'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { cn } from '@/lib/utils'
 import { BOARD_COLUMNS } from '../../const'
 import useTrackerStore from '../../store'
 import { ColumnCard } from './column-card'
 
+const EDGE_THRESHOLD = 120
+const SCROLL_SPEED = 80
+
 export default function BoardView() {
-  const { jobs, changeJobStatus } = useTrackerStore()
+  const { jobs, changeJobStatus, filterStatus } = useTrackerStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const columnRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const isDraggingRef = useRef(false)
+
+  // 拖拽时在库内置自动滚动基础上叠加加速
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current)
+        return
+      const container = scrollContainerRef.current
+      if (!container)
+        return
+
+      const rect = container.getBoundingClientRect()
+      const mouseX = e.clientX
+
+      if (mouseX < rect.left + EDGE_THRESHOLD) {
+        const intensity = (rect.left + EDGE_THRESHOLD - mouseX) / EDGE_THRESHOLD
+        container.scrollLeft -= SCROLL_SPEED * Math.max(intensity, 0.15)
+      }
+      else if (mouseX > rect.right - EDGE_THRESHOLD) {
+        const intensity = (mouseX - (rect.right - EDGE_THRESHOLD)) / EDGE_THRESHOLD
+        container.scrollLeft += SCROLL_SPEED * Math.max(intensity, 0.15)
+      }
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   const getJobsByStatus = (status: ApplicationStatus) =>
     jobs.filter(job => job.status === status)
 
-  // 滚动到目标列
+  const scrollToColumnCenter = useCallback((status: string) => {
+    const container = scrollContainerRef.current
+    const columnEl = columnRefs.current.get(status)
+    if (!container || !columnEl)
+      return
+
+    const containerWidth = container.clientWidth
+    const columnLeft = columnEl.offsetLeft - container.offsetLeft
+    const columnWidth = columnEl.offsetWidth
+    const targetScroll = columnLeft - (containerWidth - columnWidth) / 2
+
+    container.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' })
+  }, [])
+
+  // filterStatus 变化时滚动到对应列并居中
+  useEffect(() => {
+    if (filterStatus && BOARD_COLUMNS.some(c => c.status === filterStatus)) {
+      requestAnimationFrame(() => {
+        scrollToColumnCenter(filterStatus)
+      })
+    }
+  }, [filterStatus, scrollToColumnCenter])
+
+  // 拖拽结束后滚动到目标列（靠近可见即可）
   const scrollToColumn = useCallback((status: string) => {
     const container = scrollContainerRef.current
     const columnEl = columnRefs.current.get(status)
@@ -24,14 +78,19 @@ export default function BoardView() {
     const containerRect = container.getBoundingClientRect()
     const columnRect = columnEl.getBoundingClientRect()
 
-    // 如果目标列不在可视区域内，滚动到该列
     if (columnRect.left < containerRect.left || columnRect.right > containerRect.right) {
       const scrollLeft = columnEl.offsetLeft - container.offsetLeft - 16
       container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
     }
   }, [])
 
+  const handleDragStart = () => {
+    isDraggingRef.current = true
+  }
+
   const handleDragEnd = (result: DropResult) => {
+    isDraggingRef.current = false
+
     const { destination, draggableId } = result
     if (!destination)
       return
@@ -39,18 +98,24 @@ export default function BoardView() {
     const newStatus = destination.droppableId as ApplicationStatus
     changeJobStatus(draggableId, newStatus)
 
-    // 拖拽完成后滚动到目标列
     requestAnimationFrame(() => {
       scrollToColumn(newStatus)
     })
   }
 
+  const isColumnHighlighted = (status: ApplicationStatus) =>
+    filterStatus !== null && filterStatus === status
+
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div ref={scrollContainerRef} className="w-full min-w-0 max-w-full overflow-x-auto scroll-smooth">
-        <div className="flex w-max gap-4 pb-4 min-h-[500px]">
+    <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div
+        ref={scrollContainerRef}
+        className="w-full min-w-0 max-w-full overflow-x-auto scroll-smooth"
+      >
+        <div className="flex w-max gap-4 px-4 pb-4 min-h-[500px]">
           {BOARD_COLUMNS.map((column) => {
             const columnJobs = getJobsByStatus(column.status)
+            const highlighted = isColumnHighlighted(column.status)
             return (
               <div
                 key={column.status}
@@ -74,9 +139,14 @@ export default function BoardView() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`flex-1 flex flex-col gap-2 p-2 rounded-lg overflow-y-auto transition-colors ${
-                        snapshot.isDraggingOver ? 'bg-primary/10 ring-2 ring-primary/20' : 'bg-muted/30'
-                      }`}
+                      className={cn(
+                        'flex-1 flex flex-col gap-2 p-2 rounded-lg transition-all duration-300',
+                        snapshot.isDraggingOver
+                          ? 'bg-primary/10 ring-2 ring-primary/20'
+                          : highlighted
+                            ? 'ring-2 ring-primary/40 bg-primary/5'
+                            : 'bg-muted/30',
+                      )}
                     >
                       {columnJobs.length > 0
                         ? (

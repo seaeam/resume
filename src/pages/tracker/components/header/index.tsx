@@ -15,7 +15,6 @@ export default function TrackerHeader() {
     enterSelectMode,
     exitSelectMode,
     deleteSelectedJobs,
-    openAddDrawer,
   } = useTrackerStore()
 
   const jobCount = jobs.length
@@ -72,8 +71,6 @@ export default function TrackerHeader() {
                   管理职位
                 </Button>
               )}
-          <div className="h-6 w-px bg-border" />
-          <Button onClick={openAddDrawer}>新建看板</Button>
           {isSelectMode && (
             <>
               {selectedCount > 0 && (

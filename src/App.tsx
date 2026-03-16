@@ -33,7 +33,7 @@ function App() {
           <header className="sticky top-0 z-1 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) p-2">
             <SiteHeader />
           </header>
-          <div className="flex-1 min-w-0 p-4 overflow-hidden">
+          <div className="flex-1 min-w-0 p-4 overflow-clip">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
