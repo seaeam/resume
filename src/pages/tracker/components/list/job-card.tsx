@@ -1,4 +1,5 @@
 import type { JobApplication } from '../../types'
+import { Building2, DollarSign, MapPin, MoreVertical, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -8,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Building2, DollarSign, MapPin, MoreVertical, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG } from '../../const'
 import useTrackerStore from '../../store'
@@ -19,7 +19,8 @@ interface JobCardProps {
 }
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return ''
+  if (!dateStr)
+    return ''
   const d = new Date(dateStr)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
@@ -70,7 +71,8 @@ export function JobCard({ job }: JobCardProps) {
                 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
                 statusConfig.bgColor,
                 statusConfig.color,
-              )}>
+              )}
+              >
                 {statusConfig.label}
               </span>
               <span className="text-xs text-muted-foreground">{stageDate}</span>
