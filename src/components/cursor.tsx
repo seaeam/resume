@@ -4,13 +4,7 @@ import { memo, useCallback, useLayoutEffect, useRef } from 'react'
 import { usePerfectCursor } from '@/hooks/use-perfect-cursor'
 import { cn } from '@/lib/utils'
 
-export const Cursor = memo(({
-  className,
-  style,
-  point,
-  color,
-  name,
-}: {
+export const Cursor = memo(({ className, style, point, color, name}: {
   className?: string
   style?: React.CSSProperties
   point: { x: number, y: number }
@@ -38,12 +32,10 @@ export const Cursor = memo(({
       <MousePointer2
         color={color}
         fill={color}
-        size={30}
-        className="transition-transform duration-100"
+        size={20}
       />
-
       <div
-        className="mt-1 rounded px-2 py-1 text-center text-xs font-bold text-white transition-all duration-100"
+        className="mt-1 rounded px-2 py-1 text-center text-xs font-bold"
         style={{ backgroundColor: color }}
       >
         {name}

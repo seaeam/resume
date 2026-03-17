@@ -2,7 +2,7 @@ import { PerfectCursor } from 'perfect-cursors'
 import { useCallback, useEffect, useRef } from 'react'
 
 // Keep the library's interpolation window enabled so remote cursors animate between sparse points.
-PerfectCursor.MAX_INTERVAL = 1
+PerfectCursor.MAX_INTERVAL = 40
 
 /**
  * 创建一个基于 `perfect-cursors` 的平滑光标轨迹推送器。
