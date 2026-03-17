@@ -6,11 +6,7 @@ import { createCursorColor, createRealtimeUserId, getViewportSize, projectPointT
 import { bindCursorChannel, broadcastCursorPayload, createCursorPayload, isCursorChannelSubscribed, trackCursorPresence } from './channel'
 import { projectRealtimeCursor, removeRealtimeCursor, upsertRealtimeCursorBatch } from './state'
 
-export function useRealtimeCursors({
-  roomName,
-  username,
-  throttleMs,
-}: UseRealtimeCursorsOptions): UseRealtimeCursorsReturn {
+export function useRealtimeCursors({ roomName, username, throttleMs }: UseRealtimeCursorsOptions): UseRealtimeCursorsReturn {
   const [color] = useState(createCursorColor)
   const [userId] = useState(createRealtimeUserId)
   const [cursors, setCursors] = useState<UseRealtimeCursorsReturn['cursors']>({})
