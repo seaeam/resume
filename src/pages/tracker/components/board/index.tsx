@@ -110,7 +110,7 @@ export default function BoardView() {
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div
         ref={scrollContainerRef}
-        className="w-full min-w-0 max-w-full overflow-x-auto scroll-smooth"
+        className="w-full min-w-0 max-w-full overflow-x-auto"
       >
         <div className="flex w-max gap-4 px-4 pb-4 min-h-[500px]">
           {BOARD_COLUMNS.map((column) => {

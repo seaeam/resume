@@ -20,12 +20,20 @@ export default function ListView() {
     )
   }
 
+  if (filterStatus && filteredJobs.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <p className="text-lg font-medium">当前暂无跟进</p>
+      </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {filteredJobs.map(job => (
         <JobCard key={job.id} job={job} />
       ))}
-      <CreateJobCard />
+      {!filterStatus && <CreateJobCard />}
     </div>
   )
 }

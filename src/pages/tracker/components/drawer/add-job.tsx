@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { getAllResumesFromUser } from '@/lib/supabase/resume'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
@@ -247,17 +247,17 @@ export default function AddJobDrawer() {
   }
 
   return (
-    <Sheet open={addDrawerOpen} onOpenChange={v => !v && closeAddDrawer()}>
-      <SheetContent side="right" className="w-full sm:w-[520px] lg:w-[600px] sm:max-w-none overflow-hidden rounded-l-2xl p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-4 border-b shrink-0">
-          <SheetTitle>新增职位申请</SheetTitle>
-          <SheetDescription>填写职位信息以添加新的申请记录</SheetDescription>
-        </SheetHeader>
+    <Dialog open={addDrawerOpen} onOpenChange={v => !v && closeAddDrawer()}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-hidden p-0 flex flex-col">
+        <DialogHeader className="p-6 pb-4 border-b shrink-0">
+          <DialogTitle>新增职位申请</DialogTitle>
+          <DialogDescription>填写职位信息以添加新的申请记录</DialogDescription>
+        </DialogHeader>
         {formContent}
-        <SheetFooter className="p-6 pt-4 border-t shrink-0">
+        <DialogFooter className="p-6 pt-4 border-t shrink-0">
           {footerButtons}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
