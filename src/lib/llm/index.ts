@@ -2,15 +2,87 @@ import type { ChatCompletionCreateParamsBase } from 'openai/resources/chat/compl
 import type { ResumeSchema } from '../schema'
 import { throttle } from 'lodash'
 import { callLLM } from './call'
-import { optimize_prompt } from './prompt'
+import { createJobDescriptionAnalysisPrompt, optimize_prompt } from './prompt'
 
-export async function runAtsStructured(
-  resumeConfig: ResumeSchema,
-  onUpdate?: (data: { content?: string, reasoning?: string }) => void,
+interface StreamUpdate {
+  content?: string
+  reasoning?: string
+}
+
+async function streamStructuredJson(
+  req: ChatCompletionCreateParamsBase,
+  onUpdate?: (data: StreamUpdate) => void,
   options?: { throttleMs?: number },
 ) {
   const { throttleMs = 100 } = options || {}
+  const stream = await callLLM(req)
 
+  let fullContent = ''
+  let fullReasoning = ''
+
+  const throttledUpdate = onUpdate
+    ? throttle((data: StreamUpdate) => {
+        onUpdate(data)
+      }, throttleMs)
+    : null
+
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta as { content?: string, reasoning_content?: string } | undefined
+    const content = typeof delta?.content === 'string' ? delta.content : ''
+    const reasoning = typeof delta?.reasoning_content === 'string' ? delta.reasoning_content : ''
+
+    if (!content && !reasoning) {
+      continue
+    }
+
+    if (content) {
+      fullContent += content
+    }
+
+    if (reasoning) {
+      fullReasoning += reasoning
+    }
+
+    throttledUpdate?.({
+      content: fullContent,
+      reasoning: fullReasoning,
+    })
+  }
+
+  throttledUpdate?.flush()
+
+  return { content: fullContent, reasoning: fullReasoning }
+}
+
+export function parseLlmJsonObject<T>(value: string): T {
+  const normalized = value
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim()
+
+  const firstBraceIndex = normalized.indexOf('{')
+  const lastBraceIndex = normalized.lastIndexOf('}')
+
+  if (firstBraceIndex < 0 || lastBraceIndex <= firstBraceIndex) {
+    throw new Error('LLM 未返回有效的 JSON 对象')
+  }
+
+  const jsonText = normalized.slice(firstBraceIndex, lastBraceIndex + 1)
+  const parsed = JSON.parse(jsonText) as T
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('LLM 返回的 JSON 结构无效')
+  }
+
+  return parsed
+}
+
+export async function runAtsStructured(
+  resumeConfig: ResumeSchema,
+  onUpdate?: (data: StreamUpdate) => void,
+  options?: { throttleMs?: number },
+) {
   const promptText = optimize_prompt.replace('<<<RESUME_JSON>>>', JSON.stringify(resumeConfig, null, 2))
   const req = {
     messages: [
@@ -25,38 +97,28 @@ export async function runAtsStructured(
     },
   } as ChatCompletionCreateParamsBase
 
-  const stream = await callLLM(req)
+  return await streamStructuredJson(req, onUpdate, options)
+}
 
-  let fullContent = ''
-  let fullReasoning = ''
+export async function runJobDescriptionStructured(
+  resumeConfig: ResumeSchema,
+  jobDescription: string,
+  onUpdate?: (data: StreamUpdate) => void,
+  options?: { throttleMs?: number },
+) {
+  const promptText = createJobDescriptionAnalysisPrompt(JSON.stringify(resumeConfig, null, 2), jobDescription)
+  const req = {
+    messages: [
+      {
+        role: 'system',
+        content: '你是一个职位描述匹配分析引擎。你会同时收到当前简历 JSON 和岗位描述文本。你的任务是只根据输入内容，输出一份严格符合约定结构的职位匹配分析 JSON。',
+      },
+      { role: 'user', content: promptText },
+    ],
+    response_format: {
+      type: 'json_object',
+    },
+  } as ChatCompletionCreateParamsBase
 
-  // 使用节流来限制 UI 更新频率，避免页面卡顿
-  const throttledUpdate = onUpdate
-    ? throttle((data: { content?: string, reasoning?: string }) => {
-        onUpdate(data)
-      }, throttleMs)
-    : null
-
-  for await (const chunk of stream) {
-    const delta = chunk.choices[0]?.delta as any
-    const content = delta?.content || ''
-    const reasoning = delta?.reasoning_content || ''
-
-    if (content || reasoning) {
-      if (content)
-        fullContent += content
-      if (reasoning)
-        fullReasoning += reasoning
-
-      throttledUpdate?.({
-        content: fullContent,
-        reasoning: fullReasoning,
-      })
-    }
-  }
-
-  // 确保最后一次更新被执行
-  throttledUpdate?.flush()
-
-  return { content: fullContent, reasoning: fullReasoning }
+  return await streamStructuredJson(req, onUpdate, options)
 }

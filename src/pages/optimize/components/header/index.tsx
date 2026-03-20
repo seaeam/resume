@@ -7,7 +7,7 @@ import { ChainOfThought, ChainOfThoughtContent, ChainOfThoughtStep } from '@/com
 import { AutoScrollContainer } from '@/components/ui/auto-scroll-container'
 import { Button } from '@/components/ui/button'
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogHeader, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog'
-import { runAtsStructured } from '@/lib/llm'
+import { parseLlmJsonObject, runAtsStructured } from '@/lib/llm'
 import { getOfflineResumeById } from '@/lib/offline-resume-manager'
 import { createAtsConfig, updateAtsConfig } from '@/lib/supabase/resume'
 import { uploadOfflineResumeToCloud } from '@/lib/supabase/resume/form'
@@ -93,7 +93,7 @@ function Header() {
       setAnalysisState({ status: 'received' })
       updateLog('result', '已收到结果')
 
-      const result = JSON.parse(finalContent)
+      const result = parseLlmJsonObject<Record<string, unknown>>(finalContent)
 
       // 保存结果
       setAnalysisState({ status: 'saving' })

@@ -6,9 +6,13 @@ export interface JobSectionMatch {
   matchedCount: number
   coverage: number
   matchedKeywords: string[]
+  analysis: string
 }
 
 export interface JobDescriptionComparisonResult {
+  summary: string
+  strengths: string[]
+  risks: string[]
   matchScore: number
   extractedKeywords: string[]
   matchedKeywords: string[]

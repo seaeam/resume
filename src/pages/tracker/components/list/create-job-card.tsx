@@ -1,5 +1,5 @@
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Plus } from 'lucide-react'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import useTrackerStore from '../../store'
 
 export function CreateJobCard() {

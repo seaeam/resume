@@ -8,6 +8,8 @@ import ListView from './components/list'
 import { StatusFilter } from './components/status-filter'
 import useTrackerStore from './store'
 
+const TRACKER_SKELETON_KEYS = ['tracker-skeleton-1', 'tracker-skeleton-2', 'tracker-skeleton-3'] as const
+
 function Tracker() {
   const { viewMode, loading, init } = useTrackerStore()
 
@@ -27,8 +29,8 @@ function Tracker() {
           {loading
             ? (
                 <div className="flex flex-col gap-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                  {TRACKER_SKELETON_KEYS.map(key => (
+                    <Skeleton key={key} className="h-20 w-full rounded-xl" />
                   ))}
                 </div>
               )

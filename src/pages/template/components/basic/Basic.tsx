@@ -126,7 +126,7 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
     basics.heightCm && `${basics.heightCm}cm`,
     basics.weightKg && `${basics.weightKg}kg`,
     basics.maritalStatus !== '不填' && basics.maritalStatus,
-  ].filter(Boolean)
+  ].filter((field): field is string => typeof field === 'string' && field.length > 0)
 
   return (
     <header
@@ -177,7 +177,7 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
           }}
         >
           {infoFields.map((field, i) => (
-            <span key={i}>
+            <span key={field}>
               {field}
               {i < infoFields.length - 1 && <span style={{ color: theme.textMuted }}> | </span>}
             </span>
@@ -198,10 +198,10 @@ function BasicsModule({ data, age }: { data: ResumeSchema, age?: string | number
         {basics.email && <span>{basics.email}</span>}
       </div>
 
-      {basics.customFields?.filter(f => f?.label && f?.value).map((field, i) => (
+      {basics.customFields?.filter(f => f?.label && f?.value).map(field => (
         field && (
           <div
-            key={`custom-field-${i}`}
+            key={`${field.label}-${field.value}`}
             style={{
               fontSize: font.contentSize,
               color: theme.textPrimary,
@@ -246,9 +246,9 @@ function EduBackgroundModule() {
   const { edu_background } = useResumeStore()
   return (
     <Section title="教育背景">
-      {edu_background.items.map((item, i) => (
+      {edu_background.items.map(item => (
         <Entry
-          key={`edu-${item.schoolName}-${i}`}
+          key={`${item.schoolName}-${item.professional}-${item.duration?.join('-') ?? 'no-duration'}`}
           title={item.schoolName}
           subtitle={item.degree !== '不填' ? `${item.professional}（${item.degree}）` : item.professional}
           duration={formatDuration(item.duration)}
@@ -263,9 +263,9 @@ function WorkExperienceModule() {
   const { work_experience } = useResumeStore()
   return (
     <Section title="工作经历">
-      {work_experience.items.map((item, i) => (
+      {work_experience.items.map(item => (
         <Entry
-          key={`work-${item.companyName}-${i}`}
+          key={`${item.companyName}-${item.position}-${item.workDuration?.join('-') ?? 'no-duration'}`}
           title={item.companyName}
           subtitle={item.position}
           duration={formatDuration(item.workDuration)}
@@ -280,9 +280,9 @@ function InternshipExperienceModule() {
   const { internship_experience } = useResumeStore()
   return (
     <Section title="实习经验">
-      {internship_experience.items.map((item, i) => (
+      {internship_experience.items.map(item => (
         <Entry
-          key={`intern-${item.companyName}-${i}`}
+          key={`${item.companyName}-${item.position}-${item.internshipDuration?.join('-') ?? 'no-duration'}`}
           title={item.companyName}
           subtitle={item.position}
           duration={formatDuration(item.internshipDuration)}
@@ -297,9 +297,9 @@ function ProjectExperienceModule() {
   const { project_experience } = useResumeStore()
   return (
     <Section title="项目经验">
-      {project_experience.items.map((item, i) => (
+      {project_experience.items.map(item => (
         <Entry
-          key={`project-${item.projectName}-${i}`}
+          key={`${item.projectName}-${item.participantRole}-${item.projectDuration?.join('-') ?? 'no-duration'}`}
           title={item.projectName}
           subtitle={item.participantRole}
           duration={formatDuration(item.projectDuration)}
@@ -314,9 +314,9 @@ function CampusExperienceModule() {
   const { campus_experience } = useResumeStore()
   return (
     <Section title="校园经历">
-      {campus_experience.items.map((item, i) => (
+      {campus_experience.items.map(item => (
         <Entry
-          key={`campus-${item.experienceName}-${i}`}
+          key={`${item.experienceName}-${item.role}-${item.duration?.join('-') ?? 'no-duration'}`}
           title={item.experienceName}
           subtitle={item.role}
           duration={formatDuration(item.duration)}
@@ -336,10 +336,10 @@ function SkillSpecialtyModule() {
       {skill_specialty.description && <div className="prose">{parser(skill_specialty.description)}</div>}
       {skill_specialty.skills?.length > 0 && (
         <div className="grid gap-4 mt-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-          {skill_specialty.skills.map((skill, i) => {
+          {skill_specialty.skills.map((skill) => {
             const percentage = skillProficiencyMap[skill.proficiencyLevel] || 50
             return (
-              <div key={`skill-${skill.label}-${i}`} className="flex flex-col gap-1">
+              <div key={`${skill.label}-${skill.proficiencyLevel}-${skill.displayType}`} className="flex flex-col gap-1">
                 {skill.displayType === 'percentage' && (
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 rounded overflow-hidden" style={{ backgroundColor: theme.progressBarBg }}>
@@ -376,7 +376,7 @@ function HonorsCertificatesModule() {
       {honors_certificates.certificates?.length > 0 && (
         <div style={{ fontSize: font.contentSize, lineHeight: spacing.lineHeight }}>
           {honors_certificates.certificates.map((cert, i) => (
-            <span key={`cert-${cert.name}-${i}`}>
+            <span key={cert.name}>
               {i > 0 && '、'}
               {cert.name}
             </span>
@@ -405,8 +405,8 @@ function HobbiesModule() {
       {hobbies.description && <div className="prose">{parser(hobbies.description)}</div>}
       {hobbies.hobbies?.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {hobbies.hobbies.map((hobby, i) => (
-            <Badge variant="outline" key={`hobby-${hobby.name}-${i}`} style={{ backgroundColor: theme.badgeBg }}>
+          {hobbies.hobbies.map(hobby => (
+            <Badge variant="outline" key={hobby.name} style={{ backgroundColor: theme.badgeBg }}>
               {hobby.name}
             </Badge>
           ))}

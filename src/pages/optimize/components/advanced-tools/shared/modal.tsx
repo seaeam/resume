@@ -13,13 +13,7 @@ interface AdvancedToolsModalProps extends PropsWithChildren {
   title: string
 }
 
-function ModalShell({
-  children,
-  closeButton,
-  description,
-  footer,
-  title,
-}: {
+function ModalShell({ children, closeButton, description, footer, title}: {
   children: ReactNode
   closeButton: ReactNode
   description: ReactNode

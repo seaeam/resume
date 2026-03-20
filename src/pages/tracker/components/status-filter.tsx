@@ -13,7 +13,8 @@ export function StatusFilter() {
   const { jobs, filterStatus, setFilterStatus } = useTrackerStore()
 
   const getCount = (status: ApplicationStatus | null) => {
-    if (status === null) return jobs.length
+    if (status === null)
+      return jobs.length
     return jobs.filter(j => j.status === status).length
   }
 
@@ -40,8 +41,11 @@ export function StatusFilter() {
             <span className={cn(
               'text-xs',
               isActive ? 'opacity-80' : 'opacity-60',
-            )}>
-              ({count})
+            )}
+            >
+              (
+              {count}
+              )
             </span>
           </button>
         )

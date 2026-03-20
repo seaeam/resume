@@ -13,7 +13,7 @@ export const TOOL_DEFINITIONS: ToolVisualDefinition[] = [
   {
     key: 'job-description',
     title: '职位描述比对',
-    description: '提取 JD 关键信号，定位当前简历最缺的岗位词。',
+    description: '把当前简历和 JD 一起交给大模型分析，输出匹配亮点、风险和补强建议。',
     badge: 'JD Match',
     badgeClassName: 'border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300',
     icon: LayoutTemplate,

@@ -53,6 +53,18 @@ function AdvancedTools() {
     [resumeContext],
   )
 
+  const canReuseResumeContext = useMemo(() => {
+    if (!resumeContext || !selectedResumeId || !selectedResumeType) {
+      return false
+    }
+
+    return (
+      resumeContext.resumeId === selectedResumeId
+      && resumeContext.resumeType === selectedResumeType
+      && (resumeContext.atsConfig?.id ?? null) === (selectedAtsConfig?.id ?? null)
+    )
+  }, [resumeContext, selectedAtsConfig, selectedResumeId, selectedResumeType])
+
   async function loadContext() {
     if (!selectedResumeId || !selectedResumeType) {
       throw new Error('请先在上方选择要处理的简历')
@@ -71,9 +83,15 @@ function AdvancedTools() {
       return
     }
 
-    const requestId = ++requestIdRef.current
     setActiveTool(tool)
     setOpen(true)
+
+    if (canReuseResumeContext) {
+      setLoadingContext(false)
+      return
+    }
+
+    const requestId = ++requestIdRef.current
     setLoadingContext(true)
 
     try {
@@ -154,12 +172,13 @@ function AdvancedTools() {
     }
 
     if (activeTool === 'job-description') {
-      return <JobDescriptionTool resumeContext={resumeContext} />
+      return <JobDescriptionTool key={`${resumeContext.resumeId}-${resumeContext.resumeType}`} resumeContext={resumeContext} />
     }
 
     if (activeTool === 'formatter') {
       return (
         <FormatterTool
+          key={`${resumeContext.resumeId}-${resumeContext.resumeType}`}
           resumeContext={resumeContext}
           onResumeUpdated={setResumeContext}
         />
@@ -167,10 +186,10 @@ function AdvancedTools() {
     }
 
     if (activeTool === 'ats-preview') {
-      return <AtsPreviewTool resumeContext={resumeContext} />
+      return <AtsPreviewTool key={`${resumeContext.resumeId}-${resumeContext.resumeType}`} resumeContext={resumeContext} />
     }
 
-    return <BenchmarkTool resumeContext={resumeContext} />
+    return <BenchmarkTool key={`${resumeContext.resumeId}-${resumeContext.resumeType}`} resumeContext={resumeContext} />
   }
 
   return (

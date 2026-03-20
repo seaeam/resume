@@ -7,9 +7,11 @@ import { COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../data'
 import useTrackerStore from '../../store'
 
 function parseSalaryRange(salary: string): { min: string, max: string } {
-  if (!salary) return { min: '', max: '' }
+  if (!salary)
+    return { min: '', max: '' }
   const nums = salary.match(/\d+/g)
-  if (!nums) return { min: '', max: '' }
+  if (!nums)
+    return { min: '', max: '' }
   return { min: nums[0] || '', max: nums[1] || '' }
 }
 

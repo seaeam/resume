@@ -3,6 +3,15 @@ import useTrackerStore from '../../store'
 import { CreateJobCard } from './create-job-card'
 import { JobCard } from './job-card'
 
+const LIST_SKELETON_KEYS = [
+  'list-skeleton-1',
+  'list-skeleton-2',
+  'list-skeleton-3',
+  'list-skeleton-4',
+  'list-skeleton-5',
+  'list-skeleton-6',
+] as const
+
 export default function ListView() {
   const { jobs, loading, filterStatus } = useTrackerStore()
 
@@ -13,8 +22,8 @@ export default function ListView() {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-[280px] w-full rounded-xl" />
+        {LIST_SKELETON_KEYS.map(key => (
+          <Skeleton key={key} className="h-[280px] w-full rounded-xl" />
         ))}
       </div>
     )

@@ -1,11 +1,16 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
+const STAT_SKELETON_KEYS = ['stat-1', 'stat-2', 'stat-3', 'stat-4'] as const
+const ACTION_SKELETON_KEYS = ['action-1', 'action-2', 'action-3', 'action-4'] as const
+const ACTIVITY_SKELETON_KEYS = ['activity-1', 'activity-2', 'activity-3'] as const
+const CHART_SKELETON_KEYS = ['chart-1', 'chart-2', 'chart-3'] as const
+
 export function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={`stat-${i}`}>
+      {STAT_SKELETON_KEYS.map(key => (
+        <Card key={key}>
           <CardContent className="p-4 md:p-5">
             <div className="flex items-start gap-3">
               <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
@@ -36,8 +41,8 @@ export function EntrySkeleton() {
         </CardHeader>
         <CardContent className="flex-1 pt-0">
           <div className="grid gap-2.5 grid-cols-2 h-full">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+            {ACTION_SKELETON_KEYS.map(key => (
+              <Skeleton key={key} className="h-24 w-full rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -54,8 +59,8 @@ export function EntrySkeleton() {
         </CardHeader>
         <CardContent className="flex-1 pt-0">
           <div className="space-y-1">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-2">
+            {ACTIVITY_SKELETON_KEYS.map(key => (
+              <div key={key} className="flex items-center gap-3 p-2">
                 <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
                 <div className="flex-1 space-y-1.5">
                   <Skeleton className="h-3.5 w-3/4" />
@@ -73,8 +78,8 @@ export function EntrySkeleton() {
 export function ChartsSkeleton() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <Card key={`chart-${i}`} className="h-80">
+      {CHART_SKELETON_KEYS.map(key => (
+        <Card key={key} className="h-80">
           <CardHeader className="items-center pb-0">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-3 w-20 mt-1" />

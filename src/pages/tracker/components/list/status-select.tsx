@@ -1,4 +1,5 @@
 import type { ApplicationStatus } from '../../types'
+import { CheckIcon, SquarePen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -7,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { CheckIcon, SquarePen } from 'lucide-react'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
 
 interface StatusSelectProps {
