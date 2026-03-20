@@ -447,8 +447,9 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
             variant="outline"
             onClick={addSubStage}
             disabled={
-              localSubStages.length > 0
-              && localSubStages[localSubStages.length - 1]?.status !== '已完成'
+              currentStatus !== '进行中'
+              || (localSubStages.length > 0
+                && localSubStages[localSubStages.length - 1]?.status !== '已完成')
             }
             className="w-full"
           >

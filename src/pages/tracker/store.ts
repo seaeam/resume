@@ -16,6 +16,9 @@ interface TrackerStore {
   selectedIds: Set<string>
   isSelectMode: boolean
 
+  // 筛选
+  filterStatus: ApplicationStatus | null
+
   // Drawer
   selectedJob: JobApplication | null
   drawerOpen: boolean
@@ -26,6 +29,9 @@ interface TrackerStore {
 
   // 视图
   setViewMode: (mode: ViewMode) => void
+
+  // 筛选
+  setFilterStatus: (status: ApplicationStatus | null) => void
 
   // 数据操作
   changeJobStatus: (jobId: string, newStatus: ApplicationStatus) => Promise<void>
@@ -57,6 +63,9 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
   // 选择模式
   selectedIds: new Set(),
   isSelectMode: false,
+
+  // 筛选
+  filterStatus: null,
 
   // Drawer
   selectedJob: null,
@@ -107,6 +116,8 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
 
   setViewMode: mode => set({ viewMode: mode }),
 
+  setFilterStatus: status => set({ filterStatus: status }),
+
   changeJobStatus: async (jobId, newStatus) => {
     const { jobs, selectedJob } = get()
     const job = jobs.find(j => j.id === jobId)
@@ -116,7 +127,7 @@ const useTrackerStore = create<TrackerStore>()((set, get) => ({
     const previousJobs = jobs
     const previousSelectedJob = selectedJob
 
-    const updatedStageDetails = autoCompleteStages(job.status, newStatus, job.stage_details)
+    const updatedStageDetails = autoCompleteStages(job.status, newStatus, job.stage_details, true)
     const updatedJob = { ...job, status: newStatus, stage_details: updatedStageDetails }
 
     // 乐观更新

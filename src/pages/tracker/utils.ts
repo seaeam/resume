@@ -33,6 +33,7 @@ export function autoCompleteStages(
   _currentStatus: ApplicationStatus,
   newStatus: ApplicationStatus,
   stageDetails: StageDetail[],
+  autoSetCurrentDate = false,
 ): StageDetail[] {
   const newIndex = APPLICATION_STATUS_ORDER.indexOf(newStatus)
 
@@ -40,30 +41,29 @@ export function autoCompleteStages(
   if (newIndex === -1)
     return stageDetails
 
+  const today = new Date().toISOString().slice(0, 10)
+
   return APPLICATION_STATUS_ORDER.map((status, idx) => {
     const existing = stageDetails.find(s => s.stage === status)
 
     if (idx < newIndex) {
-      // 之前的阶段：已完成
       return {
         stage: status,
         status: '已完成' as const,
-        start_date: existing?.start_date || null,
+        start_date: existing?.start_date || (autoSetCurrentDate ? today : null),
         notes: existing?.notes || '',
       }
     }
 
     if (idx === newIndex) {
-      // 当前阶段：待处理
       return {
         stage: status,
         status: '待处理' as const,
-        start_date: existing?.start_date || null,
+        start_date: autoSetCurrentDate ? today : (existing?.start_date || null),
         notes: existing?.notes || '',
       }
     }
 
-    // 之后的阶段：保持原状或待处理
     return existing || {
       stage: status,
       status: '待处理' as const,

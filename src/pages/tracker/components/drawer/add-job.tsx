@@ -3,14 +3,16 @@ import type { ResumeOption } from './types'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Combobox } from '@/components/ui/combobox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { getAllResumesFromUser } from '@/lib/supabase/resume'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
+import { COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../data'
 import useTrackerStore from '../../store'
 
 export default function AddJobDrawer() {
@@ -22,7 +24,8 @@ export default function AddJobDrawer() {
     location: '',
     status: 'saved' as ApplicationStatus,
     job_url: '',
-    salary: '',
+    salaryMin: '',
+    salaryMax: '',
     resume_id: null as string | null,
   })
 
@@ -70,7 +73,9 @@ export default function AddJobDrawer() {
       company_logo: null,
       position: formData.position,
       location: formData.location,
-      salary: formData.salary || null,
+      salary: formData.salaryMin && formData.salaryMax
+        ? `${formData.salaryMin}K-${formData.salaryMax}K`
+        : formData.salaryMin ? `${formData.salaryMin}K` : null,
       job_url: formData.job_url || null,
       status: formData.status,
       stage_details: [{ stage: formData.status, status: '待处理', start_date: null, notes: '' }],
@@ -87,7 +92,8 @@ export default function AddJobDrawer() {
       location: '',
       status: 'saved',
       job_url: '',
-      salary: '',
+      salaryMin: '',
+      salaryMax: '',
       resume_id: null,
     })
   }
@@ -104,10 +110,11 @@ export default function AddJobDrawer() {
           {' '}
           <span className="text-destructive">*</span>
         </Label>
-        <Input
-          placeholder="请输入职位名称"
+        <Combobox
+          placeholder="搜索或输入职位名称"
           value={formData.position}
-          onChange={e => handleChange('position', e.target.value)}
+          onChange={v => handleChange('position', v)}
+          options={COMMON_POSITIONS}
         />
       </div>
       <div className="space-y-2">
@@ -116,10 +123,11 @@ export default function AddJobDrawer() {
           {' '}
           <span className="text-destructive">*</span>
         </Label>
-        <Input
-          placeholder="请输入公司名称"
+        <Combobox
+          placeholder="搜索或输入公司名称"
           value={formData.company}
-          onChange={e => handleChange('company', e.target.value)}
+          onChange={v => handleChange('company', v)}
+          options={COMMON_COMPANIES}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -129,10 +137,11 @@ export default function AddJobDrawer() {
             {' '}
             <span className="text-destructive">*</span>
           </Label>
-          <Input
-            placeholder="请输入工作地点"
+          <Combobox
+            placeholder="搜索或输入地点"
             value={formData.location}
-            onChange={e => handleChange('location', e.target.value)}
+            onChange={v => handleChange('location', v)}
+            options={COMMON_CITIES}
           />
         </div>
         <div className="space-y-2">
@@ -166,11 +175,22 @@ export default function AddJobDrawer() {
       </div>
       <div className="space-y-2">
         <Label>薪资范围</Label>
-        <Input
-          placeholder="如：15k - 20k"
-          value={formData.salary}
-          onChange={e => handleChange('salary', e.target.value)}
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            placeholder="最低"
+            value={formData.salaryMin}
+            onChange={e => handleChange('salaryMin', e.target.value)}
+          />
+          <span className="text-sm text-muted-foreground shrink-0">K ~</span>
+          <Input
+            type="number"
+            placeholder="最高"
+            value={formData.salaryMax}
+            onChange={e => handleChange('salaryMax', e.target.value)}
+          />
+          <span className="text-sm text-muted-foreground shrink-0">K</span>
+        </div>
       </div>
       <div className="space-y-2">
         <Label>投递简历</Label>
@@ -227,17 +247,17 @@ export default function AddJobDrawer() {
   }
 
   return (
-    <Sheet open={addDrawerOpen} onOpenChange={v => !v && closeAddDrawer()}>
-      <SheetContent side="right" className="w-full sm:w-[520px] lg:w-[600px] sm:max-w-none overflow-hidden rounded-l-2xl p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-4 border-b shrink-0">
-          <SheetTitle>新增职位申请</SheetTitle>
-          <SheetDescription>填写职位信息以添加新的申请记录</SheetDescription>
-        </SheetHeader>
+    <Dialog open={addDrawerOpen} onOpenChange={v => !v && closeAddDrawer()}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-hidden p-0 flex flex-col">
+        <DialogHeader className="p-6 pb-4 border-b shrink-0">
+          <DialogTitle>新增职位申请</DialogTitle>
+          <DialogDescription>填写职位信息以添加新的申请记录</DialogDescription>
+        </DialogHeader>
         {formContent}
-        <SheetFooter className="p-6 pt-4 border-t shrink-0">
+        <DialogFooter className="p-6 pt-4 border-t shrink-0">
           {footerButtons}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

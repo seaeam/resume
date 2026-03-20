@@ -1,7 +1,7 @@
 import type { ApplicationStatus, DrawerTab } from '../../types'
 import { useState } from 'react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 import useTrackerStore from '../../store'
 import { autoCompleteStages } from '../../utils'
@@ -115,28 +115,25 @@ export default function JobDrawer() {
     )
   }
 
-  // 桌面端：右侧 Sheet
+  // 桌面端：Dialog
   return (
-    <Sheet open={drawerOpen} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:w-[520px] lg:w-[600px] sm:max-w-none overflow-hidden rounded-l-2xl p-0 flex flex-col"
-      >
-        <SheetHeader className="p-6 pb-4 border-b shrink-0">
-          <SheetTitle>
+    <Dialog open={drawerOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-hidden p-0 flex flex-col">
+        <DialogHeader className="p-6 pb-4 border-b shrink-0">
+          <DialogTitle>
             {selectedJob.company}
             {' '}
             ·
             {' '}
             {selectedJob.position}
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             {selectedJob.location}
             {selectedJob.salary ? ` · ${selectedJob.salary}` : ''}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         {drawerContent}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
