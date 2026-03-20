@@ -15,6 +15,7 @@ import { Card, CardBody } from '@/components/tiptap-ui-primitive/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/tiptap-ui-primitive/dropdown-menu'
@@ -102,18 +103,20 @@ export function ListDropdownMenu({
       <DropdownMenuContent align="start" portal={portal}>
         <Card>
           <CardBody>
-            <ButtonGroup>
-              {filteredLists.map(option => (
-                <DropdownMenuItem key={option.type} asChild>
-                  <ListButton
-                    editor={editor}
-                    type={option.type}
-                    text={option.label}
-                    showTooltip={false}
-                  />
-                </DropdownMenuItem>
-              ))}
-            </ButtonGroup>
+            <DropdownMenuGroup>
+              <ButtonGroup>
+                {filteredLists.map(option => (
+                  <DropdownMenuItem key={option.type} asChild>
+                    <ListButton
+                      editor={editor}
+                      type={option.type}
+                      text={option.label}
+                      showTooltip={false}
+                    />
+                  </DropdownMenuItem>
+                ))}
+              </ButtonGroup>
+            </DropdownMenuGroup>
           </CardBody>
         </Card>
       </DropdownMenuContent>

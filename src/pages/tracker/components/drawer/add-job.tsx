@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { getAllResumesFromUser } from '@/lib/supabase/resume'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
@@ -103,80 +103,87 @@ export default function AddJobDrawer() {
   }
 
   const formContent = (
-    <div className="p-6 space-y-5 flex-1 overflow-y-auto">
-      <div className="space-y-2">
-        <Label>
+    <FieldGroup className="flex-1 gap-5 overflow-y-auto p-6">
+      <Field>
+        <FieldLabel htmlFor="position" className="items-center">
           职位名称
           {' '}
           <span className="text-destructive">*</span>
-        </Label>
+        </FieldLabel>
         <Combobox
+          id="position"
           placeholder="搜索或输入职位名称"
           value={formData.position}
           onChange={v => handleChange('position', v)}
           options={COMMON_POSITIONS}
         />
-      </div>
-      <div className="space-y-2">
-        <Label>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="company" className="items-center">
           公司名称
           {' '}
           <span className="text-destructive">*</span>
-        </Label>
+        </FieldLabel>
         <Combobox
+          id="company"
           placeholder="搜索或输入公司名称"
           value={formData.company}
           onChange={v => handleChange('company', v)}
           options={COMMON_COMPANIES}
         />
-      </div>
+      </Field>
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>
+        <Field>
+          <FieldLabel htmlFor="location" className="items-center">
             工作地点
             {' '}
             <span className="text-destructive">*</span>
-          </Label>
+          </FieldLabel>
           <Combobox
+            id="location"
             placeholder="搜索或输入地点"
             value={formData.location}
             onChange={v => handleChange('location', v)}
             options={COMMON_CITIES}
           />
-        </div>
-        <div className="space-y-2">
-          <Label>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="status" className="items-center">
             申请状态
             {' '}
             <span className="text-destructive">*</span>
-          </Label>
+          </FieldLabel>
           <Select
             value={formData.status}
             onValueChange={v => handleChange('status', v)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" id="status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {APPLICATION_STATUS_ORDER.map(s => (
-                <SelectItem key={s} value={s}>{APPLICATION_STATUS_CONFIG[s].label}</SelectItem>
-              ))}
+              <SelectGroup>
+                {APPLICATION_STATUS_ORDER.map(s => (
+                  <SelectItem key={s} value={s}>{APPLICATION_STATUS_CONFIG[s].label}</SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
-        </div>
+        </Field>
       </div>
-      <div className="space-y-2">
-        <Label>JD 链接</Label>
+      <Field>
+        <FieldLabel htmlFor="job-url">JD 链接</FieldLabel>
         <Input
+          id="job-url"
           placeholder="https://..."
           value={formData.job_url}
           onChange={e => handleChange('job_url', e.target.value)}
         />
-      </div>
-      <div className="space-y-2">
-        <Label>薪资范围</Label>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="salary-min">薪资范围</FieldLabel>
         <div className="flex items-center gap-2">
           <Input
+            id="salary-min"
             type="number"
             placeholder="最低"
             value={formData.salaryMin}
@@ -184,6 +191,7 @@ export default function AddJobDrawer() {
           />
           <span className="text-sm text-muted-foreground shrink-0">K ~</span>
           <Input
+            id="salary-max"
             type="number"
             placeholder="最高"
             value={formData.salaryMax}
@@ -191,31 +199,33 @@ export default function AddJobDrawer() {
           />
           <span className="text-sm text-muted-foreground shrink-0">K</span>
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label>投递简历</Label>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="resume-id">投递简历</FieldLabel>
         <Select
           value={formData.resume_id || ''}
           onValueChange={v => setFormData(prev => ({ ...prev, resume_id: v || null }))}
           disabled={loadingResumes}
         >
-          <SelectTrigger>
+          <SelectTrigger id="resume-id">
             <SelectValue placeholder={loadingResumes ? '加载中...' : '选择简历'} />
           </SelectTrigger>
           <SelectContent>
-            {resumes.map(r => (
-              <SelectItem key={r.resume_id} value={r.resume_id}>
-                {r.display_name}
-                {r.type === 'default' && ' (默认)'}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              {resumes.map(r => (
+                <SelectItem key={r.resume_id} value={r.resume_id}>
+                  {r.display_name}
+                  {r.type === 'default' && ' (默认)'}
+                </SelectItem>
+              ))}
+            </SelectGroup>
             {resumes.length === 0 && !loadingResumes && (
               <div className="px-2 py-1.5 text-sm text-muted-foreground">暂无简历</div>
             )}
           </SelectContent>
         </Select>
-      </div>
-    </div>
+      </Field>
+    </FieldGroup>
   )
 
   const footerButtons = (

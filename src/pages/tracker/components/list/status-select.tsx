@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -22,26 +23,28 @@ export function StatusSelect({ value, onChange }: StatusSelectProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="w-full gap-2">
-          <SquarePen className="size-4" />
+          <SquarePen data-icon="inline-start" />
           更改状态
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {ALL_STATUSES.map((status) => {
-          const config = APPLICATION_STATUS_CONFIG[status]
-          const isActive = status === value
-          return (
-            <DropdownMenuItem
-              key={status}
-              onClick={() => onChange(status)}
-              className={cn(isActive && 'font-medium')}
-            >
-              <span className={cn('size-2 rounded-full', config.bgColor, config.color)} />
-              {config.label}
-              {isActive && <CheckIcon className="ml-auto size-4" />}
-            </DropdownMenuItem>
-          )
-        })}
+        <DropdownMenuGroup>
+          {ALL_STATUSES.map((status) => {
+            const config = APPLICATION_STATUS_CONFIG[status]
+            const isActive = status === value
+            return (
+              <DropdownMenuItem
+                key={status}
+                onClick={() => onChange(status)}
+                className={cn(isActive && 'font-medium')}
+              >
+                <span className={cn('size-2 rounded-full', config.bgColor, config.color)} />
+                {config.label}
+                {isActive && <CheckIcon className="ml-auto size-4" />}
+              </DropdownMenuItem>
+            )
+          })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

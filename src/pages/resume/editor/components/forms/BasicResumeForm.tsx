@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -88,11 +88,13 @@ function BasicResumeForm({ className }: { className?: string }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {genderOptions.map(o => (
-                      <SelectItem key={o} value={o}>
-                        {o}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      {genderOptions.map(o => (
+                        <SelectItem key={o} value={o}>
+                          {o}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </FormItem>
@@ -146,11 +148,13 @@ function BasicResumeForm({ className }: { className?: string }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {workYearsOptions.map(o => (
-                      <SelectItem key={o} value={o}>
-                        {o}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      {workYearsOptions.map(o => (
+                        <SelectItem key={o} value={o}>
+                          {o}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </FormItem>
@@ -196,11 +200,13 @@ function BasicResumeForm({ className }: { className?: string }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {maritalStatusOptions.map(o => (
-                      <SelectItem key={o} value={o}>
-                        {o}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      {maritalStatusOptions.map(o => (
+                        <SelectItem key={o} value={o}>
+                          {o}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </FormItem>
@@ -299,11 +305,13 @@ function BasicResumeForm({ className }: { className?: string }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {politicalStatusOptions.map(o => (
-                      <SelectItem key={o} value={o}>
-                        {o}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      {politicalStatusOptions.map(o => (
+                        <SelectItem key={o} value={o}>
+                          {o}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </FormItem>

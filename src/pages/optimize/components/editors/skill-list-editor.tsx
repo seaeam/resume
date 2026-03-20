@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { PROFICIENCY_PERCENTAGE_MAP } from '@/lib/schema/resume/form/skillSpecialty'
 import { DISPLAY_TYPES, PRESET_SKILLS, PROFICIENCY_LEVELS } from '../../const'
@@ -54,9 +54,9 @@ function SkillListEditor({ value, onChange }: {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {/* 快速添加 */}
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <label className="text-xs font-medium text-muted-foreground">快速添加</label>
         <div className="flex flex-wrap gap-1.5">
           {PRESET_SKILLS.map(skill => (
@@ -69,7 +69,7 @@ function SkillListEditor({ value, onChange }: {
               className="h-7 text-xs"
             >
               {skill}
-              {isSkillAdded(skill) && <X className="ml-1 size-3" />}
+              {isSkillAdded(skill) && <X data-icon="inline-end" className="size-3" />}
             </Button>
           ))}
         </div>
@@ -92,7 +92,7 @@ function SkillListEditor({ value, onChange }: {
           disabled={!customInput.trim()}
           className="h-9"
         >
-          <Plus className="size-4 mr-1" />
+          <Plus data-icon="inline-start" />
           添加
         </Button>
       </div>
@@ -128,13 +128,13 @@ function SkillListEditor({ value, onChange }: {
                         onClick={() => removeSkill(index)}
                         className="size-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        <Trash2 className="size-3.5" />
+                        <Trash2 />
                       </Button>
                     </div>
 
                     {/* 选项行 */}
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
+                      <div className="flex flex-col gap-1">
                         <label className="text-[10px] text-muted-foreground">熟练程度</label>
                         <Select
                           value={safeLevel}
@@ -144,13 +144,15 @@ function SkillListEditor({ value, onChange }: {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {PROFICIENCY_LEVELS.map(level => (
-                              <SelectItem key={level} value={level} className="text-xs">{level}</SelectItem>
-                            ))}
+                            <SelectGroup>
+                              {PROFICIENCY_LEVELS.map(level => (
+                                <SelectItem key={level} value={level} className="text-xs">{level}</SelectItem>
+                              ))}
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1">
+                      <div className="flex flex-col gap-1">
                         <label className="text-[10px] text-muted-foreground">展示方式</label>
                         <Select
                           value={skill.displayType}
@@ -160,16 +162,18 @@ function SkillListEditor({ value, onChange }: {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {DISPLAY_TYPES.map(type => (
-                              <SelectItem key={type.value} value={type.value} className="text-xs">{type.label}</SelectItem>
-                            ))}
+                            <SelectGroup>
+                              {DISPLAY_TYPES.map(type => (
+                                <SelectItem key={type.value} value={type.value} className="text-xs">{type.label}</SelectItem>
+                              ))}
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
                     {/* 预览 */}
-                    <div className="pt-2 border-t space-y-1.5">
+                    <div className="flex flex-col gap-1.5 border-t pt-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">预览</span>
                         <span className="font-medium text-primary">

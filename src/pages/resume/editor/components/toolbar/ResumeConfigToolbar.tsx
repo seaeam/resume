@@ -2,7 +2,7 @@ import { FileDown, Palette, Space, Type } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { fontFamilyOptions, fontSizeOptions, themeOptions } from '@/lib/schema'
@@ -23,10 +23,10 @@ export function ResumeConfigToolbar() {
           <Button
             variant="outline"
             size={isMobile ? 'icon' : 'sm'}
-            className={cn(isMobile && 'h-9 w-9')}
+            className={cn(isMobile && 'size-9')}
           >
-            <Space className={cn(isMobile ? 'h-4 w-4' : 'h-4 w-4')} />
-            {!isMobile && <span className="ml-2">间距</span>}
+            <Space data-icon="inline-start" />
+            {!isMobile && <span>间距</span>}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -36,9 +36,9 @@ export function ResumeConfigToolbar() {
         >
           <DropdownMenuLabel className="text-base md:text-sm">间距设置</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <div className="p-3 md:p-4 space-y-4 md:space-y-6">
+          <div className="flex flex-col gap-4 p-3 md:gap-6 md:p-4">
             {/* 模块上下间距 */}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">模块上下间距</Label>
                 <span className="text-sm font-semibold text-muted-foreground">
@@ -57,7 +57,7 @@ export function ResumeConfigToolbar() {
             </div>
 
             {/* 行间距 */}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">行间距</Label>
                 <span className="text-sm font-semibold text-muted-foreground">{spacing.lineHeight.toFixed(1)}</span>
@@ -73,7 +73,7 @@ export function ResumeConfigToolbar() {
             </div>
 
             {/* 页面边距 */}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">页面边距</Label>
                 <span className="text-sm font-semibold text-muted-foreground">
@@ -100,10 +100,10 @@ export function ResumeConfigToolbar() {
           <Button
             variant="outline"
             size={isMobile ? 'icon' : 'sm'}
-            className={cn(isMobile && 'h-9 w-9')}
+            className={cn(isMobile && 'size-9')}
           >
-            <Type className={cn(isMobile ? 'h-4 w-4' : 'h-4 w-4')} />
-            {!isMobile && <span className="ml-2">字体</span>}
+            <Type data-icon="inline-start" />
+            {!isMobile && <span>字体</span>}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -115,9 +115,9 @@ export function ResumeConfigToolbar() {
 
           <DropdownMenuSeparator />
 
-          <div className="p-3 md:p-4 space-y-4">
+          <div className="flex flex-col gap-4 p-3 md:p-4">
             {/* 字体样式 */}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label className="text-sm font-medium">字体样式</Label>
               <Select
                 value={font.fontFamily}
@@ -130,17 +130,19 @@ export function ResumeConfigToolbar() {
                   <SelectValue placeholder="选择字体" />
                 </SelectTrigger>
                 <SelectContent>
-                  {fontFamilyOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    {fontFamilyOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
 
             {/* 文字大小 */}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label className="text-sm font-medium">文字大小</Label>
               <Select
                 value={font.fontSize.toString()}
@@ -153,11 +155,13 @@ export function ResumeConfigToolbar() {
                   <SelectValue placeholder="选择大小" />
                 </SelectTrigger>
                 <SelectContent>
-                  {fontSizeOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    {fontSizeOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
@@ -171,10 +175,10 @@ export function ResumeConfigToolbar() {
           <Button
             variant="outline"
             size={isMobile ? 'icon' : 'sm'}
-            className={cn(isMobile && 'h-9 w-9')}
+            className={cn(isMobile && 'size-9')}
           >
-            <Palette className={cn(isMobile ? 'h-4 w-4' : 'h-4 w-4')} />
-            {!isMobile && <span className="ml-2">皮肤</span>}
+            <Palette data-icon="inline-start" />
+            {!isMobile && <span>皮肤</span>}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -184,7 +188,7 @@ export function ResumeConfigToolbar() {
         >
           <DropdownMenuLabel className="text-base md:text-sm">皮肤设置</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <div className="p-3 md:p-4 space-y-2">
+          <div className="flex flex-col gap-2 p-3 md:p-4">
             <Label className="text-sm font-medium">选择主题</Label>
             <Select
               value={theme.theme}
@@ -197,11 +201,13 @@ export function ResumeConfigToolbar() {
                 <SelectValue placeholder="选择主题" />
               </SelectTrigger>
               <SelectContent>
-                {themeOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  {themeOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>
@@ -211,8 +217,8 @@ export function ResumeConfigToolbar() {
       <ExportDialog
         trigger={(
           <Button variant="outline" size={isMobile ? 'icon' : 'sm'}>
-            <FileDown className="h-4 w-4" />
-            {!isMobile && <span className="ml-2">导出</span>}
+            <FileDown data-icon="inline-start" />
+            {!isMobile && <span>导出</span>}
           </Button>
         )}
       />

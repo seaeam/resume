@@ -68,9 +68,9 @@ export function SyncResumesDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {/* 全选按钮 */}
-          <div className="flex items-center space-x-2 pb-2 border-b">
+          <div className="flex items-center gap-2 border-b pb-2">
             <Checkbox
               id="select-all"
               checked={selectedIds.length === offlineResumes.length && offlineResumes.length > 0}
@@ -91,7 +91,7 @@ export function SyncResumesDialog() {
 
           {/* 简历列表 */}
           <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               {offlineResumes.map((resume) => {
                 const isSelected = selectedIds.includes(resume.resume_id)
                 return (

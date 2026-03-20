@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { isOfflineResumeId, updateOfflineResumeMeta } from '@/lib/offline-resume-manager'
 import { updateResumeConfig } from '@/lib/supabase/resume'
@@ -77,9 +77,9 @@ export function EditResumeDialog({ resume, open, onOpenChange, onSuccess }: Edit
           <DialogDescription>更新简历的名称和描述信息</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="display_name">简历名称</Label>
+          <FieldGroup className="gap-4 py-4">
+            <Field>
+              <FieldLabel htmlFor="display_name">简历名称</FieldLabel>
               <Input
                 id="display_name"
                 placeholder="例如: 前端工程师简历"
@@ -87,10 +87,10 @@ export function EditResumeDialog({ resume, open, onOpenChange, onSuccess }: Edit
                 onChange={e => setDisplayName(e.target.value)}
                 maxLength={50}
               />
-              <p className="text-xs text-muted-foreground">为你的简历起一个容易识别的名称</p>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">简历描述</Label>
+              <FieldDescription>为你的简历起一个容易识别的名称</FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="description">简历描述</FieldLabel>
               <Textarea
                 id="description"
                 placeholder="例如: 用于投递互联网公司的技术岗位"
@@ -99,13 +99,13 @@ export function EditResumeDialog({ resume, open, onOpenChange, onSuccess }: Edit
                 rows={4}
                 maxLength={200}
               />
-              <p className="text-xs text-muted-foreground">
+              <FieldDescription>
                 简要描述这份简历的用途 (
                 {description.length}
                 /200)
-              </p>
-            </div>
-          </div>
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               取消

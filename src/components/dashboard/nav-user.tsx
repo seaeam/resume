@@ -73,20 +73,24 @@ export function NavUser() {
 
             {user
               ? (
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <IconLogout />
-                    登出
-                  </DropdownMenuItem>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <IconLogout />
+                      登出
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 )
               : (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      navigate('/login')
-                    }}
-                  >
-                    <IconLogin />
-                    登录
-                  </DropdownMenuItem>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        navigate('/login')
+                      }}
+                    >
+                      <IconLogin />
+                      登录
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 )}
           </DropdownMenuContent>
         </DropdownMenu>

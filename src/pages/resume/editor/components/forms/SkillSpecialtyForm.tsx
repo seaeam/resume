@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -111,7 +111,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
   return (
     <Form {...form}>
       <form id="skill-specialty-form">
-        <div className={cn('space-y-6', className)}>
+        <div className={cn('flex flex-col gap-6', className)}>
           <FormField
             name="description"
             control={form.control}
@@ -133,7 +133,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
           <Separator />
 
           {/* 预设技能标签 */}
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <FormLabel>快速添加技能</FormLabel>
             <div className="flex flex-wrap gap-2">
               {PRESET_SKILLS.map(skill => (
@@ -146,14 +146,14 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                   className="h-8"
                 >
                   {skill}
-                  {isPresetSkillAdded(skill) && <X className="ml-1 h-3 w-3" />}
+                  {isPresetSkillAdded(skill) && <X data-icon="inline-end" className="size-3" />}
                 </Button>
               ))}
             </div>
           </div>
 
           {/* 自定义技能输入 */}
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             <FormLabel>添加自定义技能</FormLabel>
             <div className="flex gap-2 max-w-md">
               <Input
@@ -169,17 +169,17 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                 className="flex-1"
               />
               <Button type="button" variant="outline" size={isMobile ? 'sm' : 'default'} onClick={addCustomSkill}>
-                <Plus className="h-4 w-4" />
-                {!isMobile && <span className="ml-2">添加</span>}
+                <Plus data-icon="inline-start" />
+                {!isMobile && <span>添加</span>}
               </Button>
             </div>
           </div>
 
           {/* 技能列表 */}
           {fields.length > 0 && (
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <FormLabel>技能列表</FormLabel>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {fields.map((item, index) => (
                   <motion.div
                     key={item.id}
@@ -201,9 +201,9 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                         variant="ghost"
                         size="sm"
                         onClick={() => remove(index)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                        className="size-8 shrink-0 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 />
                       </Button>
                     </div>
 
@@ -213,7 +213,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                         name={`skills.${index}.proficiencyLevel`}
                         control={form.control}
                         render={({ field }) => (
-                          <FormItem className="space-y-1">
+                          <FormItem className="flex flex-col gap-1">
                             <FormLabel className="text-xs text-muted-foreground">熟练程度</FormLabel>
                             <FormControl>
                               <Select onValueChange={field.onChange} value={field.value}>
@@ -221,11 +221,13 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {proficiencyLevels.map(level => (
-                                    <SelectItem key={level} value={level}>
-                                      {level}
-                                    </SelectItem>
-                                  ))}
+                                  <SelectGroup>
+                                    {proficiencyLevels.map(level => (
+                                      <SelectItem key={level} value={level}>
+                                        {level}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectGroup>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -237,7 +239,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                         name={`skills.${index}.displayType`}
                         control={form.control}
                         render={({ field }) => (
-                          <FormItem className="space-y-1">
+                          <FormItem className="flex flex-col gap-1">
                             <FormLabel className="text-xs text-muted-foreground">展示方式</FormLabel>
                             <FormControl>
                               <Select onValueChange={field.onChange} value={field.value}>
@@ -245,11 +247,13 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {displayTypes.map(type => (
-                                    <SelectItem key={type.value} value={type.value}>
-                                      {type.label}
-                                    </SelectItem>
-                                  ))}
+                                  <SelectGroup>
+                                    {displayTypes.map(type => (
+                                      <SelectItem key={type.value} value={type.value}>
+                                        {type.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectGroup>
                                 </SelectContent>
                               </Select>
                             </FormControl>

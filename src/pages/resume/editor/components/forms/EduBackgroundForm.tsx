@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -66,12 +66,12 @@ function EduBackgroundForm({ className }: { className?: string }) {
 
   return (
     <Form {...form}>
-      <form id="edu-background-form" className={cn('space-y-6', className)}>
+      <form id="edu-background-form" className={cn('flex flex-col gap-6', className)}>
         {fields.map((item, index) => (
           <motion.div key={item.id} layout>
             {index > 0 && <Separator className="my-6" />}
 
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-muted-foreground">
                   教育背景
@@ -171,7 +171,7 @@ function EduBackgroundForm({ className }: { className?: string }) {
                               />
                             </PopoverContent>
                           </Popover>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             <Label htmlFor="up-to-now">至今</Label>
                             <Checkbox
                               id="up-to-now"
@@ -205,11 +205,13 @@ function EduBackgroundForm({ className }: { className?: string }) {
                             <SelectValue placeholder="请选择学历" />
                           </SelectTrigger>
                           <SelectContent>
-                            {degreeOptions.map(option => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
+                            <SelectGroup>
+                              {degreeOptions.map(option => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </FormControl>

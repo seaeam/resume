@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
@@ -57,7 +58,7 @@ export function JobCard({ job }: JobCardProps) {
       )}
       onClick={handleClick}
     >
-      <CardContent className="flex-1 p-4 pb-3 flex flex-col justify-center space-y-3">
+      <CardContent className="flex flex-1 flex-col justify-center gap-3 p-4 pb-3">
         {/* 顶部：Logo + 状态 Badge + 日期 + 菜单 */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -98,17 +99,19 @@ export function JobCard({ job }: JobCardProps) {
                         className="text-muted-foreground"
                         onClick={e => e.stopPropagation()}
                       >
-                        <MoreVertical className="size-4" />
+                        <MoreVertical />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
-                      <DropdownMenuItem onClick={() => openJobDrawer(job)}>
-                        查看详情
-                      </DropdownMenuItem>
-                      <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-                        <Trash2 className="size-4" />
-                        删除
-                      </DropdownMenuItem>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={() => openJobDrawer(job)}>
+                          查看详情
+                        </DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                          <Trash2 data-icon="inline-start" />
+                          删除
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -121,7 +124,7 @@ export function JobCard({ job }: JobCardProps) {
         </div>
 
         {/* 公司 / 地点 / 薪资 */}
-        <div className="space-y-1.5 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Building2 className="size-4 shrink-0" />
             <span className="truncate">{job.company}</span>

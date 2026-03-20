@@ -11,8 +11,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useDebounce } from '@/hooks/use-debounce'
 import supabase from '@/lib/supabase/client'
 import { Spinner } from './ui/spinner'
@@ -122,15 +122,15 @@ export function UpdatePasswordDialog() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <IconLock className="h-5 w-5" />
+            <IconLock className="size-5" />
             修改密码
           </DialogTitle>
           <DialogDescription>为了保护您的账户安全，请输入旧密码并设置新密码</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="old-password">旧密码</Label>
+          <FieldGroup className="gap-4 py-4">
+            <Field>
+              <FieldLabel htmlFor="old-password">旧密码</FieldLabel>
               <Input
                 id="old-password"
                 type="password"
@@ -140,9 +140,9 @@ export function UpdatePasswordDialog() {
                 disabled={loading}
                 required
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-password">新密码</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="new-password">新密码</FieldLabel>
               <Input
                 id="new-password"
                 type="password"
@@ -153,9 +153,9 @@ export function UpdatePasswordDialog() {
                 required
                 minLength={6}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">确认新密码</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="confirm-password">确认新密码</FieldLabel>
               <Input
                 id="confirm-password"
                 type="password"
@@ -166,14 +166,14 @@ export function UpdatePasswordDialog() {
                 required
                 minLength={6}
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               取消
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading && <Spinner className="mr-2 h-4 w-4" />}
+              {loading && <Spinner data-icon="inline-start" />}
               确认修改
             </Button>
           </DialogFooter>

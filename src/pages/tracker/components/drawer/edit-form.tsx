@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../data'
 import useTrackerStore from '../../store'
 
@@ -55,44 +55,48 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <h3 className="font-semibold text-lg">编辑信息</h3>
 
-      <div className="space-y-3">
-        <div className="space-y-1.5">
-          <Label>公司名称</Label>
+      <FieldGroup className="gap-3">
+        <Field>
+          <FieldLabel htmlFor="company">公司名称</FieldLabel>
           <Combobox
+            id="company"
             value={formData.company}
             onChange={v => handleChange('company', v)}
             options={COMMON_COMPANIES}
             placeholder="搜索或输入公司名称"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label>职位名称</Label>
+        <Field>
+          <FieldLabel htmlFor="position">职位名称</FieldLabel>
           <Combobox
+            id="position"
             value={formData.position}
             onChange={v => handleChange('position', v)}
             options={COMMON_POSITIONS}
             placeholder="搜索或输入职位名称"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label>工作地点</Label>
+        <Field>
+          <FieldLabel htmlFor="location">工作地点</FieldLabel>
           <Combobox
+            id="location"
             value={formData.location}
             onChange={v => handleChange('location', v)}
             options={COMMON_CITIES}
             placeholder="搜索或输入地点"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label>薪资范围</Label>
+        <Field>
+          <FieldLabel htmlFor="salary-min">薪资范围</FieldLabel>
           <div className="flex items-center gap-2">
             <Input
+              id="salary-min"
               type="number"
               placeholder="最低"
               value={formData.salaryMin}
@@ -100,6 +104,7 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
             />
             <span className="text-sm text-muted-foreground shrink-0">K ~</span>
             <Input
+              id="salary-max"
               type="number"
               placeholder="最高"
               value={formData.salaryMax}
@@ -107,17 +112,18 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
             />
             <span className="text-sm text-muted-foreground shrink-0">K</span>
           </div>
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label>JD 链接</Label>
+        <Field>
+          <FieldLabel htmlFor="job-url">JD 链接</FieldLabel>
           <Input
+            id="job-url"
             placeholder="https://..."
             value={formData.job_url}
             onChange={e => handleChange('job_url', e.target.value)}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGroup>
 
       <div className="flex gap-2 pt-2">
         <Button className="flex-1" onClick={handleSubmit}>

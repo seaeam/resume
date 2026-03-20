@@ -6,8 +6,8 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { createOfflineResume } from '@/lib/offline-resume-manager'
@@ -95,8 +95,8 @@ export function CreateResumeCard() {
         onClick={() => setIsCreating(true)}
       >
         <CardHeader className="flex justify-center">
-          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Plus className="h-8 w-8" />
+          <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+            <Plus className="size-8" />
           </div>
         </CardHeader>
         <CardContent className="flex justify-center">
@@ -118,12 +118,10 @@ export function CreateResumeCard() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateResume}>
-              <div className="grid gap-6 py-6">
+              <FieldGroup className="gap-6 py-6">
                 {/* 简历名称 */}
-                <div className="grid gap-3">
-                  <Label htmlFor="display_name" className="text-sm font-semibold">
-                    简历名称
-                  </Label>
+                <Field>
+                  <FieldLabel htmlFor="display_name">简历名称</FieldLabel>
                   <Input
                     id="display_name"
                     placeholder="例如: 前端开发工程师简历"
@@ -132,18 +130,16 @@ export function CreateResumeCard() {
                     maxLength={50}
                     className="h-11"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <FieldDescription>
                     为你的简历起一个容易识别的名称 (
                     {displayName.length}
                     /50)
-                  </p>
-                </div>
+                  </FieldDescription>
+                </Field>
 
                 {/* 简历描述 */}
-                <div className="grid gap-3">
-                  <Label htmlFor="description" className="text-sm font-semibold">
-                    简历描述
-                  </Label>
+                <Field>
+                  <FieldLabel htmlFor="description">简历描述</FieldLabel>
                   <Textarea
                     id="description"
                     placeholder="例如: 用于投递互联网公司的前端技术岗位"
@@ -153,19 +149,17 @@ export function CreateResumeCard() {
                     maxLength={200}
                     className="resize-none"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <FieldDescription>
                     简要描述这份简历的用途 (
                     {description.length}
                     /200)
-                  </p>
-                </div>
+                  </FieldDescription>
+                </Field>
 
                 {/* TODO 暂时先写成这样 */}
                 {/* 模板类型 */}
-                <div className="grid gap-3">
-                  <Label htmlFor="template_type" className="text-sm font-semibold">
-                    模板类型
-                  </Label>
+                <Field>
+                  <FieldLabel htmlFor="template_type">模板类型</FieldLabel>
                   <Select value={selectedType} onValueChange={value => setSelectedType(value as ResumeType)}>
                     <SelectTrigger className="h-11" id="template_type">
                       <SelectValue placeholder="选择模板类型" />
@@ -179,8 +173,8 @@ export function CreateResumeCard() {
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
+                </Field>
+              </FieldGroup>
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleCancel} disabled={loading}>

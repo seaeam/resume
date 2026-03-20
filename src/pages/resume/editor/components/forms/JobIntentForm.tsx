@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { jobIntentFormSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
@@ -107,11 +107,13 @@ function JobIntentForm({ className }: { className?: string }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {dateEntryOptions.map(opt => (
-                      <SelectItem key={opt} value={opt}>
-                        {opt}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      {dateEntryOptions.map(opt => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </FormItem>

@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { SignInWithEmailAndPassword } from '@/lib/supabase/user'
 import { cn } from '@/lib/utils'
@@ -42,9 +42,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">邮箱</Label>
+            <FieldGroup className="gap-6">
+              <Field>
+                <FieldLabel htmlFor="email">邮箱</FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -53,13 +53,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                 />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">密码</Label>
+              </Field>
+              <Field>
+                <div className="flex items-center justify-between gap-2">
+                  <FieldLabel htmlFor="password">密码</FieldLabel>
                   <Link
                     to="/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    className="text-sm underline-offset-4 hover:underline"
                   >
                     忘记密码？
                   </Link>
@@ -71,13 +71,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              </Field>
+              {error && <FieldError>{error}</FieldError>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Spinner />}
+                {isLoading && <Spinner data-icon="inline-start" />}
                 {isLoading ? '登录中...' : '登录'}
               </Button>
-            </div>
+            </FieldGroup>
             <div className="mt-4 text-center text-sm">
               还没有账号？
               <Link to="/sign-up" className="underline underline-offset-4">

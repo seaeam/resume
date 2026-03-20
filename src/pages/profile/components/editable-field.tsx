@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { IconCheck, IconEdit, IconX } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
+import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 
 interface EditableFieldProps {
@@ -33,11 +33,11 @@ export function EditableField({
   onCancel,
 }: EditableFieldProps) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="flex items-center gap-2">
+    <Field>
+      <FieldLabel htmlFor={id} className="items-center">
         {icon}
         {label}
-      </Label>
+      </FieldLabel>
       <div className="flex gap-2">
         <Input
           id={id}
@@ -49,21 +49,21 @@ export function EditableField({
         />
         {!isEditing
           ? (
-              <Button variant="outline" size="icon" onClick={onEdit}>
-                <IconEdit className="h-4 w-4" />
+              <Button variant="outline" size="icon" onClick={onEdit} aria-label={`编辑${label}`}>
+                <IconEdit />
               </Button>
             )
           : (
               <>
-                <Button variant="outline" size="icon" onClick={onSave} disabled={isSaving}>
-                  {isSaving ? <Spinner className="h-4 w-4" /> : <IconCheck className="h-4 w-4" />}
+                <Button variant="outline" size="icon" onClick={onSave} disabled={isSaving} aria-label={`保存${label}`}>
+                  {isSaving ? <Spinner /> : <IconCheck />}
                 </Button>
-                <Button variant="outline" size="icon" onClick={onCancel} disabled={isSaving}>
-                  <IconX className="h-4 w-4" />
+                <Button variant="outline" size="icon" onClick={onCancel} disabled={isSaving} aria-label={`取消编辑${label}`}>
+                  <IconX />
                 </Button>
               </>
             )}
       </div>
-    </div>
+    </Field>
   )
 }

@@ -13,6 +13,7 @@ import { Card, CardBody } from '@/components/tiptap-ui-primitive/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/tiptap-ui-primitive/dropdown-menu'
@@ -99,18 +100,20 @@ export function HeadingDropdownMenu({ ref, editor: providedEditor, levels = [1, 
       >
         <Card>
           <CardBody>
-            <ButtonGroup>
-              {levels.map(level => (
-                <DropdownMenuItem key={`heading-${level}`} asChild>
-                  <HeadingButton
-                    editor={editor}
-                    level={level}
-                    text={`Heading ${level}`}
-                    showTooltip={false}
-                  />
-                </DropdownMenuItem>
-              ))}
-            </ButtonGroup>
+            <DropdownMenuGroup>
+              <ButtonGroup>
+                {levels.map(level => (
+                  <DropdownMenuItem key={`heading-${level}`} asChild>
+                    <HeadingButton
+                      editor={editor}
+                      level={level}
+                      text={`Heading ${level}`}
+                      showTooltip={false}
+                    />
+                  </DropdownMenuItem>
+                ))}
+              </ButtonGroup>
+            </DropdownMenuGroup>
           </CardBody>
         </Card>
       </DropdownMenuContent>

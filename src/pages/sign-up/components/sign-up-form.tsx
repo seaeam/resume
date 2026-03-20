@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { SignUpWithEmail } from '@/lib/supabase/user'
 import { cn } from '@/lib/utils'
@@ -62,9 +62,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignUp}>
-                  <div className="flex flex-col gap-6">
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">邮箱</Label>
+                  <FieldGroup className="gap-6">
+                    <Field>
+                      <FieldLabel htmlFor="email">邮箱</FieldLabel>
                       <Input
                         id="email"
                         type="email"
@@ -73,11 +73,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                       />
-                    </div>
-                    <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <Label htmlFor="password">密码</Label>
-                      </div>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="password">密码</FieldLabel>
                       <Input
                         id="password"
                         type="password"
@@ -85,11 +83,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                       />
-                    </div>
-                    <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <Label htmlFor="repeat-password">确认您的密码</Label>
-                      </div>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="repeat-password">确认您的密码</FieldLabel>
                       <Input
                         id="repeat-password"
                         type="password"
@@ -97,13 +93,13 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                         value={repeatPassword}
                         onChange={e => setRepeatPassword(e.target.value)}
                       />
-                    </div>
-                    {error && <p className="text-sm text-red-500">{error}</p>}
+                    </Field>
+                    {error && <FieldError>{error}</FieldError>}
                     <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading && <Spinner />}
+                      {isLoading && <Spinner data-icon="inline-start" />}
                       {isLoading ? '创建账户中...' : '注册'}
                     </Button>
-                  </div>
+                  </FieldGroup>
                   <div className="mt-4 text-center text-sm">
                     已有账号？
                     <Link to="/login" className="underline underline-offset-4">

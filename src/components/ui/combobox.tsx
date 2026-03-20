@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { CheckIcon } from 'lucide-react'
 
 interface ComboboxProps {
+  id?: string
   value: string
   onChange: (value: string) => void
   options: string[]
@@ -12,7 +13,7 @@ interface ComboboxProps {
   className?: string
 }
 
-export function Combobox({ value, onChange, options, placeholder, className }: ComboboxProps) {
+export function Combobox({ id, value, onChange, options, placeholder, className }: ComboboxProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -47,6 +48,7 @@ export function Combobox({ value, onChange, options, placeholder, className }: C
   return (
     <div ref={containerRef} className="relative">
       <Input
+        id={id}
         ref={inputRef}
         value={value}
         onChange={handleInputChange}

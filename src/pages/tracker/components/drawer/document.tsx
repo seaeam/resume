@@ -2,8 +2,8 @@ import type { ResumeOption, ResumePreviewData } from './types'
 import { FileText, Loader2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DEFAULT_FONT_CONFIG, DEFAULT_SPACING_CONFIG, DEFAULT_THEME_CONFIG } from '@/lib/schema'
 import { getAllResumesFromUser, getResumeById } from '@/lib/supabase/resume'
 import { ResumePreview } from '@/pages/resume/editor/components/preview/ResumePreview'
@@ -114,7 +114,7 @@ export default function DrawerDocument() {
   // 没有简历的空状态
   if (!loading && resumes.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <h3 className="font-semibold text-lg">投递简历</h3>
         <div className="border rounded-lg aspect-3/4 bg-white overflow-hidden">
           <div className="w-full h-full flex items-center justify-center bg-muted/50">
@@ -137,55 +137,59 @@ export default function DrawerDocument() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <h3 className="font-semibold text-lg">投递简历</h3>
 
       {/* 简历选择 */}
-      <div className="space-y-1.5">
-        <Label>选择简历</Label>
-        <Select
-          value={job.resume_id || ''}
-          onValueChange={handleResumeChange}
-          disabled={loading}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={loading ? '加载中...' : '选择简历'} />
-          </SelectTrigger>
-          <SelectContent>
-            {resumes.map(resume => (
-              <SelectItem key={resume.resume_id} value={resume.resume_id}>
-                {resume.display_name}
-                {resume.type === 'default' && ' (默认)'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FieldGroup className="gap-4">
+        <Field>
+          <FieldLabel htmlFor="resume-select">选择简历</FieldLabel>
+          <Select
+            value={job.resume_id || ''}
+            onValueChange={handleResumeChange}
+            disabled={loading}
+          >
+            <SelectTrigger id="resume-select">
+              <SelectValue placeholder={loading ? '加载中...' : '选择简历'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {resumes.map(resume => (
+                  <SelectItem key={resume.resume_id} value={resume.resume_id}>
+                    {resume.display_name}
+                    {resume.type === 'default' && ' (默认)'}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
 
-      {/* 简历预览区域 */}
-      <div className="space-y-1.5">
-        <Label>简历预览</Label>
-        <div className="border rounded-lg aspect-3/4 bg-white overflow-hidden">
-          {previewLoading
-            ? (
-                <div className="w-full h-full flex items-center justify-center bg-muted/50">
-                  <Loader2 className="size-8 animate-spin text-muted-foreground" />
-                </div>
-              )
-            : previewData
+        {/* 简历预览区域 */}
+        <Field>
+          <FieldLabel>简历预览</FieldLabel>
+          <div className="border rounded-lg aspect-3/4 bg-white overflow-hidden">
+            {previewLoading
               ? (
-                  <SharedResumePreview data={previewData} />
-                )
-              : (
                   <div className="w-full h-full flex items-center justify-center bg-muted/50">
-                    <div className="text-center text-muted-foreground">
-                      <FileText className="size-12 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">请选择一份简历</p>
-                    </div>
+                    <Loader2 className="size-8 animate-spin text-muted-foreground" />
                   </div>
-                )}
-        </div>
-      </div>
+                )
+              : previewData
+                ? (
+                    <SharedResumePreview data={previewData} />
+                  )
+                : (
+                    <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                      <div className="text-center text-muted-foreground">
+                        <FileText className="size-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">请选择一份简历</p>
+                      </div>
+                    </div>
+                  )}
+          </div>
+        </Field>
+      </FieldGroup>
     </div>
   )
 }

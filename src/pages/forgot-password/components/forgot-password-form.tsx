@@ -2,8 +2,8 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import supabase from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -59,9 +59,9 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleForgotPassword}>
-                  <div className="flex flex-col gap-6">
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">邮箱</Label>
+                  <FieldGroup className="gap-6">
+                    <Field>
+                      <FieldLabel htmlFor="email">邮箱</FieldLabel>
                       <Input
                         id="email"
                         type="email"
@@ -70,13 +70,13 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                       />
-                    </div>
-                    {error && <p className="text-sm text-red-500">{error}</p>}
+                    </Field>
+                    {error && <FieldError>{error}</FieldError>}
                     <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading && <Spinner />}
+                      {isLoading && <Spinner data-icon="inline-start" />}
                       {isLoading ? '发送中...' : '发送重置邮件'}
                     </Button>
-                  </div>
+                  </FieldGroup>
                   <div className="mt-4 text-center text-sm">
                     已经有账户？
                     <Link to="/login" className="underline underline-offset-4">
