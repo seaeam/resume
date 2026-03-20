@@ -67,7 +67,7 @@ function BenchmarkTool({ resumeContext }: BenchmarkToolProps) {
           badge={<ToolMetaBadge tone={benchmarkResult.profileConfidence >= 60 ? 'primary' : 'warning'}>{`置信度 ${benchmarkResult.profileConfidence}%`}</ToolMetaBadge>}
         />
         <ToolPanelBody className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
             <ToolStatCard
               label="画像置信度"
               value={`${benchmarkResult.profileConfidence}%`}
@@ -118,7 +118,7 @@ function BenchmarkTool({ resumeContext }: BenchmarkToolProps) {
         </ToolPanelBody>
       </ToolPanelCard>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {benchmarkResult.metrics.map((metric) => {
           const progressValue = metric.target && metric.target > 0
             ? Math.min(100, Math.round((metric.current / metric.target) * 100))
@@ -137,14 +137,11 @@ function BenchmarkTool({ resumeContext }: BenchmarkToolProps) {
             >
               <ToolPanelBody>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background/80 text-foreground shadow-sm">
-                        <Icon className="size-4" />
-                      </div>
-                      <p className="text-sm font-medium">{metric.label}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background/80 text-foreground shadow-sm">
+                      <Icon className="size-4" />
                     </div>
-                    <p className="text-sm leading-6 text-muted-foreground">{metric.description}</p>
+                    <p className="text-sm font-medium">{metric.label}</p>
                   </div>
                   <ToolMetaBadge tone={tone}>
                     {metric.displayCurrent}
@@ -154,6 +151,7 @@ function BenchmarkTool({ resumeContext }: BenchmarkToolProps) {
                     {metric.displayTarget}
                   </ToolMetaBadge>
                 </div>
+                <p className="text-sm leading-6 text-muted-foreground">{metric.description}</p>
                 <Progress value={progressValue} className="mt-4 h-2 bg-muted" />
                 <div className="mt-4 flex flex-wrap gap-2">
                   <span className={cn('inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium', getMetricStatusClassName(metric.status))}>
