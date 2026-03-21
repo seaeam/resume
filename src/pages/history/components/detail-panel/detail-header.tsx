@@ -1,0 +1,252 @@
+import type { PreviewTarget } from '../../types'
+import type { HistoryDetailPanelState } from './use-detail-panel-state'
+import { Clock3, Edit3, Eye, RotateCcw, Save, Sparkles, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
+import { formatDateTime, formatRelativeTime } from '@/utils/date'
+import { getResumeTypeLabel, SOURCE_META } from '../../const'
+import useHistoryStore from '../../store'
+import { getCurrentSyncState, getVersionTitle } from '../../utils'
+import HistoryDialogs from '../dialogs'
+import HistoryPreviewDialog from '../preview-dialog'
+import SaveVersionDialog from '../save-version-dialog'
+
+interface DetailHeaderProps {
+  state: HistoryDetailPanelState
+}
+
+export default function DetailHeader({ state }: DetailHeaderProps) {
+  const isMobile = useIsMobile()
+  const { currentResume, versions, savingMetadata, restoreVersion, deleteVersion } = useHistoryStore()
+  const [previewTarget, setPreviewTarget] = useState<PreviewTarget>(null)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [restoreTargetId, setRestoreTargetId] = useState<number | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
+  const { selectedEntry, selectedVersion, editing } = state
+  const isCurrent = selectedEntry === 'current'
+
+  useEffect(() => {
+    setPreviewTarget(null)
+    setSaveDialogOpen(false)
+    setRestoreTargetId(null)
+    setDeleteTargetId(null)
+  }, [selectedEntry])
+
+  const handleConfirmRestore = async () => {
+    if (!restoreTargetId) {
+      return
+    }
+
+    const restoredVersion = await restoreVersion(restoreTargetId)
+
+    if (!restoredVersion) {
+      return
+    }
+
+    setRestoreTargetId(null)
+    setPreviewTarget(null)
+    state.selectEntry(restoredVersion.id)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) {
+      return
+    }
+
+    const deleted = await deleteVersion(deleteTargetId)
+
+    if (!deleted) {
+      return
+    }
+
+    if (previewTarget === deleteTargetId) {
+      setPreviewTarget(null)
+    }
+
+    setDeleteTargetId(null)
+  }
+
+  if (isCurrent && currentResume) {
+    const syncState = getCurrentSyncState(currentResume, versions)
+
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">当前版本</Badge>
+              {versions.length === 0
+                ? (
+                    <Badge variant="outline">尚未保存历史记录</Badge>
+                  )
+                : syncState.synced
+                  ? (
+                      <Badge variant="outline">
+                        已与 V
+                        {syncState.latestVersionNo}
+                        同步
+                      </Badge>
+                    )
+                  : (
+                      <Badge variant="outline" className="border-primary/20 text-primary">存在未保存更新</Badge>
+                    )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <h2 className="text-2xl font-semibold tracking-tight">{currentResume.displayName}</h2>
+              <p className="text-sm text-muted-foreground">
+                {currentResume.description || '当前内容。'}
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              'grid w-full gap-2 sm:w-auto',
+              isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2',
+            )}
+          >
+            {!isMobile && (
+              <Button variant="outline" className="w-full justify-center" onClick={() => setPreviewTarget('current')}>
+                <Eye data-icon="inline-start" />
+                预览
+              </Button>
+            )}
+            <Button className="w-full justify-center" onClick={() => setSaveDialogOpen(true)}>
+              <Save data-icon="inline-start" />
+              保存当前版本
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <Badge variant="outline">
+            <Clock3 />
+            {currentResume.updatedAt ? formatRelativeTime(currentResume.updatedAt) : '更新时间未知'}
+          </Badge>
+          {currentResume.updatedAt && (
+            <Badge variant="outline">{formatDateTime(currentResume.updatedAt)}</Badge>
+          )}
+          <Badge variant="outline">
+            模板：
+            {getResumeTypeLabel(currentResume.type)}
+          </Badge>
+        </div>
+        <HistoryPreviewDialog previewTarget={previewTarget} onClose={() => setPreviewTarget(null)} />
+        <SaveVersionDialog
+          open={saveDialogOpen}
+          onOpenChange={setSaveDialogOpen}
+          onSaved={versionId => state.selectEntry(versionId)}
+        />
+      </div>
+    )
+  }
+
+  if (!selectedVersion) {
+    return null
+  }
+
+  const sourceMeta = SOURCE_META[selectedVersion.source_type]
+  const SourceIcon = sourceMeta.icon
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline">
+              V
+              {selectedVersion.version_no}
+            </Badge>
+            <Badge className={sourceMeta.badgeClassName}>
+              <SourceIcon data-icon="inline-start" />
+              {sourceMeta.label}
+            </Badge>
+            {selectedVersion.milestone_name && (
+              <Badge variant="outline" className="border-primary/20 text-primary">
+                <Sparkles data-icon="inline-start" />
+                {selectedVersion.milestone_name}
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <h2 className="text-2xl font-semibold tracking-tight">{getVersionTitle(selectedVersion)}</h2>
+            <p className="text-sm text-muted-foreground">
+              {selectedVersion.description || '查看元信息、快照和恢复操作。'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex w-full flex-col gap-2 sm:w-auto">
+          {!editing
+            ? (
+                <>
+                  <div
+                    className={cn(
+                      'grid gap-2',
+                      isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2',
+                    )}
+                  >
+                    {!isMobile && (
+                      <Button variant="outline" className="w-full justify-center" onClick={() => setPreviewTarget(selectedVersion.id)}>
+                        <Eye data-icon="inline-start" />
+                        预览
+                      </Button>
+                    )}
+                    <Button variant="outline" className="w-full justify-center" onClick={() => setRestoreTargetId(selectedVersion.id)}>
+                      <RotateCcw data-icon="inline-start" />
+                      恢复到此版本
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <Button className="w-full justify-center" onClick={state.startEditing}>
+                      <Edit3 data-icon="inline-start" />
+                      编辑信息
+                    </Button>
+                    <Button variant="destructive" className="w-full justify-center" onClick={() => setDeleteTargetId(selectedVersion.id)}>
+                      <Trash2 data-icon="inline-start" />
+                      删除版本
+                    </Button>
+                  </div>
+                </>
+              )
+            : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <Button variant="outline" className="w-full justify-center" onClick={state.cancelEditing} disabled={savingMetadata}>
+                    取消
+                  </Button>
+                  <Button className="w-full justify-center" onClick={() => void state.submitEditDraft()} disabled={savingMetadata}>
+                    <Save data-icon="inline-start" />
+                    {savingMetadata ? '保存中...' : '保存修改'}
+                  </Button>
+                </div>
+              )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Badge variant="outline">{formatRelativeTime(selectedVersion.created_at)}</Badge>
+        <Badge variant="outline">{formatDateTime(selectedVersion.created_at)}</Badge>
+        <Badge variant="outline">{sourceMeta.label}</Badge>
+      </div>
+      <HistoryPreviewDialog previewTarget={previewTarget} onClose={() => setPreviewTarget(null)} />
+      <SaveVersionDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        onSaved={versionId => state.selectEntry(versionId)}
+      />
+      <HistoryDialogs
+        restoreTargetId={restoreTargetId}
+        deleteTargetId={deleteTargetId}
+        onCloseRestore={() => setRestoreTargetId(null)}
+        onConfirmRestore={handleConfirmRestore}
+        onCloseDelete={() => setDeleteTargetId(null)}
+        onConfirmDelete={handleConfirmDelete}
+      />
+    </div>
+  )
+}

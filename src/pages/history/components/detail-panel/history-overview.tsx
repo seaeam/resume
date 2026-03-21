@@ -1,0 +1,88 @@
+import type { HistoryDetailPanelState } from './use-detail-panel-state'
+import { Bookmark, CalendarClock, Flag, MessageSquareText, Tags } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { formatDateTime } from '@/utils/date'
+import { SOURCE_META } from '../../const'
+import VersionMetadataFields from '../shared/version-metadata-fields'
+import MetricCard from './metric-card'
+
+interface HistoryVersionOverviewProps {
+  state: HistoryDetailPanelState
+}
+
+export default function HistoryVersionOverview({ state }: HistoryVersionOverviewProps) {
+  const { selectedVersion: version, editing } = state
+
+  if (!version) {
+    return null
+  }
+
+  if (editing) {
+    return (
+      <Card className="gap-0 py-0">
+        <CardContent className="px-5 py-5">
+          <VersionMetadataFields draft={state.editDraft} onChange={state.updateEditDraft} />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <>
+      <Card className="gap-4 border-border/70 bg-muted/20 py-5 shadow-none">
+        <CardContent className="grid gap-3 px-5 sm:grid-cols-2">
+          <MetricCard label="版本号" value={`V${version.version_no}`} icon={Bookmark} toneClassName="border-primary/10 bg-primary/5" />
+          <MetricCard
+            label="来源类型"
+            value={SOURCE_META[version.source_type].label}
+            icon={SOURCE_META[version.source_type].icon}
+            toneClassName="border-accent bg-accent/40"
+          />
+          <MetricCard
+            label="创建时间"
+            value={formatDateTime(version.created_at)}
+            icon={CalendarClock}
+            toneClassName="border-secondary bg-secondary/40"
+          />
+          <MetricCard
+            label="里程碑"
+            value={version.milestone_name || '未标记'}
+            icon={Flag}
+            toneClassName="border-border bg-muted/40"
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="gap-4 border-border/70 py-5 shadow-none">
+        <CardContent className="flex flex-col gap-3 px-5">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <MessageSquareText className="size-4 text-primary" />
+              备注说明
+            </div>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {version.description || '暂无备注说明'}
+            </p>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Tags className="size-4 text-primary" />
+              标签
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(version.tags?.length ?? 0) > 0
+                ? version.tags?.map(tag => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))
+                : <span className="text-sm text-muted-foreground">暂无标签</span>}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  )
+}
