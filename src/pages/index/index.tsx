@@ -109,7 +109,7 @@ export default function DashboardPage() {
       </motion.div>
 
       <motion.div variants={MotionItem}>
-        <TodoCard />
+        <TodoCard resumes={resumes} loading={resumesLoading} />
       </motion.div>
 
       <motion.div variants={MotionItem}>

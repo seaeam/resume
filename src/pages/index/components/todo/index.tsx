@@ -1,13 +1,20 @@
+import type { Resume } from '../../types'
 import { Card, CardContent } from '@/components/ui/card'
 import CompletenessModule from './content-complete'
 import { ExportModule } from './export-module'
 import { FollowUpModule } from './follow-up'
 import { TodoHeader } from './todo-header'
+import { useResumeSpotlights } from './use-resume-spotlights'
+import { useSpotlightRotation } from './use-spotlight-rotation'
 
-export function TodoCard() {
-  const exportInfo = {
-    lastExportDays: 5,
-  }
+interface TodoCardProps {
+  resumes: Resume[]
+  loading?: boolean
+}
+
+export function TodoCard({ resumes, loading = false }: TodoCardProps) {
+  const { items, loading: spotlightLoading } = useResumeSpotlights(resumes, loading)
+  const { activeIndex, setActiveIndex } = useSpotlightRotation(items.length)
 
   return (
     <Card className="overflow-hidden">
@@ -16,13 +23,28 @@ export function TodoCard() {
       <CardContent className="pt-0">
         <div className="flex -mx-6 px-6 overflow-x-auto gap-3 pb-2 snap-x snap-mandatory md:grid lg:grid-cols-3 md:grid-cols-2 md:gap-4 md:pb-0 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden scroll-smooth">
           <div className="min-w-[80%] snap-center md:min-w-0">
-            <CompletenessModule />
+            <CompletenessModule
+              items={items}
+              activeIndex={activeIndex}
+              loading={spotlightLoading}
+              onSelectIndex={setActiveIndex}
+            />
           </div>
           <div className="min-w-[80%] snap-center md:min-w-0">
-            <ExportModule lastExportDays={exportInfo.lastExportDays} />
+            <ExportModule
+              items={items}
+              activeIndex={activeIndex}
+              loading={spotlightLoading}
+              onSelectIndex={setActiveIndex}
+            />
           </div>
           <div className="min-w-[80%] snap-center md:min-w-0">
-            <FollowUpModule />
+            <FollowUpModule
+              items={items}
+              activeIndex={activeIndex}
+              loading={spotlightLoading}
+              onSelectIndex={setActiveIndex}
+            />
           </div>
         </div>
       </CardContent>

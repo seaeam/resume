@@ -1,0 +1,132 @@
+import type { HistorySelection } from '../../types'
+import { Eye, MoreHorizontal, Save, ShieldCheck, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
+import { formatDateTime, formatRelativeTime } from '@/utils/date'
+import { getResumeTypeLabel } from '../../const'
+import useHistoryStore from '../../store'
+import { getCurrentSyncState } from '../../utils'
+import HistoryPreviewDialog from '../preview-dialog'
+import SaveVersionDialog from '../save-version-dialog'
+
+interface CurrentVersionCardProps {
+  selected: boolean
+  onSelectEntry: (target: HistorySelection) => void
+}
+
+export default function CurrentVersionCard({
+  selected,
+  onSelectEntry,
+}: CurrentVersionCardProps) {
+  const isMobile = useIsMobile()
+  const { currentResume, versions } = useHistoryStore()
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+
+  const { latestVersionNo, synced } = getCurrentSyncState(currentResume, versions)
+  const syncLabel = versions.length === 0
+    ? '尚未建立历史记录'
+    : synced
+      ? `已与 V${latestVersionNo} 同步`
+      : '存在未保存更新'
+
+  useEffect(() => {
+    setPreviewOpen(false)
+    setSaveDialogOpen(false)
+  }, [currentResume?.resumeId])
+
+  if (!currentResume) {
+    return null
+  }
+
+  return (
+    <>
+      <article
+        className={cn(
+          'relative overflow-hidden rounded-2xl border border-border/70 bg-background transition-colors',
+          'hover:bg-muted/20',
+          selected && 'border-primary/25 bg-primary/5 ring-1 ring-primary/15',
+        )}
+      >
+        {selected && <span className="absolute inset-y-4 left-0 w-1 rounded-r-full bg-primary" />}
+
+        <div className="flex items-start gap-3 px-4 py-4">
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 flex-col gap-4 text-left"
+            onClick={() => onSelectEntry('current')}
+          >
+            <div className="flex min-w-0 flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">
+                  <ShieldCheck data-icon="inline-start" />
+                  当前版本
+                </Badge>
+                <Badge variant="outline" className={cn(!synced && versions.length > 0 && 'border-primary/20 text-primary')}>
+                  {versions.length > 0 && synced && <Sparkles data-icon="inline-start" />}
+                  {syncLabel}
+                </Badge>
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <div className="truncate text-base font-semibold sm:text-lg">{currentResume.displayName}</div>
+                <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+                  {currentResume.description || '当前草稿内容。'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline">
+                最近更新
+                {' '}
+                {currentResume.updatedAt ? formatRelativeTime(currentResume.updatedAt) : '未知'}
+              </Badge>
+              {currentResume.updatedAt && (
+                <Badge variant="outline">{formatDateTime(currentResume.updatedAt)}</Badge>
+              )}
+              <Badge variant="outline">
+                模板
+                {' '}
+                {getResumeTypeLabel(currentResume.type)}
+              </Badge>
+            </div>
+          </button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="shrink-0">
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                {!isMobile && (
+                  <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
+                    <Eye />
+                    当前快照
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => setSaveDialogOpen(true)}>
+                  <Save />
+                  保存当前版本
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </article>
+
+      <HistoryPreviewDialog previewTarget={previewOpen ? 'current' : null} onClose={() => setPreviewOpen(false)} />
+      <SaveVersionDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        onSaved={versionId => onSelectEntry(versionId)}
+      />
+    </>
+  )
+}

@@ -1,7 +1,15 @@
-import type { AtsEvaluationResult } from '../../../pages/optimize/types'
+import type { AtsEvaluationResult, Summary } from '../../../pages/optimize/types'
 import type { FixChecklistItem } from '@/pages/optimize/types'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
+
+export interface AtsSummaryRecord {
+  id: string
+  resume_id: string
+  created_at: string
+  todo_items: string[]
+  summary: Pick<Summary, 'overall_score'> | null
+}
 
 export async function getAtsFromUserId() {
   const user = await getCurrentUser()
@@ -20,6 +28,26 @@ export async function getAtsFromUserId() {
   }
 
   return data as AtsEvaluationResult[]
+}
+
+export async function listAtsSummaries() {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登录')
+  }
+
+  const { data, error } = await supabase
+    .from('ats')
+    .select('id,resume_id,created_at,todo_items,summary')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as AtsSummaryRecord[]
 }
 
 export async function updateAtsConfig(id: string, payload: Record<string, any>) {

@@ -2,6 +2,15 @@ import type { ApplicationStatus, InterviewSubStage, JobApplication, StageDetail 
 import supabase from '../client'
 import { getCurrentUser } from '../user'
 
+export interface JobApplicationSummary {
+  id: string
+  resume_id: string | null
+  status: ApplicationStatus
+  updated_at: string
+  company: string
+  position: string
+}
+
 // 获取用户所有公司/职位
 export async function getCompanies(): Promise<JobApplication[]> {
   const user = await getCurrentUser()
@@ -25,6 +34,26 @@ export async function getCompanies(): Promise<JobApplication[]> {
     stage_details: (item.stage_details || []) as StageDetail[],
     interview_sub_stages: (item.interview_sub_stages || []) as InterviewSubStage[],
   }))
+}
+
+export async function listJobApplicationSummaries(): Promise<JobApplicationSummary[]> {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { data, error } = await supabase
+    .from('company')
+    .select('id,resume_id,status,updated_at,company,position')
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as JobApplicationSummary[]
 }
 
 // 创建新公司/职位
