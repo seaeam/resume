@@ -67,6 +67,14 @@ export interface ResumeHistoryOptionRecord {
   type: ResumeType | null
 }
 
+export interface ResumeHistoryVersionSummaryRecord {
+  resume_id: string
+  version_no: number
+  created_at: string
+  source_type: ResumeVersionSourceType
+  milestone_name: string | null
+}
+
 export interface CreateResumeHistoryVersionInput {
   resume_id: string
   version_name?: string | null
@@ -133,6 +141,14 @@ const RESUME_OPTION_SELECTOR = `
   type
 `
 
+const VERSION_SUMMARY_SELECTOR = `
+  resume_id,
+  version_no,
+  created_at,
+  source_type,
+  milestone_name
+`
+
 export async function getResumeHistoryResume(resumeId: string) {
   const data = await getResumeById(resumeId, RESUME_SELECTOR)
   return data as ResumeHistoryResumeRecord
@@ -177,6 +193,26 @@ export async function listResumeHistoryVersions(resumeId: string) {
   }
 
   return (data ?? []) as ResumeHistoryVersionRow[]
+}
+
+export async function listResumeHistoryVersionSummaries() {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { data, error } = await supabase
+    .from('resume_config_versions')
+    .select(VERSION_SUMMARY_SELECTOR)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as ResumeHistoryVersionSummaryRecord[]
 }
 
 export async function createResumeHistoryVersion(input: CreateResumeHistoryVersionInput) {
