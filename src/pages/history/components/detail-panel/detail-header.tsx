@@ -188,7 +188,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
                   <div
                     className={cn(
                       'grid gap-2',
-                      isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2',
+                      isMobile ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-2',
                     )}
                   >
                     {!isMobile && (
@@ -201,8 +201,6 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
                       <RotateCcw data-icon="inline-start" />
                       恢复到此版本
                     </Button>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <Button className="w-full justify-center" onClick={state.startEditing}>
                       <Edit3 data-icon="inline-start" />
                       编辑信息
@@ -215,7 +213,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
                 </>
               )
             : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" className="w-full justify-center" onClick={state.cancelEditing} disabled={savingMetadata}>
                     取消
                   </Button>

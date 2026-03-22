@@ -1,5 +1,5 @@
 import type { HistoryDetailPanelState } from './use-detail-panel-state'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
@@ -24,6 +24,12 @@ export default function HistoryDetailContent({ state,
   const detailSnapshot = state.selectedEntry === 'current'
     ? currentResume?.snapshot
     : state.selectedVersion?.snapshot
+
+  useEffect(() => {
+    if (state.editing) {
+      setActiveTab('overview')
+    }
+  }, [state.editing])
 
   if (!detailSnapshot) {
     return null
