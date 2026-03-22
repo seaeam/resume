@@ -81,13 +81,13 @@ export default function HistoryDetailPanel({
     ? '当前版本'
     : renderedState.selectedVersion
       ? getVersionTitle(renderedState.selectedVersion)
-      : '版本详情'
+      : '版本内容'
 
   const description = renderedState.selectedEntry === 'current'
-    ? '查看当前简历的实时快照，也可以直接保存为新的历史节点。'
+    ? '查看当前内容，并可直接保存为新版本。'
     : renderedState.selectedVersion
       ? `V${renderedState.selectedVersion.version_no} · ${formatDateTime(renderedState.selectedVersion.created_at)}`
-      : '选择一个版本查看详情。'
+      : '请选择一个版本。'
   const desktopPanelClassName = 'md:flex md:min-h-0 md:max-h-[min(78vh,920px)] md:flex-col md:overflow-hidden lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]'
 
   const handleMobileClose = () => {
@@ -147,12 +147,12 @@ export default function HistoryDetailPanel({
         ? (
             loading
               ? (
-                  <Card className={`${desktopPanelClassName} border-border/70 bg-background py-0 shadow-none`}>
+                  <Card className={`${desktopPanelClassName} border-border/70 bg-background/95 py-0 shadow-none`}>
                     <DetailPanelLoadingState />
                   </Card>
                 )
               : (
-                  <Card className={`${desktopPanelClassName} justify-center border-border/70 bg-background py-0 shadow-none`}>
+                  <Card className={`${desktopPanelClassName} justify-center border-border/70 bg-background/95 py-0 shadow-none`}>
                     <Empty className="m-6 border border-dashed bg-muted/15">
                       <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -160,7 +160,7 @@ export default function HistoryDetailPanel({
                         </EmptyMedia>
                         <EmptyTitle>选择一个版本查看详情</EmptyTitle>
                         <EmptyDescription>
-                          右侧会展示版本元信息、只读快照预览，以及恢复和编辑操作。
+                          右侧会显示版本说明、当时的内容，以及恢复和编辑操作。
                         </EmptyDescription>
                       </EmptyHeader>
                     </Empty>
@@ -168,7 +168,7 @@ export default function HistoryDetailPanel({
                 )
           )
         : (
-            <Card className={`${desktopPanelClassName} border-border/70 bg-background py-0 shadow-none`}>
+            <Card className={`${desktopPanelClassName} border-border/70 bg-background/95 py-0 shadow-none`}>
               <HistoryDetailContent state={state} />
             </Card>
           )}

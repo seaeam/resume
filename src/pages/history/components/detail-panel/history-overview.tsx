@@ -34,7 +34,7 @@ export default function HistoryVersionOverview({ state }: HistoryVersionOverview
         <CardContent className="grid gap-3 px-5 sm:grid-cols-2">
           <MetricCard label="版本号" value={`V${version.version_no}`} icon={Bookmark} toneClassName="border-primary/10 bg-primary/5" />
           <MetricCard
-            label="来源类型"
+            label="版本来源"
             value={SOURCE_META[version.source_type].label}
             icon={SOURCE_META[version.source_type].icon}
             toneClassName="border-accent bg-accent/40"
@@ -46,8 +46,8 @@ export default function HistoryVersionOverview({ state }: HistoryVersionOverview
             toneClassName="border-secondary bg-secondary/40"
           />
           <MetricCard
-            label="里程碑"
-            value={version.milestone_name || '未标记'}
+            label="重点标记"
+            value={version.milestone_name || '未设置'}
             icon={Flag}
             toneClassName="border-border bg-muted/40"
           />
@@ -59,10 +59,10 @@ export default function HistoryVersionOverview({ state }: HistoryVersionOverview
           <div>
             <div className="flex items-center gap-2 text-sm font-medium">
               <MessageSquareText className="size-4 text-primary" />
-              备注说明
+              版本说明
             </div>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {version.description || '暂无备注说明'}
+              {version.description || '暂无说明'}
             </p>
           </div>
 

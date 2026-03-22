@@ -20,10 +20,10 @@ export default function HistoryHeaderActions() {
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
-            当前操作
+            常用操作
           </span>
           <p className="text-sm leading-6 text-muted-foreground">
-            先检查当前快照，再决定是否保存为新的历史节点。
+            先查看当前内容，再决定是否保存为新版本。
           </p>
         </div>
 
@@ -35,7 +35,7 @@ export default function HistoryHeaderActions() {
             onClick={() => setPreviewOpen(true)}
           >
             <Eye data-icon="inline-start" />
-            当前快照
+            查看当前内容
           </Button>
           <Button
             className="justify-center"

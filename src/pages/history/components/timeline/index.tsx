@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime } from '@/utils/date'
+import { useOverflowState } from '../../hooks/use-overflow-state'
 import useHistoryStore from '../../store'
-import { useOverflowState } from '../../use-overflow-state'
 import { groupVersionsByDay } from '../../utils'
 import CurrentVersionCard from './current-version-card'
 import TimelineEmptyState from './empty-state'
@@ -26,10 +26,10 @@ export default function HistoryTimeline({
   const { ref: scrollRef, overflowing } = useOverflowState<HTMLDivElement>()
 
   const groups = groupVersionsByDay(versions)
-  const timelineCountLabel = versions.length === 0 ? '暂无历史版本' : `${versions.length} 条历史版本`
+  const timelineCountLabel = versions.length === 0 ? '暂无版本记录' : `${versions.length} 条版本记录`
 
   return (
-    <Card className="gap-0 overflow-hidden border-border/70 bg-background py-0 shadow-none md:flex md:min-h-0 md:max-h-[min(78vh,920px)] md:flex-col lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]">
+    <Card className="gap-0 overflow-hidden border-border/70 bg-background/95 py-0 shadow-none md:flex md:min-h-0 md:max-h-[min(78vh,920px)] md:flex-col lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]">
       <CardHeader className="gap-4 py-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{timelineCountLabel}</Badge>
@@ -50,7 +50,7 @@ export default function HistoryTimeline({
         <div className="flex flex-col gap-1.5">
           <CardTitle>版本时间线</CardTitle>
           <CardDescription>
-            {loading ? '正在读取当前简历的版本时间线。' : '左侧用于定位节点，右侧查看详情、编辑、恢复和删除。'}
+            {loading ? '正在加载这份简历的版本记录。' : '左侧选择版本，右侧查看内容、编辑说明或恢复版本。'}
           </CardDescription>
         </div>
       </CardHeader>
@@ -68,7 +68,7 @@ export default function HistoryTimeline({
         <div className="flex flex-col gap-5 p-4 sm:p-5">
           <section className="flex flex-col gap-3">
             <div className="px-1 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-              当前
+              当前版本
             </div>
             <CurrentVersionCard
               selected={selectedEntry === 'current'}
@@ -80,7 +80,7 @@ export default function HistoryTimeline({
 
           <section className="flex flex-col gap-4">
             <div className="px-1 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-              历史记录
+              历史版本
             </div>
 
             {loading

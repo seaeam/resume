@@ -7,9 +7,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { formatDateTime, formatRelativeTime } from '@/utils/date'
-import { getResumeTypeLabel } from '../../const'
 import useHistoryStore from '../../store'
-import { getCurrentSyncState } from '../../utils'
+import { getCurrentSyncState, getResumeTypeLabel } from '../../utils'
 import HistoryPreviewDialog from '../preview-dialog'
 import SaveVersionDialog from '../save-version-dialog'
 
@@ -29,10 +28,10 @@ export default function CurrentVersionCard({
 
   const { latestVersionNo, synced } = getCurrentSyncState(currentResume, versions)
   const syncLabel = versions.length === 0
-    ? '尚未建立历史记录'
+    ? '暂无版本记录'
     : synced
-      ? `已与 V${latestVersionNo} 同步`
-      : '存在未保存更新'
+      ? `已同步至 V${latestVersionNo}`
+      : '有未保存的更新'
 
   useEffect(() => {
     setPreviewOpen(false)
@@ -47,13 +46,11 @@ export default function CurrentVersionCard({
     <>
       <article
         className={cn(
-          'relative overflow-hidden rounded-2xl border border-border/70 bg-background transition-colors',
-          'hover:bg-muted/20',
-          selected && 'border-primary/25 bg-primary/5 ring-1 ring-primary/15',
+          'relative overflow-hidden rounded-2xl border border-primary/10 bg-linear-to-br from-primary/[0.05] via-background to-background transition-colors',
+          'hover:border-primary/20 hover:bg-primary/[0.04]',
+          selected && 'border-primary/25 bg-linear-to-br from-primary/[0.14] via-primary/[0.05] to-background ring-1 ring-primary/12',
         )}
       >
-        {selected && <span className="absolute inset-y-4 left-0 w-1 rounded-r-full bg-primary" />}
-
         <div className="flex items-start gap-3 px-4 py-4">
           <button
             type="button"
@@ -75,14 +72,14 @@ export default function CurrentVersionCard({
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="truncate text-base font-semibold sm:text-lg">{currentResume.displayName}</div>
                 <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-                  {currentResume.description || '当前草稿内容。'}
+                  {currentResume.description || '当前正在编辑的内容。'}
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="outline">
-                最近更新
+                上次改动
                 {' '}
                 {currentResume.updatedAt ? formatRelativeTime(currentResume.updatedAt) : '未知'}
               </Badge>
@@ -108,7 +105,7 @@ export default function CurrentVersionCard({
                 {!isMobile && (
                   <DropdownMenuItem onClick={() => setPreviewOpen(true)}>
                     <Eye />
-                    当前快照
+                    查看当前内容
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => setSaveDialogOpen(true)}>

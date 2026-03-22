@@ -32,13 +32,13 @@ export default function HistoryWorkspace({ activeResumeId, onReloadResumeOptions
           <EmptyMedia variant="icon">
             <HistoryIcon />
           </EmptyMedia>
-          <EmptyTitle>历史版本暂时不可用</EmptyTitle>
+          <EmptyTitle>版本记录暂时不可用</EmptyTitle>
           <EmptyDescription>{error}</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button variant="outline" onClick={() => void handleReload()}>
             <RefreshCcw data-icon="inline-start" />
-            重新加载
+            重试
           </Button>
         </EmptyContent>
       </Empty>

@@ -1,7 +1,7 @@
-import type { HistoryResumeOption } from './types'
+import type { HistoryResumeOption } from '../types'
 import { useCallback, useEffect, useState } from 'react'
 import { listResumeHistoryOptions } from '@/lib/supabase/resume'
-import { buildHistoryResumeOption } from './utils'
+import { buildHistoryResumeOption } from '../utils'
 
 interface UseHistoryResumeOptionsResult {
   resumeOptions: HistoryResumeOption[]

@@ -5,7 +5,7 @@ import { isOfflineResumeId } from '@/lib/offline-resume-manager'
 import useCurrentResumeStore from '@/store/resume/current'
 import HistoryHeader from './components/header'
 import HistoryWorkspace from './components/workspace'
-import { useHistoryResumeOptions } from './use-history-options'
+import { useHistoryResumeOptions } from './hooks/use-history-options'
 
 function History() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -53,11 +53,11 @@ function History() {
                 <EmptyMedia variant="icon">
                   <HistoryIcon />
                 </EmptyMedia>
-                <EmptyTitle>{resumeOptions.length > 0 ? '先选择一份简历' : '还没有可查看的云端简历'}</EmptyTitle>
+                <EmptyTitle>{resumeOptions.length > 0 ? '请选择一份简历' : '暂无云端简历'}</EmptyTitle>
                 <EmptyDescription>
                   {resumeOptions.length > 0
-                    ? '从上方下拉框选择简历后，这里会显示它的当前内容、版本时间线和恢复记录。'
-                    : '历史版本当前只支持云端简历。先创建或同步一份云端简历后，再回到这里查看版本时间线。'}
+                    ? '选择简历后，这里会显示当前内容、历史版本以及恢复记录。'
+                    : '当前仅支持查看云端简历的版本记录。请先创建云端简历，或将本地简历同步到云端后再查看。'}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

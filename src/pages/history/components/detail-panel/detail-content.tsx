@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
+import { useOverflowState } from '../../hooks/use-overflow-state'
 import useHistoryStore from '../../store'
-import { useOverflowState } from '../../use-overflow-state'
 import SnapshotPreview from '../shared/snapshot-preview'
 import CurrentOverview from './current-overview'
 import DetailHeader from './detail-header'
@@ -46,7 +46,7 @@ export default function HistoryDetailContent({ state,
         <div className="shrink-0 px-4 py-3 sm:px-6">
           <TabsList className="w-full justify-start sm:w-auto">
             <TabsTrigger value="overview" className="flex-1 sm:flex-none">概览</TabsTrigger>
-            <TabsTrigger value="snapshot" className="flex-1 sm:flex-none">快照</TabsTrigger>
+            <TabsTrigger value="snapshot" className="flex-1 sm:flex-none">内容</TabsTrigger>
           </TabsList>
         </div>
         <Separator />

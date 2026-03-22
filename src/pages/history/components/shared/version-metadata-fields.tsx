@@ -21,11 +21,11 @@ export default function VersionMetadataFields({ draft, onChange }: VersionMetada
           maxLength={60}
           onChange={event => onChange({ versionName: event.target.value })}
         />
-        <FieldDescription>为空时会自动显示为“版本 Vx”。</FieldDescription>
+        <FieldDescription>为空时将自动显示为“版本 Vx”。</FieldDescription>
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="milestone-name">里程碑名称</FieldLabel>
+        <FieldLabel htmlFor="milestone-name">重点标记</FieldLabel>
         <Input
           id="milestone-name"
           value={draft.milestoneName}
@@ -33,15 +33,15 @@ export default function VersionMetadataFields({ draft, onChange }: VersionMetada
           maxLength={40}
           onChange={event => onChange({ milestoneName: event.target.value })}
         />
-        <FieldDescription>用于突出关键节点，不填也可以保存。</FieldDescription>
+        <FieldDescription>给特别重要的一版做个标记，不填也没关系。</FieldDescription>
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="version-description">备注说明</FieldLabel>
+        <FieldLabel htmlFor="version-description">版本说明</FieldLabel>
         <Textarea
           id="version-description"
           value={draft.description}
-          placeholder="记录这次保存的原因、投递用途或修改重点"
+          placeholder="记录本次保存的原因、用途或主要改动"
           rows={4}
           maxLength={240}
           onChange={event => onChange({ description: event.target.value })}
@@ -55,7 +55,7 @@ export default function VersionMetadataFields({ draft, onChange }: VersionMetada
       <Field>
         <FieldLabel>标签</FieldLabel>
         <VersionTagInput value={draft.tags} onChange={tags => onChange({ tags })} />
-        <FieldDescription>支持添加多个标签，方便后续搜索和筛选。</FieldDescription>
+        <FieldDescription>可添加多个标签，方便后续查找。</FieldDescription>
       </Field>
     </FieldGroup>
   )
