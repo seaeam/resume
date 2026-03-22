@@ -1,4 +1,6 @@
+import type { RestoreStrategy } from '../../types'
 import { LoaderCircle, RotateCcw, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import useHistoryStore from '../../store'
@@ -7,7 +9,7 @@ interface HistoryDialogsProps {
   restoreTargetId: number | null
   deleteTargetId: number | null
   onCloseRestore: () => void
-  onConfirmRestore: () => Promise<void>
+  onConfirmRestore: (strategy: RestoreStrategy) => Promise<void>
   onCloseDelete: () => void
   onConfirmDelete: () => Promise<void>
 }
@@ -21,8 +23,20 @@ export default function HistoryDialogs({
   onConfirmDelete,
 }: HistoryDialogsProps) {
   const { versions, restoring, deletingVersionId } = useHistoryStore()
+  const [restoreStrategy, setRestoreStrategy] = useState<RestoreStrategy | null>(null)
   const restoreTarget = versions.find(version => version.id === restoreTargetId)
   const deleteTarget = versions.find(version => version.id === deleteTargetId)
+
+  useEffect(() => {
+    if (!restoring) {
+      setRestoreStrategy(null)
+    }
+  }, [restoring])
+
+  const handleRestore = async (strategy: RestoreStrategy) => {
+    setRestoreStrategy(strategy)
+    await onConfirmRestore(strategy)
+  }
 
   return (
     <>
@@ -41,16 +55,40 @@ export default function HistoryDialogs({
             </AlertDialogMedia>
             <AlertDialogTitle>恢复此版本？</AlertDialogTitle>
             <AlertDialogDescription>
-              恢复后，当前内容将被此版本覆盖。系统会先自动保存当前内容，然后再生成一条“恢复自 V
-              {restoreTarget?.version_no}
-              ”记录，方便后续撤回。
+              恢复后，当前内容会被此版本覆盖，并生成一条新的恢复记录。
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="grid gap-3 px-6 pb-1 text-sm text-muted-foreground">
+            <div className="rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
+              <div className="font-medium text-foreground">恢复并保留当前内容</div>
+              <p className="mt-1 leading-6">
+                先额外保存一条“恢复前备份”，再恢复到所选版本。适合希望保留当前内容的情况。
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
+              <div className="font-medium text-foreground">直接恢复</div>
+              <p className="mt-1 leading-6">
+                不额外保存当前内容，直接恢复到所选版本，并生成一条新的恢复记录。
+              </p>
+            </div>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={restoring}>取消</AlertDialogCancel>
-            <Button disabled={restoring} onClick={() => void onConfirmRestore()}>
-              {restoring && <LoaderCircle data-icon="inline-start" className="animate-spin" />}
-              {restoring ? '恢复中...' : '确认恢复'}
+            <Button
+              variant="outline"
+              disabled={restoring}
+              onClick={() => void handleRestore('without_backup')}
+            >
+              {restoring && restoreStrategy === 'without_backup' && (
+                <LoaderCircle data-icon="inline-start" className="animate-spin" />
+              )}
+              {restoring && restoreStrategy === 'without_backup' ? '恢复中...' : '直接恢复'}
+            </Button>
+            <Button disabled={restoring} onClick={() => void handleRestore('with_backup')}>
+              {restoring && restoreStrategy === 'with_backup' && (
+                <LoaderCircle data-icon="inline-start" className="animate-spin" />
+              )}
+              {restoring && restoreStrategy === 'with_backup' ? '恢复中...' : '恢复并保留当前内容'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

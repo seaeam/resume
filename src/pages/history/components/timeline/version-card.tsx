@@ -1,4 +1,4 @@
-import type { HistorySelection } from '../../types'
+import type { HistorySelection, RestoreStrategy } from '../../types'
 import type { ResumeHistoryVersionRecord } from '@/lib/supabase/resume/history'
 import { Eye, Flag, MoreHorizontal, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -38,8 +38,8 @@ export default function VersionCard({
   const SourceIcon = sourceMeta.icon
   const showSelectedState = selected && !isMobile
 
-  const handleConfirmRestore = async () => {
-    const restoredVersion = await restoreVersion(version.id)
+  const handleConfirmRestore = async (strategy: RestoreStrategy) => {
+    const restoredVersion = await restoreVersion(version.id, strategy)
 
     if (!restoredVersion) {
       return
@@ -82,13 +82,11 @@ export default function VersionCard({
         <article
           className={cn(
             'relative overflow-hidden rounded-2xl border border-border/70 bg-background transition-colors',
-            'hover:bg-muted/20',
+            'hover:border-border/90 hover:shadow-xs',
             sourceMeta.surfaceClassName,
-            showSelectedState && 'border-primary/25 bg-primary/5 ring-1 ring-primary/15',
+            showSelectedState && sourceMeta.selectedSurfaceClassName,
           )}
         >
-          {showSelectedState && <span className="absolute inset-y-4 left-0 w-1 rounded-r-full bg-primary" />}
-
           <div className="flex items-start gap-3 px-4 py-4">
             <button
               type="button"

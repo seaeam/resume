@@ -1,4 +1,4 @@
-import type { HistoryCurrentResume, VersionMetadataDraft } from './types'
+import type { HistoryCurrentResume, RestoreStrategy, VersionMetadataDraft } from './types'
 import type { ResumeHistoryVersionRecord } from '@/lib/supabase/resume/history'
 import { toast } from 'sonner'
 import { create } from 'zustand'
@@ -21,7 +21,7 @@ interface HistoryStore {
   reload: () => Promise<void>
   saveCurrentVersion: (draft: VersionMetadataDraft) => Promise<ResumeHistoryVersionRecord | null>
   updateVersionMetadata: (versionId: number, draft: VersionMetadataDraft) => Promise<ResumeHistoryVersionRecord | null>
-  restoreVersion: (versionId: number) => Promise<ResumeHistoryVersionRecord | null>
+  restoreVersion: (versionId: number, strategy: RestoreStrategy) => Promise<ResumeHistoryVersionRecord | null>
   deleteVersion: (versionId: number) => Promise<boolean>
 }
 
@@ -177,7 +177,7 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
         set({ savingMetadata: false })
       }
     },
-    async restoreVersion(versionId) {
+    async restoreVersion(versionId, strategy) {
       const { resumeId, currentResume, versions } = get()
       const targetVersion = versions.find(version => version.id === versionId)
 
@@ -188,16 +188,18 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
       set({ restoring: true })
 
       try {
-        await createResumeHistoryVersion({
-          resume_id: resumeId,
-          version_name: '恢复前备份',
-          description: `回到 V${targetVersion.version_no} 前自动保存`,
-          source_type: 'autosave',
-          tags: ['恢复前备份'],
-          snapshot: currentResume.snapshot,
-          content_hash: await createSnapshotHash(currentResume.snapshot),
-          base_updated_at: currentResume.updatedAt,
-        })
+        if (strategy === 'with_backup') {
+          await createResumeHistoryVersion({
+            resume_id: resumeId,
+            version_name: '恢复前备份',
+            description: `恢复到 V${targetVersion.version_no} 前自动保存`,
+            source_type: 'autosave',
+            tags: ['恢复前备份'],
+            snapshot: currentResume.snapshot,
+            content_hash: await createSnapshotHash(currentResume.snapshot),
+            base_updated_at: currentResume.updatedAt,
+          })
+        }
 
         await replaceAutomergeDocumentSnapshot(resumeId, targetVersion.snapshot)
 

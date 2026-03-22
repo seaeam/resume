@@ -1,9 +1,8 @@
 import { Clock3, FileText, History, Info } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatRelativeTime } from '@/utils/date'
-import { getResumeTypeLabel } from '../../const'
 import useHistoryStore from '../../store'
-import { getCurrentSyncState } from '../../utils'
+import { getCurrentSyncState, getResumeTypeLabel } from '../../utils'
 import MetricCard from './metric-card'
 
 export default function CurrentOverview() {

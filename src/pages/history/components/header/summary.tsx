@@ -29,7 +29,7 @@ export default function HistoryHeaderSummary() {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex min-w-0 items-start gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border bg-muted/40 text-primary sm:size-14">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/[0.08] text-primary shadow-xs sm:size-14">
           <History className="size-5" />
         </div>
 

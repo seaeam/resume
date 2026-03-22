@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime } from '@/utils/date'
+import { useOverflowState } from '../../hooks/use-overflow-state'
 import useHistoryStore from '../../store'
-import { useOverflowState } from '../../use-overflow-state'
 import { groupVersionsByDay } from '../../utils'
 import CurrentVersionCard from './current-version-card'
 import TimelineEmptyState from './empty-state'
@@ -29,7 +29,7 @@ export default function HistoryTimeline({
   const timelineCountLabel = versions.length === 0 ? '暂无版本记录' : `${versions.length} 条版本记录`
 
   return (
-    <Card className="gap-0 overflow-hidden border-border/70 bg-background py-0 shadow-none md:flex md:min-h-0 md:max-h-[min(78vh,920px)] md:flex-col lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]">
+    <Card className="gap-0 overflow-hidden border-border/70 bg-background/95 py-0 shadow-none md:flex md:min-h-0 md:max-h-[min(78vh,920px)] md:flex-col lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]">
       <CardHeader className="gap-4 py-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{timelineCountLabel}</Badge>

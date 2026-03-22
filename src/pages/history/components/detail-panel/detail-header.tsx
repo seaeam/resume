@@ -1,4 +1,4 @@
-import type { PreviewTarget } from '../../types'
+import type { PreviewTarget, RestoreStrategy } from '../../types'
 import type { HistoryDetailPanelState } from './use-detail-panel-state'
 import { Clock3, Edit3, Eye, RotateCcw, Save, Sparkles, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { formatDateTime, formatRelativeTime } from '@/utils/date'
-import { getResumeTypeLabel, SOURCE_META } from '../../const'
+import { SOURCE_META } from '../../const'
 import useHistoryStore from '../../store'
-import { getCurrentSyncState, getVersionTitle } from '../../utils'
+import { getCurrentSyncState, getResumeTypeLabel, getVersionTitle } from '../../utils'
 import HistoryDialogs from '../dialogs'
 import HistoryPreviewDialog from '../preview-dialog'
 import SaveVersionDialog from '../save-version-dialog'
@@ -35,12 +35,12 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
     setDeleteTargetId(null)
   }, [selectedEntry])
 
-  const handleConfirmRestore = async () => {
+  const handleConfirmRestore = async (strategy: RestoreStrategy) => {
     if (!restoreTargetId) {
       return
     }
 
-    const restoredVersion = await restoreVersion(restoreTargetId)
+    const restoredVersion = await restoreVersion(restoreTargetId, strategy)
 
     if (!restoredVersion) {
       return

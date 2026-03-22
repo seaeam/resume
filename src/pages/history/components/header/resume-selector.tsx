@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatDateTime } from '@/utils/date'
-import { getResumeTypeLabel } from '../../const'
+import { getResumeTypeLabel } from '../../utils'
 
 interface HistoryResumeSelectorProps {
   value: string | null
@@ -66,13 +66,13 @@ export default function HistoryResumeSelector({ value, options, loading, error, 
               <SelectTrigger
                 id="history-resume-selector"
                 aria-invalid={Boolean(error)}
-                className="h-auto min-h-18 w-full rounded-2xl border-border/70 bg-muted/24 px-3 py-3 shadow-none transition-colors hover:bg-muted/38"
+                className="h-auto min-h-18 w-full rounded-2xl border-primary/10 bg-background/95 px-3 py-3 shadow-xs transition-colors hover:border-primary/20 hover:bg-primary/[0.04]"
               >
                 <SelectValue placeholder={loading ? '正在加载简历...' : '选择简历'}>
                   {selectedResume && (
                     <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 text-left">
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background shadow-xs">
-                        <FileText className="text-muted-foreground" />
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-primary/[0.06] shadow-xs">
+                        <FileText className="text-primary" />
                       </div>
 
                       <div className="min-w-0 flex flex-col gap-1">
@@ -97,7 +97,7 @@ export default function HistoryResumeSelector({ value, options, loading, error, 
                 </SelectValue>
               </SelectTrigger>
 
-              <SelectContent className="scrollbar-thin-subtle max-h-[min(60vh,420px)] w-(--radix-select-trigger-width) max-w-[calc(100vw-2rem)] rounded-2xl border-border/70 bg-background/95 p-1.5 shadow-lg backdrop-blur">
+              <SelectContent className="scrollbar-thin-subtle max-h-[min(60vh,420px)] w-(--radix-select-trigger-width) max-w-[calc(100vw-2rem)] rounded-2xl border-border/70 bg-background/95 p-1.5 shadow-xl backdrop-blur">
                 <SelectGroup>{optionItems}</SelectGroup>
               </SelectContent>
             </Select>

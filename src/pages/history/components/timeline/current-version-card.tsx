@@ -7,9 +7,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import { formatDateTime, formatRelativeTime } from '@/utils/date'
-import { getResumeTypeLabel } from '../../const'
 import useHistoryStore from '../../store'
-import { getCurrentSyncState } from '../../utils'
+import { getCurrentSyncState, getResumeTypeLabel } from '../../utils'
 import HistoryPreviewDialog from '../preview-dialog'
 import SaveVersionDialog from '../save-version-dialog'
 
@@ -47,9 +46,9 @@ export default function CurrentVersionCard({
     <>
       <article
         className={cn(
-          'relative overflow-hidden rounded-2xl border border-border/70 bg-background transition-colors',
-          'hover:bg-muted/20',
-          selected && 'border-primary/25 bg-primary/5 ring-1 ring-primary/15',
+          'relative overflow-hidden rounded-2xl border border-primary/10 bg-linear-to-br from-primary/[0.05] via-background to-background transition-colors',
+          'hover:border-primary/20 hover:bg-primary/[0.04]',
+          selected && 'border-primary/25 bg-linear-to-br from-primary/[0.14] via-primary/[0.05] to-background ring-1 ring-primary/12',
         )}
       >
         <div className="flex items-start gap-3 px-4 py-4">

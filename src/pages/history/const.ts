@@ -2,16 +2,11 @@ import type { LucideIcon } from 'lucide-react'
 import type { ResumeType } from '@/lib/schema'
 import type { ResumeVersionSourceType } from '@/lib/supabase/resume/history'
 import { BookmarkCheck, Clock3, EyeOff, Flag, RotateCcw, Sparkles, Upload } from 'lucide-react'
-import { normalizeResumeType } from '@/lib/schema'
 
 export const RESUME_TYPE_LABEL_MAP: Record<ResumeType, string> = {
   default: '默认模板',
   simple: '简洁模板',
   modern: '现代模板',
-}
-
-export function getResumeTypeLabel(type: string | null | undefined): string {
-  return RESUME_TYPE_LABEL_MAP[normalizeResumeType(type)]
 }
 
 export const SOURCE_META: Record<
@@ -22,42 +17,48 @@ export const SOURCE_META: Record<
     badgeClassName: string
     nodeClassName: string
     surfaceClassName: string
+    selectedSurfaceClassName: string
   }
 > = {
   manual: {
     label: '手动保存',
     icon: BookmarkCheck,
-    badgeClassName: 'border-secondary/80 bg-secondary text-secondary-foreground',
-    nodeClassName: 'border-secondary/80 bg-secondary text-secondary-foreground',
-    surfaceClassName: 'bg-linear-to-br from-secondary via-background to-background',
+    badgeClassName: 'border-secondary/80 bg-secondary/90 text-secondary-foreground',
+    nodeClassName: 'border-secondary/90 bg-secondary text-secondary-foreground',
+    surfaceClassName: 'bg-linear-to-br from-secondary/85 via-background to-background',
+    selectedSurfaceClassName: 'border-secondary-foreground/15 bg-linear-to-br from-secondary via-secondary/55 to-background ring-1 ring-secondary-foreground/8',
   },
   autosave: {
     label: '自动保存',
     icon: Clock3,
-    badgeClassName: 'border-border bg-muted text-muted-foreground',
-    nodeClassName: 'border-border bg-muted text-muted-foreground',
+    badgeClassName: 'border-border bg-muted/85 text-muted-foreground',
+    nodeClassName: 'border-border/90 bg-muted text-muted-foreground',
     surfaceClassName: 'bg-linear-to-br from-muted/75 via-background to-background',
+    selectedSurfaceClassName: 'border-border/80 bg-linear-to-br from-muted via-muted/55 to-background ring-1 ring-border/50',
   },
   restore: {
     label: '恢复后生成',
     icon: RotateCcw,
-    badgeClassName: 'border-destructive/15 bg-destructive/8 text-foreground',
-    nodeClassName: 'border-destructive/20 bg-destructive/12 text-destructive',
-    surfaceClassName: 'bg-linear-to-br from-destructive/[0.06] via-background to-background',
+    badgeClassName: 'border-primary/20 bg-primary/10 text-primary',
+    nodeClassName: 'border-primary/30 bg-primary/12 text-primary',
+    surfaceClassName: 'bg-linear-to-br from-primary/[0.08] via-background to-background',
+    selectedSurfaceClassName: 'border-primary/35 bg-linear-to-br from-primary/[0.16] via-primary/[0.07] to-background ring-1 ring-primary/12',
   },
   ai_optimize: {
     label: 'AI 优化',
     icon: Sparkles,
-    badgeClassName: 'border-primary/20 bg-primary/10 text-primary',
-    nodeClassName: 'border-primary/30 bg-primary/10 text-primary',
-    surfaceClassName: 'bg-linear-to-br from-primary/[0.08] via-background to-background',
+    badgeClassName: 'border-chart-3/25 bg-chart-3/10 text-chart-4',
+    nodeClassName: 'border-chart-3/35 bg-chart-3/12 text-chart-4',
+    surfaceClassName: 'bg-linear-to-br from-chart-3/[0.08] via-background to-background',
+    selectedSurfaceClassName: 'border-chart-3/30 bg-linear-to-br from-chart-3/[0.16] via-chart-3/[0.06] to-background ring-1 ring-chart-3/12',
   },
   import: {
     label: '导入版本',
     icon: Upload,
-    badgeClassName: 'border-chart-1/20 bg-chart-1/10 text-foreground',
-    nodeClassName: 'border-chart-1/25 bg-chart-1/12 text-foreground',
-    surfaceClassName: 'bg-linear-to-br from-chart-1/10 via-background to-background',
+    badgeClassName: 'border-chart-1/25 bg-chart-1/10 text-foreground',
+    nodeClassName: 'border-chart-1/30 bg-chart-1/12 text-foreground',
+    surfaceClassName: 'bg-linear-to-br from-chart-1/[0.12] via-background to-background',
+    selectedSurfaceClassName: 'border-chart-1/35 bg-linear-to-br from-chart-1/[0.18] via-chart-1/[0.06] to-background ring-1 ring-chart-1/12',
   },
 }
 

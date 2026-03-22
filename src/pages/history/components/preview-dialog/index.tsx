@@ -128,7 +128,7 @@ export default function HistoryPreviewDialog({
             </div>
           </div>
           <Separator />
-          <DrawerFooter className="shrink-0 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <DrawerFooter className="shrink-0 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-backdrop-filter:bg-background/80">
             <DrawerClose asChild>
               <Button variant="outline" onClick={handleMobileClose}>关闭</Button>
             </DrawerClose>

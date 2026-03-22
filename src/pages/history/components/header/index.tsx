@@ -22,7 +22,7 @@ export default function HistoryHeader(props: HistoryHeaderProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="overflow-hidden rounded-4xl border bg-background shadow-xs"
+      className="overflow-hidden rounded-4xl border border-border/70 bg-linear-to-br from-primary/[0.035] via-background to-background shadow-xs"
     >
       <div className="flex flex-col gap-5 p-4 sm:p-6 lg:gap-6 lg:p-7">
         <HistoryHeaderSummary />

@@ -147,12 +147,12 @@ export default function HistoryDetailPanel({
         ? (
             loading
               ? (
-                  <Card className={`${desktopPanelClassName} border-border/70 bg-background py-0 shadow-none`}>
+                  <Card className={`${desktopPanelClassName} border-border/70 bg-background/95 py-0 shadow-none`}>
                     <DetailPanelLoadingState />
                   </Card>
                 )
               : (
-                  <Card className={`${desktopPanelClassName} justify-center border-border/70 bg-background py-0 shadow-none`}>
+                  <Card className={`${desktopPanelClassName} justify-center border-border/70 bg-background/95 py-0 shadow-none`}>
                     <Empty className="m-6 border border-dashed bg-muted/15">
                       <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -168,7 +168,7 @@ export default function HistoryDetailPanel({
                 )
           )
         : (
-            <Card className={`${desktopPanelClassName} border-border/70 bg-background py-0 shadow-none`}>
+            <Card className={`${desktopPanelClassName} border-border/70 bg-background/95 py-0 shadow-none`}>
               <HistoryDetailContent state={state} />
             </Card>
           )}

@@ -5,7 +5,7 @@ import { isOfflineResumeId } from '@/lib/offline-resume-manager'
 import useCurrentResumeStore from '@/store/resume/current'
 import HistoryHeader from './components/header'
 import HistoryWorkspace from './components/workspace'
-import { useHistoryResumeOptions } from './use-history-options'
+import { useHistoryResumeOptions } from './hooks/use-history-options'
 
 function History() {
   const [searchParams, setSearchParams] = useSearchParams()
