@@ -2,7 +2,7 @@ import BasicResume from './basic/Basic'
 import ModernResume from './modern/Modern'
 
 const resumeComponents = {
-  basic: BasicResume,
+  default: BasicResume,
   modern: ModernResume,
   simple: null,
 }

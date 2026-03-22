@@ -1,4 +1,4 @@
-import type { ORDERType, ResumeSchema, VisibilityItemsType } from '@/lib/schema'
+import type { ORDERType, ResumeSchema, ResumeType, VisibilityItemsType } from '@/lib/schema'
 
 /**
  * Automerge 文档结构
@@ -18,7 +18,7 @@ export interface AutomergeResumeDocument extends ResumeSchema {
   // 表单顺序和可见性
   order: ORDERType[]
   visibility: Record<VisibilityItemsType, boolean>
-  type: 'basic' | 'modern' | 'simple'
+  type: ResumeType
 
   // 协作者信息（运行时状态，不持久化到 Supabase）
   _collaborators?: {

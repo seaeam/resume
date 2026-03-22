@@ -1,6 +1,6 @@
 import type { ResumePreviewData } from './components/drawer/types'
 import type { ApplicationStatus, StageDetail } from './types'
-import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility } from '@/lib/schema'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType } from '@/lib/schema'
 import { APPLICATION_STATUS_ORDER } from './const'
 
 // 将 Supabase snake_case 字段转换为 camelCase
@@ -89,6 +89,6 @@ export function normalizeResumePreviewData(data: ResumePreviewData) {
     hobbies: data.hobbies ?? DEFAULT_HOBBIES,
     order: migrateOrder(data.order ?? DEFAULT_ORDER),
     visibility: migrateVisibility(data.visibility ?? DEFAULT_VISIBILITY),
-    type: data.type ?? 'basic',
+    type: normalizeResumeType(data.type),
   }
 }

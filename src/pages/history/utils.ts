@@ -4,7 +4,7 @@ import type {
   HistoryVersionGroup,
   VersionMetadataDraft,
 } from './types'
-import type { ResumeType, VisibilityFormType } from '@/lib/schema'
+import type { VisibilityFormType } from '@/lib/schema'
 import type {
   ResumeHistoryOptionRecord,
   ResumeHistoryResumeRecord,
@@ -13,7 +13,7 @@ import type {
   ResumeSnapshot,
 } from '@/lib/supabase/resume/history'
 import dayjs from 'dayjs'
-import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility } from '@/lib/schema'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType } from '@/lib/schema'
 
 interface SnapshotFieldConfig {
   default: unknown
@@ -35,14 +35,6 @@ const SNAPSHOT_FIELD_DEFAULTS: Record<SnapshotSectionKey, SnapshotFieldConfig> =
   honors_certificates: { default: DEFAULT_HONORS_CERTIFICATES, legacyKey: 'honorsCertificates' },
   self_evaluation: { default: DEFAULT_SELF_EVALUATION, legacyKey: 'selfEvaluation' },
   hobbies: { default: DEFAULT_HOBBIES },
-}
-
-function normalizeResumeType(value: unknown): ResumeType {
-  if (value === 'simple' || value === 'modern' || value === 'default') {
-    return value
-  }
-
-  return 'default'
 }
 
 export function sanitizeDeep<T>(value: T): T {
