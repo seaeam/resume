@@ -60,7 +60,7 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
           <DrawerHeader className="shrink-0 text-left">
             <DrawerTitle>保存当前版本</DrawerTitle>
             <DrawerDescription>
-              把当前简历内容存成一条新的历史记录，方便后续回看、预览和恢复。
+              将当前内容保存为一个新版本，方便后续查看、对比和恢复。
             </DrawerDescription>
           </DrawerHeader>
           <Separator />
@@ -82,7 +82,7 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
               </Button>
               <Button type="submit" disabled={savingCurrent}>
                 <Save data-icon="inline-start" />
-                {savingCurrent ? '保存中...' : '保存为历史版本'}
+                {savingCurrent ? '保存中...' : '保存为新版本'}
               </Button>
             </DrawerFooter>
           </form>
@@ -97,7 +97,7 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
         <DialogHeader className="shrink-0 px-5 py-4 sm:px-6 sm:py-5">
           <DialogTitle>保存当前版本</DialogTitle>
           <DialogDescription>
-            把当前简历内容存成一条新的历史记录，方便后续回看、预览和恢复。
+            将当前内容保存为一个新版本，方便后续查看、对比和恢复。
           </DialogDescription>
         </DialogHeader>
         <Separator />
@@ -119,7 +119,7 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
             </Button>
             <Button type="submit" disabled={savingCurrent}>
               <Save data-icon="inline-start" />
-              {savingCurrent ? '保存中...' : '保存为历史版本'}
+              {savingCurrent ? '保存中...' : '保存为新版本'}
             </Button>
           </div>
         </form>

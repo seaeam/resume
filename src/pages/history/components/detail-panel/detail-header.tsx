@@ -80,7 +80,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
               <Badge variant="secondary">当前版本</Badge>
               {versions.length === 0
                 ? (
-                    <Badge variant="outline">尚未保存历史记录</Badge>
+                    <Badge variant="outline">暂无版本记录</Badge>
                   )
                 : syncState.synced
                   ? (
@@ -98,7 +98,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl font-semibold tracking-tight">{currentResume.displayName}</h2>
               <p className="text-sm text-muted-foreground">
-                {currentResume.description || '当前内容。'}
+                {currentResume.description || '当前正在编辑的内容。'}
               </p>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
             {!isMobile && (
               <Button variant="outline" className="w-full justify-center" onClick={() => setPreviewTarget('current')}>
                 <Eye data-icon="inline-start" />
-                预览
+                查看当前内容
               </Button>
             )}
             <Button className="w-full justify-center" onClick={() => setSaveDialogOpen(true)}>
@@ -125,7 +125,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline">
             <Clock3 />
-            {currentResume.updatedAt ? formatRelativeTime(currentResume.updatedAt) : '更新时间未知'}
+            {currentResume.updatedAt ? formatRelativeTime(currentResume.updatedAt) : '暂无更新时间'}
           </Badge>
           {currentResume.updatedAt && (
             <Badge variant="outline">{formatDateTime(currentResume.updatedAt)}</Badge>
@@ -176,7 +176,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
           <div className="flex flex-col gap-1">
             <h2 className="text-2xl font-semibold tracking-tight">{getVersionTitle(selectedVersion)}</h2>
             <p className="text-sm text-muted-foreground">
-              {selectedVersion.description || '查看元信息、快照和恢复操作。'}
+              {selectedVersion.description || '查看该版本的说明、内容，以及恢复操作。'}
             </p>
           </div>
         </div>
@@ -194,12 +194,12 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
                     {!isMobile && (
                       <Button variant="outline" className="w-full justify-center" onClick={() => setPreviewTarget(selectedVersion.id)}>
                         <Eye data-icon="inline-start" />
-                        预览
+                        查看内容
                       </Button>
                     )}
                     <Button variant="outline" className="w-full justify-center" onClick={() => setRestoreTargetId(selectedVersion.id)}>
                       <RotateCcw data-icon="inline-start" />
-                      恢复到此版本
+                      恢复此版本
                     </Button>
                     <Button className="w-full justify-center" onClick={state.startEditing}>
                       <Edit3 data-icon="inline-start" />

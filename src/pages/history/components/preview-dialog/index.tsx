@@ -75,10 +75,10 @@ export default function HistoryPreviewDialog({
   }
 
   const title = renderTarget === 'current'
-    ? `${currentResume?.displayName || '当前简历'} · 当前快照`
+    ? `${currentResume?.displayName || '当前简历'} · 当前内容`
     : getVersionTitle(selectedVersion!)
   const description = renderTarget === 'current'
-    ? '当前实时内容的只读预览。'
+    ? '当前内容的只读预览。'
     : `V${selectedVersion!.version_no} · ${formatDateTime(selectedVersion!.created_at)}`
 
   const handleMobileClose = () => {
@@ -130,7 +130,7 @@ export default function HistoryPreviewDialog({
           <Separator />
           <DrawerFooter className="shrink-0 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <DrawerClose asChild>
-              <Button variant="outline" onClick={handleMobileClose}>关闭预览</Button>
+              <Button variant="outline" onClick={handleMobileClose}>关闭</Button>
             </DrawerClose>
           </DrawerFooter>
         </DrawerContent>
@@ -177,7 +177,7 @@ export default function HistoryPreviewDialog({
         <Separator />
         <DialogFooter className="shrink-0 bg-muted/30 px-5 py-4 sm:px-6 lg:px-8">
           <DialogClose asChild>
-            <Button variant="outline">关闭预览</Button>
+            <Button variant="outline">关闭</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

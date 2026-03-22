@@ -68,7 +68,7 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
           currentResume: null,
           versions: [],
           loading: false,
-          error: '历史版本当前仅支持云端简历，请先同步到云端后再查看。',
+          error: '当前仅支持查看云端简历的版本记录，请先同步到云端。',
         })
         return
       }
@@ -85,7 +85,7 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
         await hydrate(resumeId)
       }
       catch (error) {
-        const message = error instanceof Error ? error.message : '历史版本加载失败'
+        const message = error instanceof Error ? error.message : '版本记录加载失败'
         set({
           loading: false,
           error: message,
@@ -108,7 +108,7 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
         await hydrate(resumeId)
       }
       catch (error) {
-        const message = error instanceof Error ? error.message : '历史版本刷新失败'
+        const message = error instanceof Error ? error.message : '版本记录刷新失败'
         set({ loading: false, error: message })
         toast.error(message)
       }
@@ -137,11 +137,11 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
         set({
           versions: [created, ...versions],
         })
-        toast.success('当前版本已保存到时间线')
+        toast.success('当前版本已保存')
         return created
       }
       catch (error) {
-        toast.error(error instanceof Error ? error.message : '保存历史版本失败')
+        toast.error(error instanceof Error ? error.message : '保存版本失败')
         return null
       }
       finally {
@@ -190,10 +190,10 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
       try {
         await createResumeHistoryVersion({
           resume_id: resumeId,
-          version_name: '恢复前快照',
-          description: `恢复到 V${targetVersion.version_no} 前自动保存`,
+          version_name: '恢复前备份',
+          description: `回到 V${targetVersion.version_no} 前自动保存`,
           source_type: 'autosave',
-          tags: ['恢复前快照'],
+          tags: ['恢复前备份'],
           snapshot: currentResume.snapshot,
           content_hash: await createSnapshotHash(currentResume.snapshot),
           base_updated_at: currentResume.updatedAt,
@@ -204,11 +204,11 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
         const restoredVersion = normalizeHistoryVersion(
           await createResumeHistoryVersion({
             resume_id: resumeId,
-            version_name: `恢复自 V${targetVersion.version_no}`,
+            version_name: `从 V${targetVersion.version_no} 恢复`,
             description: trimToNull(
               targetVersion.version_name
-                ? `从「${targetVersion.version_name}」恢复当前简历`
-                : `从 V${targetVersion.version_no} 恢复当前简历`,
+                ? `从「${targetVersion.version_name}」恢复当前内容`
+                : `从 V${targetVersion.version_no} 恢复当前内容`,
             ),
             milestone_name: trimToNull(targetVersion.milestone_name),
             source_type: 'restore',
@@ -220,11 +220,11 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
         )
 
         await hydrate(resumeId)
-        toast.success('已恢复到所选历史版本')
+        toast.success('已恢复至所选版本')
         return restoredVersion
       }
       catch (error) {
-        toast.error(error instanceof Error ? error.message : '恢复历史版本失败')
+        toast.error(error instanceof Error ? error.message : '恢复版本失败')
         return null
       }
       finally {
@@ -248,11 +248,11 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
           versions: versions.filter(version => version.id !== versionId),
         })
 
-        toast.success(`已删除 V${targetVersion.version_no} 历史版本`)
+        toast.success(`已删除 V${targetVersion.version_no}`)
         return true
       }
       catch (error) {
-        toast.error(error instanceof Error ? error.message : '删除历史版本失败')
+        toast.error(error instanceof Error ? error.message : '删除版本失败')
         return false
       }
       finally {

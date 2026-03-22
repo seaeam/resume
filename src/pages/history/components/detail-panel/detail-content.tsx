@@ -46,7 +46,7 @@ export default function HistoryDetailContent({ state,
         <div className="shrink-0 px-4 py-3 sm:px-6">
           <TabsList className="w-full justify-start sm:w-auto">
             <TabsTrigger value="overview" className="flex-1 sm:flex-none">概览</TabsTrigger>
-            <TabsTrigger value="snapshot" className="flex-1 sm:flex-none">快照</TabsTrigger>
+            <TabsTrigger value="snapshot" className="flex-1 sm:flex-none">内容</TabsTrigger>
           </TabsList>
         </div>
         <Separator />

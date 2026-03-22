@@ -174,12 +174,12 @@ export default function VersionCard({
                   {!isMobile && (
                     <DropdownMenuItem onClick={() => setPreviewTarget(version.id)}>
                       <Eye />
-                      预览版本
+                      查看内容
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => setRestoreTargetId(version.id)}>
                     <RotateCcw />
-                    恢复到此版本
+                    恢复此版本
                   </DropdownMenuItem>
                   <DropdownMenuItem variant="destructive" onClick={() => setDeleteTargetId(version.id)}>
                     <Trash2 />

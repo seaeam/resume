@@ -8,7 +8,7 @@ export default function DetailPanelLoadingState() {
       <div className="flex flex-col gap-3">
         <Badge variant="secondary" className="w-fit">
           <LoaderCircle data-icon="inline-start" className="animate-spin" />
-          正在读取版本详情
+          正在加载版本详情
         </Badge>
         <div className="space-y-2">
           <Skeleton className="h-8 w-40" />

@@ -32,14 +32,14 @@ export const SOURCE_META: Record<
     surfaceClassName: 'bg-linear-to-br from-secondary via-background to-background',
   },
   autosave: {
-    label: '自动留档',
+    label: '自动保存',
     icon: Clock3,
     badgeClassName: 'border-border bg-muted text-muted-foreground',
     nodeClassName: 'border-border bg-muted text-muted-foreground',
     surfaceClassName: 'bg-linear-to-br from-muted/75 via-background to-background',
   },
   restore: {
-    label: '恢复记录',
+    label: '恢复后生成',
     icon: RotateCcw,
     badgeClassName: 'border-destructive/15 bg-destructive/8 text-foreground',
     nodeClassName: 'border-destructive/20 bg-destructive/12 text-destructive',
@@ -127,6 +127,6 @@ export const HIDDEN_SECTION_BADGE = {
 }
 
 export const MILESTONE_BADGE = {
-  label: '里程碑',
+  label: '重点版本',
   icon: Flag,
 }

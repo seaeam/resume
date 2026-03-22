@@ -39,11 +39,11 @@ export default function HistoryDialogs({
             <AlertDialogMedia className="bg-accent text-accent-foreground">
               <RotateCcw />
             </AlertDialogMedia>
-            <AlertDialogTitle>恢复到这个版本？</AlertDialogTitle>
+            <AlertDialogTitle>恢复此版本？</AlertDialogTitle>
             <AlertDialogDescription>
-              恢复后，当前简历内容会被这个历史版本覆盖。系统会先自动保存一条“恢复前快照”，随后再新增一条“恢复自 V
+              恢复后，当前内容将被此版本覆盖。系统会先自动保存当前内容，然后再生成一条“恢复自 V
               {restoreTarget?.version_no}
-              ”记录，方便你随时撤回。
+              ”记录，方便后续撤回。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -69,12 +69,11 @@ export default function HistoryDialogs({
             <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <Trash2 />
             </AlertDialogMedia>
-            <AlertDialogTitle>删除这个历史版本？</AlertDialogTitle>
+            <AlertDialogTitle>删除此版本？</AlertDialogTitle>
             <AlertDialogDescription>
               删除后，V
               {deleteTarget?.version_no}
-              {' '}
-              及其备注、标签和快照将无法恢复。当前简历内容不会被删除。
+              的说明、标签和内容将无法恢复，但当前正在编辑的内容不会受影响。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
