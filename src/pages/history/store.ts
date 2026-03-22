@@ -2,8 +2,9 @@ import type { HistoryCurrentResume, VersionMetadataDraft } from './types'
 import type { ResumeHistoryVersionRecord } from '@/lib/supabase/resume/history'
 import { toast } from 'sonner'
 import { create } from 'zustand'
+import { replaceAutomergeDocumentSnapshot } from '@/lib/automerge'
 import { isOfflineResumeId } from '@/lib/offline-resume-manager'
-import { createResumeHistoryVersion, deleteResumeHistoryVersion, getResumeHistoryResume, listResumeHistoryVersions, updateResumeConfig, updateResumeHistoryVersion } from '@/lib/supabase/resume'
+import { createResumeHistoryVersion, deleteResumeHistoryVersion, getResumeHistoryResume, listResumeHistoryVersions, updateResumeHistoryVersion } from '@/lib/supabase/resume'
 import { buildCurrentResume, createSnapshotHash, normalizeHistoryVersion, toVersionMutationPayload, trimToNull } from './utils'
 
 interface HistoryStore {
@@ -198,7 +199,7 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
           base_updated_at: currentResume.updatedAt,
         })
 
-        await updateResumeConfig(resumeId, targetVersion.snapshot)
+        await replaceAutomergeDocumentSnapshot(resumeId, targetVersion.snapshot)
 
         const restoredVersion = normalizeHistoryVersion(
           await createResumeHistoryVersion({

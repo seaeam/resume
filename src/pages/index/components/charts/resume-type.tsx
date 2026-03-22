@@ -1,9 +1,11 @@
 import type { Resume, ResumeStats } from '../../types'
+import type { ResumeType as ResumeTemplateType } from '@/lib/schema'
 import { BarChart3 } from 'lucide-react'
 import { useMemo } from 'react'
 import { Label, Pie, PieChart } from 'recharts'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { normalizeResumeType } from '@/lib/schema'
 import { TYPE_LABELS, typeChartConfig } from '../../const'
 import EmptyChart from './empty-chart'
 
@@ -14,10 +16,10 @@ interface ResumeTypeProps {
 
 function ResumeType({ stats, resumes }: ResumeTypeProps) {
   const typeDistribution = useMemo(() => {
-    const typeCount: Record<string, number> = {}
+    const typeCount: Partial<Record<ResumeTemplateType, number>> = {}
 
     resumes.forEach((r) => {
-      const type = r.type || 'default'
+      const type = normalizeResumeType(r.type)
       typeCount[type] = (typeCount[type] || 0) + 1
     })
 

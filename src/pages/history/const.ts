@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ResumeType } from '@/lib/schema'
 import type { ResumeVersionSourceType } from '@/lib/supabase/resume/history'
 import { BookmarkCheck, Clock3, EyeOff, Flag, RotateCcw, Sparkles, Upload } from 'lucide-react'
+import { normalizeResumeType } from '@/lib/schema'
 
 export const RESUME_TYPE_LABEL_MAP: Record<ResumeType, string> = {
   default: '默认模板',
@@ -10,11 +11,7 @@ export const RESUME_TYPE_LABEL_MAP: Record<ResumeType, string> = {
 }
 
 export function getResumeTypeLabel(type: string | null | undefined): string {
-  if (type === 'simple' || type === 'modern' || type === 'default') {
-    return RESUME_TYPE_LABEL_MAP[type]
-  }
-
-  return RESUME_TYPE_LABEL_MAP.default
+  return RESUME_TYPE_LABEL_MAP[normalizeResumeType(type)]
 }
 
 export const SOURCE_META: Record<

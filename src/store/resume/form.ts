@@ -1,13 +1,13 @@
 import type { DocHandle } from '@automerge/automerge-repo'
 import type { StoreApi } from 'zustand'
 import type { AutomergeResumeDocument } from '@/lib/automerge'
-import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
+import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, ResumeType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { cloneDeepWith, get } from 'lodash'
 import { create } from 'zustand'
 import { DocumentManager } from '@/lib/automerge'
 import { getOfflineResumeById, isOfflineResumeId, updateOfflineResume } from '@/lib/offline-resume-manager'
-import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility } from '@/lib/schema'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType } from '@/lib/schema'
 import { updateResumeConfig } from '@/lib/supabase/resume'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { getTimestamp } from '@/utils/date'
@@ -56,7 +56,7 @@ interface ResumeState extends FormDataMap {
   activeTabId: ORDERType
   order: ORDERType[]
   visibility: Record<VisibilityItemsType, boolean>
-  type: 'basic' | 'modern' | 'simple'
+  type: ResumeType
 
   isSyncing: boolean
   lastSyncTime: number | null
@@ -71,7 +71,7 @@ interface ResumeState extends FormDataMap {
   isInitialized: boolean
 
   toggleVisibility: (id: VisibilityItemsType) => void
-  changeType: (type: 'basic' | 'modern' | 'simple') => void
+  changeType: (type: ResumeType) => void
   getVisibility: (id: VisibilityItemsType) => boolean
   setVisibility: (id: VisibilityItemsType, isHidden: boolean) => void
   updateActiveTabId: (newActiveTab: ORDERType) => void
@@ -178,7 +178,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   self_evaluation: DEFAULT_SELF_EVALUATION,
   hobbies: DEFAULT_HOBBIES,
   visibility: DEFAULT_VISIBILITY,
-  type: 'basic',
+  type: 'default',
 
   isSyncing: false,
   lastSyncTime: null,
@@ -533,7 +533,7 @@ function mapDocToState(doc: Partial<AutomergeResumeDocument> | null | undefined)
     ...formData,
     order: migrateOrder(sanitizeDeep(get(source, 'order', DEFAULT_ORDER))),
     visibility: migrateVisibility(sanitizeDeep(get(source, 'visibility', DEFAULT_VISIBILITY))),
-    type: get(source, 'type', 'basic') as 'basic' | 'modern' | 'simple',
+    type: normalizeResumeType(get(source, 'type', 'default')),
   }
 }
 

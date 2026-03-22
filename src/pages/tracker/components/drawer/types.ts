@@ -1,4 +1,4 @@
-import type { ORDERType, ResumeSchema } from '@/lib/schema'
+import type { ORDERType, ResumeSchema, ResumeType } from '@/lib/schema'
 
 export interface ResumeOption {
   id: string
@@ -8,7 +8,7 @@ export interface ResumeOption {
 }
 
 export type ResumePreviewData = Partial<ResumeSchema> & {
-  type?: 'basic' | 'modern' | 'simple'
+  type?: ResumeType
   order?: ORDERType[]
   visibility?: Record<string, boolean>
 }

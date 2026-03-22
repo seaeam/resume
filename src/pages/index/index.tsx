@@ -1,8 +1,8 @@
 import type { Resume } from './types'
-import type { ResumeType } from '@/lib/schema'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { getAllOfflineResumes } from '@/lib/offline-resume-manager'
+import { normalizeResumeType } from '@/lib/schema'
 import { getAllResumesFromUser } from '@/lib/supabase/resume/form'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { diffDates } from '@/utils/date'
@@ -51,7 +51,11 @@ export default function DashboardPage() {
         if (user) {
           setIsOnline(true)
           const rawOnlineResumes = await getAllResumesFromUser()
-          onlineResumes = rawOnlineResumes.map(r => ({ ...r, isOffline: false }))
+          onlineResumes = rawOnlineResumes.map(r => ({
+            ...r,
+            type: normalizeResumeType(r.type),
+            isOffline: false,
+          }))
         }
 
         const localResumes = await getAllOfflineResumes()
@@ -59,7 +63,7 @@ export default function DashboardPage() {
           resume_id: r.resume_id,
           created_at: r.created_at,
           updated_at: r.updated_at,
-          type: r.type as ResumeType,
+          type: normalizeResumeType(r.type),
           display_name: r.display_name,
           description: r.description,
           isOffline: true,

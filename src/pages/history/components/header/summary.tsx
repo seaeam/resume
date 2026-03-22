@@ -1,6 +1,6 @@
 import { Clock3, Flag, History, Layers3 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { formatDateTime } from '@/utils/date'
+import { formatRelativeTime } from '@/utils/date'
 import useHistoryStore from '../../store'
 
 function SummaryMetric({ icon: Icon, label, value}: {
@@ -61,7 +61,7 @@ export default function HistoryHeaderSummary() {
         <SummaryMetric
           icon={Clock3}
           label="最近更新"
-          value={currentResume?.updatedAt ? formatDateTime(currentResume.updatedAt) : '未记录'}
+          value={currentResume?.updatedAt ? formatRelativeTime(currentResume.updatedAt) : '未记录'}
         />
       </div>
     </div>

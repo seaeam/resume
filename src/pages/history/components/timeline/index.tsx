@@ -1,9 +1,12 @@
 import type { HistorySelection } from '../../types'
+import { LoaderCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import { formatRelativeTime } from '@/utils/date'
 import useHistoryStore from '../../store'
+import { useOverflowState } from '../../use-overflow-state'
 import { groupVersionsByDay } from '../../utils'
 import CurrentVersionCard from './current-version-card'
 import TimelineEmptyState from './empty-state'
@@ -20,6 +23,7 @@ export default function HistoryTimeline({
   onSelectEntry,
 }: HistoryTimelineProps) {
   const { currentResume, versions, loading } = useHistoryStore()
+  const { ref: scrollRef, overflowing } = useOverflowState<HTMLDivElement>()
 
   const groups = groupVersionsByDay(versions)
   const timelineCountLabel = versions.length === 0 ? '暂无历史版本' : `${versions.length} 条历史版本`
@@ -29,6 +33,12 @@ export default function HistoryTimeline({
       <CardHeader className="gap-4 py-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{timelineCountLabel}</Badge>
+          {loading && (
+            <Badge variant="secondary">
+              <LoaderCircle data-icon="inline-start" className="animate-spin" />
+              正在加载
+            </Badge>
+          )}
           {currentResume?.updatedAt && (
             <Badge variant="outline">
               当前内容更新于
@@ -40,13 +50,21 @@ export default function HistoryTimeline({
         <div className="flex flex-col gap-1.5">
           <CardTitle>版本时间线</CardTitle>
           <CardDescription>
-            左侧用于定位节点，右侧查看详情、编辑、恢复和删除。
+            {loading ? '正在读取当前简历的版本时间线。' : '左侧用于定位节点，右侧查看详情、编辑、恢复和删除。'}
           </CardDescription>
         </div>
       </CardHeader>
       <Separator />
 
-      <CardContent className="scrollbar-thin-subtle px-0 py-0 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain">
+      <CardContent
+        ref={scrollRef}
+        className={cn(
+          'px-0 py-0 md:min-h-0 md:flex-1',
+          overflowing
+            ? 'scrollbar-thin-subtle md:overflow-y-auto md:overscroll-contain'
+            : 'md:overflow-hidden',
+        )}
+      >
         <div className="flex flex-col gap-5 p-4 sm:p-5">
           <section className="flex flex-col gap-3">
             <div className="px-1 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">

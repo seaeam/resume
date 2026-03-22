@@ -1,9 +1,9 @@
 import type { ChartConfig } from '@/components/ui/chart'
+import type { ResumeType } from '@/lib/schema'
 
 // 简历类型映射
-export const TYPE_LABELS: Record<string, string> = {
+export const TYPE_LABELS: Record<ResumeType, string> = {
   default: '标准',
-  basic: '基础',
   simple: '简约',
   modern: '现代',
 }
@@ -12,10 +12,6 @@ export const TYPE_LABELS: Record<string, string> = {
 export const typeChartConfig = {
   value: {
     label: '数量',
-  },
-  basic: {
-    label: '基础',
-    color: 'var(--chart-4)',
   },
   default: {
     label: '标准',
