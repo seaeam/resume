@@ -84,7 +84,7 @@ export default function VersionCard({
             'relative overflow-hidden rounded-2xl border border-border/70 bg-background transition-colors',
             'hover:bg-muted/20',
             sourceMeta.surfaceClassName,
-            showSelectedState && 'border-primary/25 bg-primary/[0.05] ring-1 ring-primary/15',
+            showSelectedState && 'border-primary/25 bg-primary/5 ring-1 ring-primary/15',
           )}
         >
           {showSelectedState && <span className="absolute inset-y-4 left-0 w-1 rounded-r-full bg-primary" />}

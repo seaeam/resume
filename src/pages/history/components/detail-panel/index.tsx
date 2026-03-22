@@ -8,9 +8,11 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/
 import { Separator } from '@/components/ui/separator'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { formatDateTime } from '@/utils/date'
+import useHistoryStore from '../../store'
 import { getVersionTitle } from '../../utils'
 import HistoryDetailContent from './detail-content'
 import DetailDiscardDialog from './discard-dialog'
+import DetailPanelLoadingState from './loading-state'
 
 interface HistoryDetailPanelProps {
   state: HistoryDetailPanelState
@@ -22,6 +24,7 @@ export default function HistoryDetailPanel({
   state,
 }: HistoryDetailPanelProps) {
   const isMobile = useIsMobile()
+  const loading = useHistoryStore(state => state.loading)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [renderedEntry, setRenderedEntry] = useState<typeof state.selectedEntry>(null)
   const [renderedVersion, setRenderedVersion] = useState(state.selectedVersion)
@@ -142,19 +145,27 @@ export default function HistoryDetailPanel({
     <>
       {!state.selectedEntry
         ? (
-            <Card className={`${desktopPanelClassName} justify-center border-border/70 bg-background py-0 shadow-none`}>
-              <Empty className="m-6 border border-dashed bg-muted/15">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <History />
-                  </EmptyMedia>
-                  <EmptyTitle>选择一个版本查看详情</EmptyTitle>
-                  <EmptyDescription>
-                    右侧会展示版本元信息、只读快照预览，以及恢复和编辑操作。
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            </Card>
+            loading
+              ? (
+                  <Card className={`${desktopPanelClassName} border-border/70 bg-background py-0 shadow-none`}>
+                    <DetailPanelLoadingState />
+                  </Card>
+                )
+              : (
+                  <Card className={`${desktopPanelClassName} justify-center border-border/70 bg-background py-0 shadow-none`}>
+                    <Empty className="m-6 border border-dashed bg-muted/15">
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <History />
+                        </EmptyMedia>
+                        <EmptyTitle>选择一个版本查看详情</EmptyTitle>
+                        <EmptyDescription>
+                          右侧会展示版本元信息、只读快照预览，以及恢复和编辑操作。
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </Card>
+                )
           )
         : (
             <Card className={`${desktopPanelClassName} border-border/70 bg-background py-0 shadow-none`}>
