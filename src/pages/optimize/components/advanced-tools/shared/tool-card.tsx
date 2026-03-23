@@ -35,10 +35,10 @@ export function ToolCard({ disabled, onClick, tool }: ToolCardProps) {
 
         <div className="min-w-0 space-y-3">
           <div className="flex min-w-0 items-start gap-2">
-            <span className="min-w-0 break-words text-lg font-semibold tracking-tight text-foreground">{tool.title}</span>
+            <span className="min-w-0 wrap-break-word text-lg font-semibold tracking-tight text-foreground">{tool.title}</span>
             <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </div>
-          <p className="break-words text-sm leading-7 text-muted-foreground">{tool.description}</p>
+          <p className="wrap-break-word text-sm leading-7 text-muted-foreground">{tool.description}</p>
         </div>
       </div>
     </Button>

@@ -1,6 +1,5 @@
 import type { AnalysisState, AnalysisStatus, Severity, SeverityConfigVariant, StepConfig, SuggestionKind } from './types'
 import type { SkillItem } from '@/lib/schema'
-
 import { AlertCircle, AlertTriangle, Brain, Calendar, CloudUpload, Database, FileText, Info, Sparkles, Tag } from 'lucide-react'
 
 export const SCORE_LABELS = {

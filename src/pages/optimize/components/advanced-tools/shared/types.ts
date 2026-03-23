@@ -21,3 +21,5 @@ export interface AdvancedToolDefinition {
   title: string
   description: string
 }
+
+export type ToolTone = 'default' | 'danger' | 'info' | 'primary' | 'success' | 'warning'
