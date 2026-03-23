@@ -4,6 +4,7 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useCallback, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { BOARD_COLUMNS } from '../../const'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
 import { ColumnCard } from './column-card'
 
@@ -11,7 +12,8 @@ const EDGE_THRESHOLD = 120
 const SCROLL_SPEED = 80
 
 export default function BoardView() {
-  const { jobs, changeJobStatus, filterStatus } = useTrackerStore()
+  const { jobs, filterStatus } = useTrackerStore()
+  const { changeJobStatus } = useTrackerActions()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const columnRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const isDraggingRef = useRef(false)
@@ -96,7 +98,7 @@ export default function BoardView() {
       return
 
     const newStatus = destination.droppableId as ApplicationStatus
-    changeJobStatus(draggableId, newStatus)
+    void changeJobStatus(draggableId, newStatus)
 
     requestAnimationFrame(() => {
       scrollToColumn(newStatus)

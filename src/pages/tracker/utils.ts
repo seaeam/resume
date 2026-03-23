@@ -1,5 +1,6 @@
 import type { ResumePreviewData } from './components/drawer/types'
 import type { ApplicationStatus, StageDetail } from './types'
+import type { TemplateResumeDataInput } from '@/pages/template/components/resume-data-context'
 import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType } from '@/lib/schema'
 import { APPLICATION_STATUS_ORDER } from './const'
 
@@ -73,7 +74,7 @@ export function autoCompleteStages(
   })
 }
 
-export function normalizeResumePreviewData(data: ResumePreviewData) {
+export function normalizeResumePreviewData(data: ResumePreviewData): TemplateResumeDataInput {
   return {
     basics: data.basics ?? DEFAULT_BASICS,
     job_intent: data.job_intent ?? DEFAULT_JOB_INTENT,
@@ -91,4 +92,37 @@ export function normalizeResumePreviewData(data: ResumePreviewData) {
     visibility: migrateVisibility(data.visibility ?? DEFAULT_VISIBILITY),
     type: normalizeResumeType(data.type),
   }
+}
+
+export function getTrackerLoadErrorMeta(error: unknown) {
+  let message = '加载失败'
+  let description = ''
+
+  if (error instanceof Error) {
+    if (error.message.includes('未登陆') || error.message.includes('not authenticated')) {
+      message = '请先登录'
+      description = '需要登录后才能查看职位追踪'
+    }
+    else if (error.message.includes('network') || error.message.includes('fetch')) {
+      message = '网络连接失败'
+      description = '请检查网络连接后重试'
+    }
+    else if (error.message.includes('permission') || error.message.includes('policy')) {
+      message = '权限不足'
+      description = '无法访问职位数据，请联系管理员'
+    }
+    else if (error.message.includes('database') || error.message.includes('relation')) {
+      message = '数据库错误'
+      description = '数据表可能不存在或结构异常'
+    }
+    else {
+      description = error.message
+    }
+  }
+
+  return { message, description }
+}
+
+export function getTrackerErrorMessage(error: unknown, fallback = '未知错误') {
+  return error instanceof Error ? error.message : fallback
 }

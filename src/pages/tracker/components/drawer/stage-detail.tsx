@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_ORDER, DEFAULT_INTERVIEW_SUB_STAGES, STAGE_STATUS_COLORS, STAGE_STATUS_OPTIONS } from '../../const'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
 
 interface DrawerStageDetailProps {
@@ -22,7 +23,8 @@ interface DrawerStageDetailProps {
 }
 
 export default function DrawerStageDetail({ displayStage, isViewingHistory = false, onSaved }: DrawerStageDetailProps) {
-  const { selectedJob: job, updateJob } = useTrackerStore()
+  const { selectedJob: job } = useTrackerStore()
+  const { updateJob } = useTrackerActions()
 
   // 本地状态
   const [localDetails, setLocalDetails] = useState(job?.stage_details || [])
@@ -183,7 +185,7 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
           ? localDetails
           : [...localDetails, { stage: nextStatus, status: '待处理' as const, start_date: null, notes: '' }]
 
-        updateJob({
+        void updateJob({
           ...job,
           status: nextStatus,
           stage_details: finalDetails,
@@ -197,7 +199,7 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
     }
 
     // 普通保存（未完成 / 拒绝 等）
-    updateJob({
+    void updateJob({
       ...job,
       stage_details: localDetails,
       interview_sub_stages: localSubStages,

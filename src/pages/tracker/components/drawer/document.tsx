@@ -1,61 +1,32 @@
 import type { ResumeOption, ResumePreviewData } from './types'
 import { FileText, Loader2 } from 'lucide-react'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ScaledReadonlyPreview from '@/components/resume/scaled-readonly-preview'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { DEFAULT_FONT_CONFIG, DEFAULT_SPACING_CONFIG, DEFAULT_THEME_CONFIG } from '@/lib/schema'
 import { getAllResumesFromUser, getResumeById } from '@/lib/supabase/resume'
-import { ResumePreview } from '@/pages/resume/editor/components/preview/ResumePreview'
-import useResumeConfigStore from '@/store/resume/config'
-import useResumeStore from '@/store/resume/form'
+import { buildTemplateResumeData } from '@/pages/template/components/resume-data-context'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
 import { normalizeResumePreviewData } from '../../utils'
 
 function SharedResumePreview({ data }: { data: ResumePreviewData }) {
-  const resumeRef = useRef<HTMLDivElement>(null)
-  const previousResumeStateRef = useRef<ReturnType<typeof useResumeStore.getState> | null>(null)
-  const previousConfigStateRef = useRef<ReturnType<typeof useResumeConfigStore.getState> | null>(null)
-  const normalizedData = useMemo(() => normalizeResumePreviewData(data), [data])
-
-  useLayoutEffect(() => {
-    previousResumeStateRef.current ??= useResumeStore.getState()
-    previousConfigStateRef.current ??= useResumeConfigStore.getState()
-
-    useResumeConfigStore.setState(state => ({
-      ...state,
-      spacing: DEFAULT_SPACING_CONFIG,
-      font: DEFAULT_FONT_CONFIG,
-      theme: DEFAULT_THEME_CONFIG,
-    }))
-
-    return () => {
-      if (previousResumeStateRef.current) {
-        useResumeStore.setState(previousResumeStateRef.current)
-      }
-
-      if (previousConfigStateRef.current) {
-        useResumeConfigStore.setState(previousConfigStateRef.current)
-      }
-    }
-  }, [])
-
-  useLayoutEffect(() => {
-    useResumeStore.setState(state => ({
-      ...state,
-      ...normalizedData,
-    }))
-  }, [normalizedData])
+  const normalizedData = useMemo(
+    () => buildTemplateResumeData(normalizeResumePreviewData(data)),
+    [data],
+  )
 
   return (
-    <div className="h-full overflow-auto bg-muted/30">
-      <ResumePreview resumeRef={resumeRef} />
+    <div className="scrollbar-gutter-stable scrollbar-thin-subtle h-full overflow-y-auto bg-muted/30 p-3 sm:p-4">
+      <ScaledReadonlyPreview data={normalizedData} />
     </div>
   )
 }
 
 export default function DrawerDocument() {
-  const { selectedJob: job, updateJob } = useTrackerStore()
+  const { selectedJob: job } = useTrackerStore()
+  const { updateJob } = useTrackerActions()
   const navigate = useNavigate()
   const [resumes, setResumes] = useState<ResumeOption[]>([])
   const [loading, setLoading] = useState(false)
@@ -102,7 +73,7 @@ export default function DrawerDocument() {
     if (!job)
       return
 
-    updateJob({
+    void updateJob({
       ...job,
       resume_id: resumeId,
     })

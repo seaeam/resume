@@ -3,15 +3,11 @@ import { Building2, DollarSign, MapPin, MoreVertical, Trash2 } from 'lucide-reac
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG } from '../../const'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
+import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
 import { StatusSelect } from './status-select'
 
@@ -27,7 +23,9 @@ function formatDate(dateStr: string | null): string {
 }
 
 export function JobCard({ job }: JobCardProps) {
-  const { isSelectMode, selectedIds, toggleSelect, openJobDrawer, changeJobStatus } = useTrackerStore()
+  const { isSelectMode, selectedIds } = useTrackerStore()
+  const { changeJobStatus, deleteSelectedJobs } = useTrackerActions()
+  const { toggleSelect, openJobDrawer, enterSelectMode } = useTrackerUiActions()
   const isSelected = selectedIds.has(job.id)
 
   const statusConfig = APPLICATION_STATUS_CONFIG[job.status]
@@ -44,10 +42,9 @@ export function JobCard({ job }: JobCardProps) {
   }
 
   const handleDelete = () => {
-    const store = useTrackerStore.getState()
-    store.enterSelectMode()
-    store.toggleSelect(job.id)
-    store.deleteSelectedJobs()
+    enterSelectMode()
+    toggleSelect(job.id)
+    void deleteSelectedJobs()
   }
 
   return (
@@ -147,7 +144,7 @@ export function JobCard({ job }: JobCardProps) {
         <div className="w-full" onClick={e => e.stopPropagation()}>
           <StatusSelect
             value={job.status}
-            onChange={newStatus => changeJobStatus(job.id, newStatus)}
+            onChange={newStatus => void changeJobStatus(job.id, newStatus)}
           />
         </div>
       </CardFooter>

@@ -1,9 +1,9 @@
 import { Plus } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import useTrackerStore from '../../store'
+import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 
 export function CreateJobCard() {
-  const { openAddDrawer } = useTrackerStore()
+  const { openAddDrawer } = useTrackerUiActions()
 
   return (
     <Card

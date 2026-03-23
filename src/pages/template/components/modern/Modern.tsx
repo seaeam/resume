@@ -5,8 +5,8 @@ import parser from 'html-react-parser'
 import { BookOpen, Briefcase, GraduationCap, Medal, Rocket, Sparkles, Target, Trophy, Users } from 'lucide-react'
 import { createContext, use, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
-import useResumeStore from '@/store/resume/form'
 import { getAge } from '@/utils'
+import { useTemplateResumeData as useResumeStore } from '../resume-data-context'
 
 // 创建简历上下文
 const ResumeContext = createContext<ResumeContextType | null>(null)
@@ -503,7 +503,7 @@ interface ModernResumeContentProps {
 
 export default function ModernResume({ theme, spacing, font }: ModernResumeContentProps) {
   const data = useResumeStore()
-  const getVisibility = useResumeStore(state => state.getVisibility)
+  const { getVisibility } = data
   const age = getAge(data.basics.birthMonth)
 
   return (

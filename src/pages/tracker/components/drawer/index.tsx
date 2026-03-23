@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
+import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
 import { autoCompleteStages } from '../../utils'
 import DrawerDocument from './document'
@@ -13,7 +15,9 @@ import DrawerProgress from './progress'
 import DrawerStageDetail from './stage-detail'
 
 export default function JobDrawer() {
-  const { selectedJob, drawerOpen, closeJobDrawer, updateJob } = useTrackerStore()
+  const { selectedJob, drawerOpen } = useTrackerStore()
+  const { updateJob } = useTrackerActions()
+  const { closeJobDrawer } = useTrackerUiActions()
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState<DrawerTab>('information')
   const [isEditing, setIsEditing] = useState(false)
@@ -37,7 +41,7 @@ export default function JobDrawer() {
     if (!selectedJob)
       return
     const updatedStageDetails = autoCompleteStages(selectedJob.status, newStatus, selectedJob.stage_details)
-    updateJob({
+    void updateJob({
       ...selectedJob,
       status: newStatus,
       stage_details: updatedStageDetails,

@@ -1,4 +1,6 @@
+import type { VisibilityFormType } from '../visibility'
 import { z } from 'zod'
+import { DEFAULT_VISIBILITY } from '../visibility'
 import { applicationInfoForm } from './applicationInfo'
 import { basicsSchema } from './basic'
 import { campusExperienceFormSchema } from './campusExperience'
@@ -79,10 +81,18 @@ export function migrateOrder(order: string[]): ORDERType[] {
 }
 
 /** 将 visibility 对象中的旧 camelCase 键迁移为 snake_case */
-export function migrateVisibility(visibility: Record<string, boolean>): Record<string, boolean> {
-  const result: Record<string, boolean> = {}
+export function migrateVisibility(visibility?: Partial<Record<string, boolean>> | null): VisibilityFormType {
+  const result: VisibilityFormType = { ...DEFAULT_VISIBILITY }
+
+  if (!visibility) {
+    return result
+  }
+
   for (const [key, value] of Object.entries(visibility)) {
-    result[LEGACY_KEY_MAP[key] ?? key] = value
+    const normalizedKey = LEGACY_KEY_MAP[key] ?? key
+    if (normalizedKey in result) {
+      result[normalizedKey as keyof VisibilityFormType] = value
+    }
   }
   return result
 }

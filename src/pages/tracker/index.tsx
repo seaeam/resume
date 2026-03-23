@@ -6,15 +6,17 @@ import AddJobDrawer from './components/drawer/add-job'
 import TrackerHeader from './components/header'
 import ListView from './components/list'
 import { StatusFilter } from './components/status-filter'
+import { useTrackerActions } from './hooks/use-tracker-actions'
 import useTrackerStore from './store'
 
 const TRACKER_SKELETON_KEYS = ['tracker-skeleton-1', 'tracker-skeleton-2', 'tracker-skeleton-3'] as const
 
 function Tracker() {
-  const { viewMode, loading, init } = useTrackerStore()
+  const { viewMode, loading } = useTrackerStore()
+  const { init } = useTrackerActions()
 
   useEffect(() => {
-    init()
+    void init()
   }, [init])
 
   return (
