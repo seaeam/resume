@@ -1,6 +1,7 @@
 import type { ApplicationStatus } from '../types'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../const'
+import { useTrackerUiActions } from '../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../store'
 
 const ALL_FILTER_STATUSES: (ApplicationStatus | null)[] = [
@@ -10,7 +11,8 @@ const ALL_FILTER_STATUSES: (ApplicationStatus | null)[] = [
 ]
 
 export function StatusFilter() {
-  const { jobs, filterStatus, setFilterStatus } = useTrackerStore()
+  const { jobs, filterStatus } = useTrackerStore()
+  const { setFilterStatus } = useTrackerUiActions()
 
   const getCount = (status: ApplicationStatus | null) => {
     if (status === null)

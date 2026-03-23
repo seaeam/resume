@@ -11,12 +11,15 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { getAllResumesFromUser } from '@/lib/supabase/resume'
-import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
-import { COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../data'
+import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER, COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../const'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
+import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
 
 export default function AddJobDrawer() {
-  const { addDrawerOpen, closeAddDrawer, addJob } = useTrackerStore()
+  const { addDrawerOpen } = useTrackerStore()
+  const { addJob } = useTrackerActions()
+  const { closeAddDrawer } = useTrackerUiActions()
   const isMobile = useIsMobile()
   const [formData, setFormData] = useState({
     position: '',
@@ -82,7 +85,7 @@ export default function AddJobDrawer() {
       interview_sub_stages: [],
     }
 
-    addJob(jobData)
+    void addJob(jobData)
     closeAddDrawer()
 
     // 重置表单

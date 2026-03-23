@@ -1,43 +1,10 @@
 import type { ComponentType, PropsWithChildren, ReactNode } from 'react'
+import type { ToolTone } from './types'
 import { Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-
-export type ToolTone = 'default' | 'danger' | 'info' | 'primary' | 'success' | 'warning'
-
-const TOOL_TONE_CLASS_MAP: Record<ToolTone, { badge: string, card: string, icon: string }> = {
-  default: {
-    card: 'border-border/60 bg-muted/20',
-    icon: 'bg-background text-foreground',
-    badge: 'border-border/60 bg-background text-foreground',
-  },
-  primary: {
-    card: 'border-primary/20 bg-primary/5',
-    icon: 'bg-primary/10 text-primary',
-    badge: 'border-primary/20 bg-primary/10 text-primary',
-  },
-  success: {
-    card: 'border-green-500/20 bg-green-500/5',
-    icon: 'bg-green-500/10 text-green-700 dark:text-green-300',
-    badge: 'border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-300',
-  },
-  warning: {
-    card: 'border-amber-500/20 bg-amber-500/5',
-    icon: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
-    badge: 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  },
-  danger: {
-    card: 'border-red-500/20 bg-red-500/5',
-    icon: 'bg-red-500/10 text-red-700 dark:text-red-300',
-    badge: 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300',
-  },
-  info: {
-    card: 'border-sky-500/20 bg-sky-500/5',
-    icon: 'bg-sky-500/10 text-sky-700 dark:text-sky-300',
-    badge: 'border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300',
-  },
-}
+import { TOOL_TONE_CLASS_MAP } from './const'
 
 export function ToolPanelCard({
   children,
@@ -74,7 +41,7 @@ export function ToolPanelHeader({
           )}
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="break-words text-base font-semibold leading-tight">{title}</CardTitle>
+              <CardTitle className="wrap-break-word text-base font-semibold leading-tight">{title}</CardTitle>
               {badge}
             </div>
             {description && <p className="text-sm leading-6 text-muted-foreground">{description}</p>}
@@ -137,7 +104,7 @@ export function ToolEmptyState({
   title: string
 }) {
   return (
-    <div className="flex min-h-[240px] flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-muted/10 px-6 py-10 text-center">
+    <div className="flex min-h-60 flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-muted/10 px-6 py-10 text-center">
       <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Sparkles className="size-5" />
       </div>

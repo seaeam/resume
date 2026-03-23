@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../data'
+import { COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../const'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
 
 function parseSalaryRange(salary: string): { min: string, max: string } {
@@ -21,7 +22,8 @@ interface DrawerEditFormProps {
 }
 
 export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProps) {
-  const { selectedJob, updateJob } = useTrackerStore()
+  const { selectedJob } = useTrackerStore()
+  const { updateJob } = useTrackerActions()
 
   const parsedSalary = parseSalaryRange(selectedJob?.salary || '')
 
@@ -41,7 +43,7 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
   const handleSubmit = () => {
     if (!selectedJob)
       return
-    updateJob({
+    void updateJob({
       ...selectedJob,
       company: formData.company,
       position: formData.position,

@@ -3,13 +3,7 @@
 import type { Icon } from '@tabler/icons-react'
 import * as React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar'
+import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 
 export function NavSecondary({
   items,

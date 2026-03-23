@@ -1,4 +1,4 @@
-import { IconHelp, IconSearch, IconSettings } from '@tabler/icons-react'
+import { IconHelp, IconSettings } from '@tabler/icons-react'
 import { FileUser, FolderKanban, History, HomeIcon, LayoutTemplate, PencilRuler } from 'lucide-react'
 
 export const Data = {
@@ -44,11 +44,6 @@ export const Data = {
       title: '帮助',
       url: '/help',
       icon: IconHelp,
-    },
-    {
-      title: '搜索',
-      url: '/search',
-      icon: IconSearch,
     },
   ],
 }

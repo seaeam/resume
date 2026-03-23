@@ -2,20 +2,15 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { useTrackerActions } from '../../hooks/use-tracker-actions'
+import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
 import { ViewToggle } from '../view-toggle'
 
 export default function TrackerHeader() {
-  const {
-    jobs,
-    loading,
-    isSelectMode,
-    selectedIds,
-    selectAll,
-    enterSelectMode,
-    exitSelectMode,
-    deleteSelectedJobs,
-  } = useTrackerStore()
+  const { jobs, loading, isSelectMode, selectedIds } = useTrackerStore()
+  const { deleteSelectedJobs } = useTrackerActions()
+  const { selectAll, enterSelectMode, exitSelectMode } = useTrackerUiActions()
 
   const jobCount = jobs.length
   const selectedCount = selectedIds.size
@@ -74,7 +69,7 @@ export default function TrackerHeader() {
           {isSelectMode && (
             <>
               {selectedCount > 0 && (
-                <Button variant="destructive" size="sm" onClick={deleteSelectedJobs}>
+                <Button variant="destructive" size="sm" onClick={() => void deleteSelectedJobs()}>
                   删除
                 </Button>
               )}

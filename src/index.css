@@ -222,4 +222,8 @@
   .scrollbar-thin-subtle::-webkit-scrollbar-thumb:hover {
     background: color-mix(in oklab, var(--muted-foreground) 18%, var(--border));
   }
+
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable;
+  }
 }

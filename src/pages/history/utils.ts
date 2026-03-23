@@ -4,7 +4,6 @@ import type {
   HistoryVersionGroup,
   VersionMetadataDraft,
 } from './types'
-import type { VisibilityFormType } from '@/lib/schema'
 import type {
   ResumeHistoryOptionRecord,
   ResumeHistoryResumeRecord,
@@ -104,7 +103,7 @@ export function buildResumeSnapshot(source: unknown): ResumeSnapshot {
     self_evaluation: getSnapshotSectionValue('self_evaluation', sourceRecord),
     hobbies: getSnapshotSectionValue('hobbies', sourceRecord),
     order: migrateOrder(orderValue as string[]),
-    visibility: migrateVisibility(visibilityValue) as VisibilityFormType,
+    visibility: migrateVisibility(visibilityValue),
     type: normalizeResumeType(sourceRecord?.type),
   }
 }
