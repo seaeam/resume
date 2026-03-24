@@ -1,5 +1,6 @@
 import type { ApplicationStatus, JobApplication } from '../../types'
 import type { ResumeOption } from './types'
+import { BriefcaseBusiness, FileText, MapPin, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, D
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { createCompany, getAllResumesFromUser } from '@/lib/supabase/resume'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER, COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../const'
@@ -115,11 +117,22 @@ export default function AddJobDrawer() {
   }
 
   const handleCancel = () => {
+    resetForm()
     closeAddDrawer()
   }
 
   const formContent = (
-    <FieldGroup className="flex-1 gap-5 overflow-y-auto p-6">
+    <FieldGroup className="gap-5">
+      <div className="rounded-3xl border border-border/60 bg-card/80 p-4 shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <Sparkles className="size-3.5" />
+          新建跟进记录
+        </div>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          先记录岗位、公司和地点就够了。状态、简历和 JD 链接可以现在补齐，也可以后续继续完善。
+        </p>
+      </div>
+
       <Field>
         <FieldLabel htmlFor="position" className="items-center">
           职位名称
@@ -148,7 +161,7 @@ export default function AddJobDrawer() {
           options={COMMON_COMPANIES}
         />
       </Field>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field>
           <FieldLabel htmlFor="location" className="items-center">
             工作地点
@@ -185,6 +198,26 @@ export default function AddJobDrawer() {
             </SelectContent>
           </Select>
         </Field>
+      </div>
+      <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+        <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+          <p className="inline-flex items-center gap-2 text-muted-foreground">
+            <BriefcaseBusiness className="size-4" />
+            职位名尽量写完整
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+          <p className="inline-flex items-center gap-2 text-muted-foreground">
+            <MapPin className="size-4" />
+            地点建议写到城市级
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-muted/30 px-4 py-3">
+          <p className="inline-flex items-center gap-2 text-muted-foreground">
+            <FileText className="size-4" />
+            简历可以稍后再绑定
+          </p>
+        </div>
       </div>
       <Field>
         <FieldLabel htmlFor="job-url">JD 链接</FieldLabel>
@@ -245,26 +278,32 @@ export default function AddJobDrawer() {
   )
 
   const footerButtons = (
-    <div className="flex gap-3">
+    <div className="flex flex-col-reverse gap-3 sm:flex-row">
       <Button variant="outline" className="flex-1 h-11" onClick={handleCancel} disabled={submitting}>
         取消
       </Button>
       <Button className="flex-1 h-11" onClick={() => void handleSubmit()} disabled={submitting}>
-        添加
+        创建并开始跟进
       </Button>
     </div>
   )
 
   if (isMobile) {
     return (
-      <Drawer open={addDrawerOpen} onOpenChange={v => !v && closeAddDrawer()}>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader className="text-left">
-            <DrawerTitle>新增职位申请</DrawerTitle>
-            <DrawerDescription>填写职位信息以添加新的申请记录</DrawerDescription>
+      <Drawer open={addDrawerOpen} onOpenChange={v => !v && handleCancel()}>
+        <DrawerContent className="flex h-[92dvh] max-h-[92dvh] flex-col overflow-hidden rounded-t-[28px] p-0">
+          <DrawerHeader className="shrink-0 text-left">
+            <DrawerTitle>新增职位</DrawerTitle>
+            <DrawerDescription>先建档，再逐步推进整个求职流程。</DrawerDescription>
           </DrawerHeader>
-          {formContent}
-          <DrawerFooter>
+          <Separator />
+          <div className="scrollbar-gutter-stable scrollbar-thin-subtle min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="px-4 py-4 pb-8">
+              {formContent}
+            </div>
+          </div>
+          <Separator />
+          <DrawerFooter className="shrink-0 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-backdrop-filter:bg-background/80">
             {footerButtons}
           </DrawerFooter>
         </DrawerContent>
@@ -273,14 +312,20 @@ export default function AddJobDrawer() {
   }
 
   return (
-    <Dialog open={addDrawerOpen} onOpenChange={v => !v && closeAddDrawer()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-hidden p-0 flex flex-col">
-        <DialogHeader className="p-6 pb-4 border-b shrink-0">
-          <DialogTitle>新增职位申请</DialogTitle>
-          <DialogDescription>填写职位信息以添加新的申请记录</DialogDescription>
+    <Dialog open={addDrawerOpen} onOpenChange={v => !v && handleCancel()}>
+      <DialogContent className="flex h-[min(90vh,880px)] w-[calc(72vw)] min-w-0 max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden border-border/70 bg-background/95 p-0 shadow-xl backdrop-blur sm:max-w-[min(960px,calc(100vw-2rem))] lg:max-w-[min(1040px,72vw)]">
+        <DialogHeader className="shrink-0 px-5 py-4 sm:px-6 sm:py-5">
+          <DialogTitle>新增职位</DialogTitle>
+          <DialogDescription>先建档，再逐步推进整个求职流程。</DialogDescription>
         </DialogHeader>
-        {formContent}
-        <DialogFooter className="p-6 pt-4 border-t shrink-0">
+        <Separator />
+        <div className="scrollbar-gutter-stable scrollbar-thin-subtle min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-5 py-4 pb-8 sm:px-6 sm:py-5 sm:pb-6">
+            {formContent}
+          </div>
+        </div>
+        <Separator />
+        <DialogFooter className="shrink-0 bg-muted/30 px-5 py-4 sm:px-6">
           {footerButtons}
         </DialogFooter>
       </DialogContent>

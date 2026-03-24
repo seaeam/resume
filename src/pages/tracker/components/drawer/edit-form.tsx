@@ -75,7 +75,12 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="font-semibold text-lg">编辑信息</h3>
+      <div className="rounded-3xl border border-border/60 bg-card/80 p-4 shadow-sm">
+        <h3 className="text-lg font-semibold tracking-tight">编辑信息</h3>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          这里用于补齐职位本身的信息。流程推进和阶段备注请回到上方跟进区处理。
+        </p>
+      </div>
 
       <FieldGroup className="gap-3">
         <Field>
@@ -144,7 +149,7 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
         </Field>
       </FieldGroup>
 
-      <div className="flex gap-2 pt-2">
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
         <Button className="flex-1" onClick={() => void handleSubmit()} disabled={isActionDisabled}>
           保存
         </Button>

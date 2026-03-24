@@ -81,11 +81,17 @@ const useTrackerStore = create<TrackerStore>()(set => ({
     })
   },
   selectAll: () => {
-    set((state) => ({
-      selectedIds: state.selectedIds.size === state.jobs.length
-        ? new Set()
-        : new Set(state.jobs.map(job => job.id)),
-    }))
+    set((state) => {
+      const selectableJobs = state.filterStatus
+        ? state.jobs.filter(job => job.status === state.filterStatus)
+        : state.jobs
+
+      return {
+        selectedIds: state.selectedIds.size === selectableJobs.length
+          ? new Set()
+          : new Set(selectableJobs.map(job => job.id)),
+      }
+    })
   },
   openJobDrawer: job => set({ selectedJob: job, drawerOpen: true }),
   closeJobDrawer: () => set({ drawerOpen: false }),

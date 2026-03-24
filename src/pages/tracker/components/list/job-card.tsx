@@ -1,16 +1,16 @@
 import type { JobApplication } from '../../types'
-import { Building2, DollarSign, MapPin, MoreVertical, Trash2 } from 'lucide-react'
+import { ArrowRight, BriefcaseBusiness, Building2, CalendarClock, FileText, Link2, MapPin, MoreVertical, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { deleteCompany, updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
-import { APPLICATION_STATUS_CONFIG } from '../../const'
+import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
 import useTrackerStore from '../../store'
-import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
-import { StatusSelect } from './status-select'
+import { autoCompleteStages, getTrackerErrorMessage, getTrackerMetaSummary, getTrackerNextAction, getTrackerProgressHint } from '../../utils'
 
 interface JobCardProps {
   job: JobApplication
@@ -30,6 +30,9 @@ export function JobCard({ job }: JobCardProps) {
   const statusConfig = APPLICATION_STATUS_CONFIG[job.status]
   const currentStage = job.stage_details.find(s => s.stage === job.status)
   const stageDate = currentStage?.start_date ? formatDate(currentStage.start_date) : formatDate(job.updated_at)
+  const nextAction = getTrackerNextAction(job)
+  const progressHint = getTrackerProgressHint(job)
+  const metaSummary = getTrackerMetaSummary(job)
 
   const handleClick = () => {
     if (isSelectMode) {
@@ -84,37 +87,41 @@ export function JobCard({ job }: JobCardProps) {
     }
   }
 
+  const handlePrimaryAction = () => {
+    if (nextAction.targetStatus) {
+      void handleStatusChange(nextAction.targetStatus)
+      return
+    }
+
+    openJobDrawer(job)
+  }
+
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all hover:shadow-md flex flex-col gap-0 py-0 overflow-hidden',
-        isSelected && 'border-primary bg-primary/5',
+        'group cursor-pointer overflow-hidden rounded-3xl border border-border/70 bg-card/90 py-0 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg',
+        isSelected && 'border-primary bg-primary/5 shadow-primary/10',
       )}
       onClick={handleClick}
     >
-      <CardContent className="flex flex-1 flex-col justify-center gap-3 p-4 pb-3">
-        {/* 顶部：Logo + 状态 Badge + 日期 + 菜单 */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+      <CardContent className="flex flex-1 flex-col gap-4 p-5 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               {job.company_logo
-                ? <img src={job.company_logo} alt={job.company} className="size-6 object-contain" />
-                : <Building2 className="size-5 text-blue-500" />}
+                ? <img src={job.company_logo} alt={job.company} className="size-7 object-contain" />
+                : <Building2 className="size-5" />}
             </div>
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                statusConfig.bgColor,
-                statusConfig.color,
-              )}
-              >
-                {statusConfig.label}
-              </span>
-              <span className="text-xs text-muted-foreground">{stageDate}</span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{job.company}</p>
+              <p className="truncate text-xs text-muted-foreground">最近更新于 {stageDate}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-1">
+            <Badge className={cn('rounded-full border-0 px-2.5 py-1 text-xs font-medium', statusConfig.bgColor, statusConfig.color)}>
+              {statusConfig.label}
+            </Badge>
             {isSelectMode
               ? (
                   <Checkbox
@@ -130,7 +137,7 @@ export function JobCard({ job }: JobCardProps) {
                       <Button
                         variant="ghost"
                         size="icon-xs"
-                        className="text-muted-foreground"
+                        className="rounded-full text-muted-foreground"
                         onClick={e => e.stopPropagation()}
                       >
                         <MoreVertical />
@@ -141,6 +148,17 @@ export function JobCard({ job }: JobCardProps) {
                         <DropdownMenuItem onClick={() => openJobDrawer(job)}>
                           查看详情
                         </DropdownMenuItem>
+                        {APPLICATION_STATUS_ORDER.filter(status => status !== job.status).map(status => (
+                          <DropdownMenuItem key={status} onClick={() => void handleStatusChange(status)}>
+                            标记为
+                            {APPLICATION_STATUS_CONFIG[status].label}
+                          </DropdownMenuItem>
+                        ))}
+                        {job.status !== 'rejected' && (
+                          <DropdownMenuItem onClick={() => void handleStatusChange('rejected')}>
+                            终止流程
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
                           <Trash2 data-icon="inline-start" />
                           删除
@@ -152,37 +170,64 @@ export function JobCard({ job }: JobCardProps) {
           </div>
         </div>
 
-        {/* 职位名称 */}
-        <div>
-          <h3 className="font-semibold text-base truncate">{job.position}</h3>
+        <div className="space-y-1">
+          <h3 className="line-clamp-1 text-xl font-semibold tracking-tight">{job.position}</h3>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="size-3.5" />
+              {job.location}
+            </span>
+            {job.salary && (
+              <span className="inline-flex items-center gap-1.5">
+                <BriefcaseBusiness className="size-3.5" />
+                {job.salary}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* 公司 / 地点 / 薪资 */}
-        <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Building2 className="size-4 shrink-0" />
-            <span className="truncate">{job.company}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="size-4 shrink-0" />
-            <span className="truncate">{job.location}</span>
-          </div>
-          {job.salary && (
-            <div className="flex items-center gap-2">
-              <DollarSign className="size-4 shrink-0" />
-              <span className="truncate">{job.salary}</span>
-            </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+            <CalendarClock className="size-3.5" />
+            {stageDate}
+          </span>
+          <span className={cn(
+            'inline-flex items-center gap-1 rounded-full px-2.5 py-1',
+            metaSummary.hasResume ? 'bg-emerald-50 text-emerald-700' : 'bg-muted text-muted-foreground',
           )}
+          >
+            <FileText className="size-3.5" />
+            {metaSummary.hasResume ? '已绑定简历' : '待绑定简历'}
+          </span>
+          <span className={cn(
+            'inline-flex items-center gap-1 rounded-full px-2.5 py-1',
+            metaSummary.hasJobUrl ? 'bg-sky-50 text-sky-700' : 'bg-muted text-muted-foreground',
+          )}
+          >
+            <Link2 className="size-3.5" />
+            {metaSummary.hasJobUrl ? '已保存 JD' : '无 JD 链接'}
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-muted/40 px-3.5 py-3">
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground/80">下一步提示</p>
+          <p className="mt-1.5 text-sm font-medium leading-6 text-foreground">{progressHint}</p>
         </div>
       </CardContent>
 
-      {/* 底部：更改状态按钮 */}
-      <CardFooter className="px-4 py-3 border-t">
-        <div className="w-full" onClick={e => e.stopPropagation()}>
-          <StatusSelect
-            value={job.status}
-            onChange={newStatus => void handleStatusChange(newStatus)}
-          />
+      <CardFooter className="border-t border-border/60 px-5 py-4">
+        <div className="flex w-full gap-2" onClick={e => e.stopPropagation()}>
+          <Button
+            className="flex-1 gap-2 rounded-xl"
+            variant={nextAction.emphasize === 'primary' ? 'default' : 'outline'}
+            onClick={handlePrimaryAction}
+          >
+            <ArrowRight className="size-4" />
+            {nextAction.label}
+          </Button>
+          <Button variant="outline" className="rounded-xl px-4" onClick={() => openJobDrawer(job)}>
+            详情
+          </Button>
         </div>
       </CardFooter>
     </Card>

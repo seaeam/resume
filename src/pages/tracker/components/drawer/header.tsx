@@ -1,6 +1,10 @@
-import { Briefcase, Building2, DollarSign, ExternalLink, MapPin } from 'lucide-react'
+import { ExternalLink, FileText, MapPin, Sparkles } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { APPLICATION_STATUS_CONFIG } from '../../const'
 import useTrackerStore from '../../store'
+import { getTrackerMetaSummary, getTrackerNextAction, getTrackerProgressHint } from '../../utils'
 
 interface DrawerHeaderInfoProps {
   onEdit?: () => void
@@ -12,76 +16,67 @@ export default function DrawerHeaderInfo({ onEdit }: DrawerHeaderInfoProps) {
   if (!job)
     return null
 
+  const statusConfig = APPLICATION_STATUS_CONFIG[job.status]
+  const nextAction = getTrackerNextAction(job)
+  const progressHint = getTrackerProgressHint(job)
+  const metaSummary = getTrackerMetaSummary(job)
+
   return (
     <div className="space-y-4">
-      {/* 公司名 + Logo + 职位 */}
-      <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
-        <div className="size-12 rounded-xl bg-primary flex items-center justify-center shrink-0">
-          {job.company_logo
-            ? (
-                <img src={job.company_logo} alt={job.company} className="size-8 object-contain" />
-              )
-            : (
-                <Building2 className="size-6 text-primary-foreground" />
-              )}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+          <Sparkles className="size-3.5" />
+          当前建议：
+          {nextAction.label}
         </div>
-        <div>
-          <h2 className="font-semibold text-lg">{job.company}</h2>
-          <p className="text-sm text-muted-foreground">{job.position}</p>
+        <Badge className={cn('rounded-full border-0 px-2.5 py-1 text-xs font-medium', statusConfig.bgColor, statusConfig.color)}>
+          {statusConfig.label}
+        </Badge>
+      </div>
+
+      <div className="rounded-2xl border border-border/60 bg-muted/40 px-4 py-3">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground/80">跟进提示</p>
+        <p className="mt-2 text-sm font-medium leading-6 text-foreground">{progressHint}</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+        <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3">
+          <p className="text-xs text-muted-foreground">工作地点</p>
+          <p className="mt-1 inline-flex items-center gap-1.5 font-medium">
+            <MapPin className="size-4 text-muted-foreground" />
+            {job.location}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3">
+          <p className="text-xs text-muted-foreground">投递简历</p>
+          <p className="mt-1 inline-flex items-center gap-1.5 font-medium">
+            <FileText className="size-4 text-muted-foreground" />
+            {metaSummary.hasResume ? '已绑定简历' : '尚未绑定简历'}
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3">
+          <p className="text-xs text-muted-foreground">薪资信息</p>
+          <p className="mt-1 font-medium">{job.salary || '暂未填写'}</p>
+        </div>
+        <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3">
+          <p className="text-xs text-muted-foreground">职位链接</p>
+          <p className="mt-1 font-medium">{job.job_url ? '已保存 JD 链接' : '暂未填写 JD 链接'}</p>
         </div>
       </div>
-      {/* 详细信息网格 */}
-      <div className="grid grid-cols-2 gap-4 text-sm pt-4 border-t">
-        {/* 岗位 */}
-        <div className="flex items-start gap-2">
-          <Briefcase className="size-4 text-muted-foreground mt-0.5" />
-          <div>
-            <p className="text-muted-foreground text-xs">岗位</p>
-            <p>{job.position}</p>
-          </div>
-        </div>
-        {/* Base 地 */}
-        <div className="flex items-start gap-2">
-          <MapPin className="size-4 text-muted-foreground mt-0.5" />
-          <div>
-            <p className="text-muted-foreground text-xs">Base地</p>
-            <p>{job.location}</p>
-          </div>
-        </div>
-        {/* 薪资 */}
-        <div className="flex items-start gap-2">
-          <DollarSign className="size-4 text-muted-foreground mt-0.5" />
-          <div>
-            <p className="text-muted-foreground text-xs">薪资</p>
-            <p>{job.salary || '未填写'}</p>
-          </div>
-        </div>
-        {/* JD 链接 */}
-        <div className="flex items-start gap-2">
-          <ExternalLink className="size-4 text-muted-foreground mt-0.5" />
-          <div>
-            <p className="text-muted-foreground text-xs">JD官网</p>
-            {job.job_url
-              ? (
-                  <a
-                    href={job.job_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    查看职位详情
-                  </a>
-                )
-              : (
-                  <p>未填写</p>
-                )}
-          </div>
-        </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Button variant="outline" className="rounded-xl" onClick={onEdit}>
+          编辑信息
+        </Button>
+        {job.job_url && (
+          <Button variant="ghost" asChild className="rounded-xl">
+            <a href={job.job_url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="size-4" />
+              打开 JD
+            </a>
+          </Button>
+        )}
       </div>
-      {/* 编辑按钮 */}
-      <Button variant="outline" size="sm" className="rounded-lg" onClick={onEdit}>
-        编辑信息
-      </Button>
     </div>
   )
 }

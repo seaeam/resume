@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
-import { BOARD_COLUMNS } from '../../const'
+import { APPLICATION_STATUS_CONFIG, BOARD_COLUMNS, TRACKER_BOARD_COLUMN_HINTS } from '../../const'
 import useTrackerStore from '../../store'
 import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
 import { ColumnCard } from './column-card'
@@ -139,11 +139,19 @@ export default function BoardView() {
 
   return (
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div
-        ref={scrollContainerRef}
-        className="w-full min-w-0 max-w-full overflow-x-auto"
-      >
-        <div className="flex w-max gap-4 px-4 pb-4 min-h-[500px]">
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-border/60 bg-card/60 px-4 py-3">
+          <p className="text-sm font-medium text-foreground">看板视图</p>
+          <p className="text-xs text-muted-foreground">
+            适合横向观察整体流程。可以直接拖拽改状态，也可以在卡片上完成下一步推进。
+          </p>
+        </div>
+
+        <div
+          ref={scrollContainerRef}
+          className="w-full min-w-0 max-w-full overflow-x-auto"
+        >
+          <div className="flex w-max gap-4 px-1 pb-4 min-h-[500px]">
           {BOARD_COLUMNS.map((column) => {
             const columnJobs = getJobsByStatus(column.status)
             const highlighted = isColumnHighlighted(column.status)
@@ -154,24 +162,40 @@ export default function BoardView() {
                   if (el)
                     columnRefs.current.set(column.status, el)
                 }}
-                className="flex flex-col min-w-[280px] w-[280px] shrink-0"
+                className="flex w-[320px] min-w-[320px] shrink-0 flex-col"
               >
-                {/* 列标题 */}
-                <div className="flex items-center justify-between px-2 py-2">
-                  <h3 className="font-semibold">{column.label}</h3>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    {columnJobs.length}
-                  </span>
+                <div className={cn(
+                  'mb-3 rounded-2xl border border-border/60 bg-card/80 px-4 py-3 shadow-sm',
+                  highlighted && 'border-primary/60 bg-primary/5',
+                )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">{column.label}</h3>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        {TRACKER_BOARD_COLUMN_HINTS[column.status]}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      'inline-flex min-w-8 items-center justify-center rounded-full px-2 py-1 text-xs font-medium',
+                      highlighted
+                        ? 'bg-primary text-primary-foreground'
+                        : APPLICATION_STATUS_CONFIG[column.status].bgColor,
+                      !highlighted && APPLICATION_STATUS_CONFIG[column.status].color,
+                    )}
+                    >
+                      {columnJobs.length}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Droppable 区域 */}
                 <Droppable droppableId={column.status}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={cn(
-                        'flex-1 flex flex-col gap-2 p-2 rounded-lg transition-all duration-300',
+                        'flex-1 flex flex-col gap-3 rounded-2xl border border-border/60 p-3 transition-all duration-300',
                         snapshot.isDraggingOver
                           ? 'bg-primary/10 ring-2 ring-primary/20'
                           : highlighted
@@ -197,8 +221,8 @@ export default function BoardView() {
                             ))
                           )
                         : (
-                            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm min-h-[120px]">
-                              暂无职位
+                            <div className="flex min-h-[180px] flex-1 items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/80 px-4 text-center text-sm text-muted-foreground">
+                              拖入新的职位到这一列，或在列表里先推进到这个阶段
                             </div>
                           )}
                       {provided.placeholder}
@@ -209,6 +233,7 @@ export default function BoardView() {
             )
           })}
         </div>
+      </div>
       </div>
     </DragDropContext>
   )
