@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -16,11 +18,10 @@ import {
   ResponsiveDialogSidebarItem,
   ResponsiveDialogTitle,
 } from '@/components/ui/responsive-dialog'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { createCompany, getAllResumesFromUser } from '@/lib/supabase/resume'
+import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER, COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../const'
 import useTrackerStore from '../../store'
 import { getTrackerErrorMessage } from '../../utils'
