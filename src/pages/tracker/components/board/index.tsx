@@ -2,18 +2,19 @@ import type { DropResult } from '@hello-pangea/dnd'
 import type { ApplicationStatus } from '../../types'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useCallback, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
+import { updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
 import { BOARD_COLUMNS } from '../../const'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
+import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
 import { ColumnCard } from './column-card'
 
 const EDGE_THRESHOLD = 120
 const SCROLL_SPEED = 80
 
 export default function BoardView() {
-  const { jobs, filterStatus } = useTrackerStore()
-  const { changeJobStatus } = useTrackerActions()
+  const { jobs, filterStatus, syncJob, restoreJobsSnapshot } = useTrackerStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const columnRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const isDraggingRef = useRef(false)
@@ -98,7 +99,35 @@ export default function BoardView() {
       return
 
     const newStatus = destination.droppableId as ApplicationStatus
-    void changeJobStatus(draggableId, newStatus)
+    const previousState = useTrackerStore.getState()
+    const currentJob = previousState.jobs.find(job => job.id === draggableId)
+
+    if (!currentJob)
+      return
+
+    const updatedStageDetails = autoCompleteStages(currentJob.status, newStatus, currentJob.stage_details, true)
+    const optimisticJob = { ...currentJob, status: newStatus, stage_details: updatedStageDetails }
+
+    syncJob(optimisticJob)
+
+    void updateCompany(draggableId, optimisticJob)
+      .then((savedJob) => {
+        syncJob(savedJob)
+
+        if (newStatus === 'offer') {
+          toast.success('Offer🎉')
+        }
+        else if (newStatus === 'rejected') {
+          toast.error('终止流程')
+        }
+      })
+      .catch((error) => {
+        restoreJobsSnapshot({
+          jobs: previousState.jobs,
+          selectedJob: previousState.selectedJob,
+        })
+        toast.error('更新状态失败', { description: getTrackerErrorMessage(error) })
+      })
 
     requestAnimationFrame(() => {
       scrollToColumn(newStatus)

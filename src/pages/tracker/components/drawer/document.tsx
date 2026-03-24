@@ -2,14 +2,14 @@ import type { ResumeOption, ResumePreviewData } from './types'
 import { FileText, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import ScaledReadonlyPreview from '@/components/resume/scaled-readonly-preview'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { getAllResumesFromUser, getResumeById } from '@/lib/supabase/resume'
+import { getAllResumesFromUser, getResumeById, updateCompany } from '@/lib/supabase/resume'
 import { buildTemplateResumeData } from '@/pages/template/components/resume-data-context'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
-import { normalizeResumePreviewData } from '../../utils'
+import { getTrackerErrorMessage, normalizeResumePreviewData } from '../../utils'
 
 function SharedResumePreview({ data }: { data: ResumePreviewData }) {
   const normalizedData = useMemo(
@@ -25,8 +25,7 @@ function SharedResumePreview({ data }: { data: ResumePreviewData }) {
 }
 
 export default function DrawerDocument() {
-  const { selectedJob: job } = useTrackerStore()
-  const { updateJob } = useTrackerActions()
+  const { selectedJob: job, syncJob, restoreJobsSnapshot } = useTrackerStore()
   const navigate = useNavigate()
   const [resumes, setResumes] = useState<ResumeOption[]>([])
   const [loading, setLoading] = useState(false)
@@ -73,10 +72,26 @@ export default function DrawerDocument() {
     if (!job)
       return
 
-    void updateJob({
+    const previousState = useTrackerStore.getState()
+    const optimisticJob = {
       ...job,
       resume_id: resumeId,
-    })
+    }
+
+    syncJob(optimisticJob)
+
+    void updateCompany(job.id, { resume_id: resumeId })
+      .then((savedJob) => {
+        syncJob(savedJob)
+      })
+      .catch((error) => {
+        console.error('Failed to update job resume:', error)
+        restoreJobsSnapshot({
+          jobs: previousState.jobs,
+          selectedJob: previousState.selectedJob,
+        })
+        toast.error('更新失败', { description: getTrackerErrorMessage(error) })
+      })
   }
 
   if (!job)

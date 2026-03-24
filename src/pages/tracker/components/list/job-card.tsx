@@ -1,14 +1,15 @@
 import type { JobApplication } from '../../types'
 import { Building2, DollarSign, MapPin, MoreVertical, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { deleteCompany, updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG } from '../../const'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
-import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
+import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
 import { StatusSelect } from './status-select'
 
 interface JobCardProps {
@@ -23,9 +24,7 @@ function formatDate(dateStr: string | null): string {
 }
 
 export function JobCard({ job }: JobCardProps) {
-  const { isSelectMode, selectedIds } = useTrackerStore()
-  const { changeJobStatus, deleteSelectedJobs } = useTrackerActions()
-  const { toggleSelect, openJobDrawer, enterSelectMode } = useTrackerUiActions()
+  const { isSelectMode, selectedIds, toggleSelect, openJobDrawer, syncJob, restoreJobsSnapshot, removeJobs } = useTrackerStore()
   const isSelected = selectedIds.has(job.id)
 
   const statusConfig = APPLICATION_STATUS_CONFIG[job.status]
@@ -41,10 +40,48 @@ export function JobCard({ job }: JobCardProps) {
     }
   }
 
-  const handleDelete = () => {
-    enterSelectMode()
-    toggleSelect(job.id)
-    void deleteSelectedJobs()
+  const handleDelete = async () => {
+    try {
+      await deleteCompany(job.id)
+      removeJobs([job.id])
+      toast.success('删除成功')
+    }
+    catch (error) {
+      console.error('Failed to delete job:', error)
+      toast.error('删除失败', { description: getTrackerErrorMessage(error) })
+    }
+  }
+
+  const handleStatusChange = async (newStatus: JobApplication['status']) => {
+    const previousState = useTrackerStore.getState()
+    const currentJob = previousState.jobs.find(current => current.id === job.id)
+
+    if (!currentJob)
+      return
+
+    const updatedStageDetails = autoCompleteStages(currentJob.status, newStatus, currentJob.stage_details, true)
+    const optimisticJob = { ...currentJob, status: newStatus, stage_details: updatedStageDetails }
+
+    syncJob(optimisticJob)
+
+    try {
+      const savedJob = await updateCompany(job.id, optimisticJob)
+      syncJob(savedJob)
+
+      if (newStatus === 'offer') {
+        toast.success('Offer🎉')
+      }
+      else if (newStatus === 'rejected') {
+        toast.error('终止流程')
+      }
+    }
+    catch (error) {
+      restoreJobsSnapshot({
+        jobs: previousState.jobs,
+        selectedJob: previousState.selectedJob,
+      })
+      toast.error('更新状态失败', { description: getTrackerErrorMessage(error) })
+    }
   }
 
   return (
@@ -104,7 +141,7 @@ export function JobCard({ job }: JobCardProps) {
                         <DropdownMenuItem onClick={() => openJobDrawer(job)}>
                           查看详情
                         </DropdownMenuItem>
-                        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
+                        <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
                           <Trash2 data-icon="inline-start" />
                           删除
                         </DropdownMenuItem>
@@ -144,7 +181,7 @@ export function JobCard({ job }: JobCardProps) {
         <div className="w-full" onClick={e => e.stopPropagation()}>
           <StatusSelect
             value={job.status}
-            onChange={newStatus => void changeJobStatus(job.id, newStatus)}
+            onChange={newStatus => void handleStatusChange(newStatus)}
           />
         </div>
       </CardFooter>

@@ -11,10 +11,11 @@ import { Calendar } from '@/components/ui/calendar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_ORDER, DEFAULT_INTERVIEW_SUB_STAGES, STAGE_STATUS_COLORS, STAGE_STATUS_OPTIONS } from '../../const'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
+import { getTrackerErrorMessage } from '../../utils'
 
 interface DrawerStageDetailProps {
   displayStage: ApplicationStatus
@@ -23,8 +24,7 @@ interface DrawerStageDetailProps {
 }
 
 export default function DrawerStageDetail({ displayStage, isViewingHistory = false, onSaved }: DrawerStageDetailProps) {
-  const { selectedJob: job } = useTrackerStore()
-  const { updateJob } = useTrackerActions()
+  const { selectedJob: job, syncJob } = useTrackerStore()
 
   // 本地状态
   const [localDetails, setLocalDetails] = useState(job?.stage_details || [])
@@ -32,6 +32,7 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
   const [isDirty, setIsDirty] = useState(false)
   const [isStatusOpen, setIsStatusOpen] = useState(false)
   const [openSubStages, setOpenSubStages] = useState<Set<string>>(() => new Set())
+  const [saving, setSaving] = useState(false)
 
   // 当 job 变化时重置本地状态
   useEffect(() => {
@@ -168,9 +169,11 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
     })
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!job)
       return
+
+    let payload: Partial<typeof job>
 
     // 检查当前阶段是否标记为“已完成”，如果是则自动推进到下一阶段
     const currentDetail = localDetails.find(s => s.stage === displayStage)
@@ -185,34 +188,50 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
           ? localDetails
           : [...localDetails, { stage: nextStatus, status: '待处理' as const, start_date: null, notes: '' }]
 
-        void updateJob({
-          ...job,
+        payload = {
           status: nextStatus,
           stage_details: finalDetails,
           interview_sub_stages: localSubStages,
-        })
-        setIsDirty(false)
-        setOpenSubStages(new Set())
-        onSaved?.()
-        return
+        }
+      }
+      else {
+        payload = {
+          stage_details: localDetails,
+          interview_sub_stages: localSubStages,
+        }
+      }
+    }
+    else {
+      payload = {
+        stage_details: localDetails,
+        interview_sub_stages: localSubStages,
       }
     }
 
-    // 普通保存（未完成 / 拒绝 等）
-    void updateJob({
-      ...job,
-      stage_details: localDetails,
-      interview_sub_stages: localSubStages,
-    })
-    setIsDirty(false)
-    setOpenSubStages(new Set())
-    onSaved?.()
+    setSaving(true)
+
+    try {
+      const savedJob = await updateCompany(job.id, payload)
+
+      syncJob(savedJob)
+      setIsDirty(false)
+      setOpenSubStages(new Set())
+      onSaved?.()
+    }
+    catch (error) {
+      console.error('Failed to update stage detail:', error)
+      toast.error('保存失败', { description: getTrackerErrorMessage(error) })
+    }
+    finally {
+      setSaving(false)
+    }
   }
 
   const handleCancel = () => {
     setLocalDetails(job.stage_details)
     setLocalSubStages(job.interview_sub_stages || [])
     setIsDirty(false)
+    setOpenSubStages(new Set())
   }
 
   const selectedDate = currentStageDetail?.start_date
@@ -449,7 +468,8 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
             variant="outline"
             onClick={addSubStage}
             disabled={
-              currentStatus !== '进行中'
+              saving
+              || currentStatus !== '进行中'
               || (localSubStages.length > 0
                 && localSubStages[localSubStages.length - 1]?.status !== '已完成')
             }
@@ -464,10 +484,10 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
       {/* 保存/取消按钮 */}
       {isDirty && (
         <div className="flex gap-3 pt-2">
-          <Button variant="outline" className="flex-1" onClick={handleCancel}>
+          <Button variant="outline" className="flex-1" onClick={handleCancel} disabled={saving}>
             取消
           </Button>
-          <Button className="flex-1" onClick={handleSave}>
+          <Button className="flex-1" onClick={() => void handleSave()} disabled={saving}>
             保存
           </Button>
         </div>

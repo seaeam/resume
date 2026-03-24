@@ -1,12 +1,12 @@
 import type { ApplicationStatus, DrawerTab } from '../../types'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
-import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
+import { updateCompany } from '@/lib/supabase/resume'
 import useTrackerStore from '../../store'
-import { autoCompleteStages } from '../../utils'
+import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
 import DrawerDocument from './document'
 import DrawerEditForm from './edit-form'
 import DrawerHeaderInfo from './header'
@@ -15,9 +15,7 @@ import DrawerProgress from './progress'
 import DrawerStageDetail from './stage-detail'
 
 export default function JobDrawer() {
-  const { selectedJob, drawerOpen } = useTrackerStore()
-  const { updateJob } = useTrackerActions()
-  const { closeJobDrawer } = useTrackerUiActions()
+  const { selectedJob, drawerOpen, closeJobDrawer, syncJob, restoreJobsSnapshot } = useTrackerStore()
   const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState<DrawerTab>('information')
   const [isEditing, setIsEditing] = useState(false)
@@ -40,12 +38,29 @@ export default function JobDrawer() {
   const handleProgressChange = (newStatus: ApplicationStatus) => {
     if (!selectedJob)
       return
+
+    const previousState = useTrackerStore.getState()
     const updatedStageDetails = autoCompleteStages(selectedJob.status, newStatus, selectedJob.stage_details)
-    void updateJob({
+    const optimisticJob = {
       ...selectedJob,
       status: newStatus,
       stage_details: updatedStageDetails,
-    })
+    }
+
+    syncJob(optimisticJob)
+
+    void updateCompany(selectedJob.id, optimisticJob)
+      .then((savedJob) => {
+        syncJob(savedJob)
+      })
+      .catch((error) => {
+        restoreJobsSnapshot({
+          jobs: previousState.jobs,
+          selectedJob: previousState.selectedJob,
+        })
+        toast.error('更新失败', { description: getTrackerErrorMessage(error) })
+      })
+
     setViewingStage(null)
   }
 

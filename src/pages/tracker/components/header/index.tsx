@@ -1,19 +1,35 @@
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
+import { deleteCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
-import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
+import { getTrackerErrorMessage } from '../../utils'
 import { ViewToggle } from '../view-toggle'
 
 export default function TrackerHeader() {
-  const { jobs, loading, isSelectMode, selectedIds } = useTrackerStore()
-  const { deleteSelectedJobs } = useTrackerActions()
-  const { selectAll, enterSelectMode, exitSelectMode } = useTrackerUiActions()
-
+  const { jobs, loading, isSelectMode, selectedIds, selectAll, enterSelectMode, exitSelectMode, removeJobs } = useTrackerStore()
   const jobCount = jobs.length
   const selectedCount = selectedIds.size
+
+  const handleDeleteSelectedJobs = async () => {
+    const { selectedIds: currentSelectedIds } = useTrackerStore.getState()
+    if (currentSelectedIds.size === 0)
+      return
+
+    const ids = new Set(currentSelectedIds)
+
+    try {
+      await Promise.all(Array.from(ids).map(id => deleteCompany(id)))
+      removeJobs(ids)
+      toast.success(`已删除 ${ids.size} 个职位`)
+    }
+    catch (error) {
+      console.error('Failed to delete jobs:', error)
+      toast.error('删除失败', { description: getTrackerErrorMessage(error) })
+    }
+  }
 
   return (
     <>
@@ -69,7 +85,7 @@ export default function TrackerHeader() {
           {isSelectMode && (
             <>
               {selectedCount > 0 && (
-                <Button variant="destructive" size="sm" onClick={() => void deleteSelectedJobs()}>
+                <Button variant="destructive" size="sm" onClick={() => void handleDeleteSelectedJobs()}>
                   删除
                 </Button>
               )}

@@ -10,16 +10,13 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { getAllResumesFromUser } from '@/lib/supabase/resume'
+import { createCompany, getAllResumesFromUser } from '@/lib/supabase/resume'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER, COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../const'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
-import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
+import { getTrackerErrorMessage } from '../../utils'
 
 export default function AddJobDrawer() {
-  const { addDrawerOpen } = useTrackerStore()
-  const { addJob } = useTrackerActions()
-  const { closeAddDrawer } = useTrackerUiActions()
+  const { addDrawerOpen, closeAddDrawer, prependJob } = useTrackerStore()
   const isMobile = useIsMobile()
   const [formData, setFormData] = useState({
     position: '',
@@ -34,6 +31,7 @@ export default function AddJobDrawer() {
 
   const [resumes, setResumes] = useState<ResumeOption[]>([])
   const [loadingResumes, setLoadingResumes] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   // 加载用户简历列表
   useEffect(() => {
@@ -56,7 +54,20 @@ export default function AddJobDrawer() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
+  const resetForm = () => {
+    setFormData({
+      position: '',
+      company: '',
+      location: '',
+      status: 'saved',
+      job_url: '',
+      salaryMin: '',
+      salaryMax: '',
+      resume_id: null,
+    })
+  }
+
+  const handleSubmit = async () => {
     if (!formData.position.trim()) {
       toast.error('请填写职位名称')
       return
@@ -85,20 +96,22 @@ export default function AddJobDrawer() {
       interview_sub_stages: [],
     }
 
-    void addJob(jobData)
-    closeAddDrawer()
+    setSubmitting(true)
 
-    // 重置表单
-    setFormData({
-      position: '',
-      company: '',
-      location: '',
-      status: 'saved',
-      job_url: '',
-      salaryMin: '',
-      salaryMax: '',
-      resume_id: null,
-    })
+    try {
+      const newJob = await createCompany(jobData)
+      prependJob(newJob)
+      closeAddDrawer()
+      toast.success('添加成功')
+      resetForm()
+    }
+    catch (error) {
+      console.error('Failed to add job:', error)
+      toast.error('添加失败', { description: getTrackerErrorMessage(error) })
+    }
+    finally {
+      setSubmitting(false)
+    }
   }
 
   const handleCancel = () => {
@@ -233,10 +246,10 @@ export default function AddJobDrawer() {
 
   const footerButtons = (
     <div className="flex gap-3">
-      <Button variant="outline" className="flex-1 h-11" onClick={handleCancel}>
+      <Button variant="outline" className="flex-1 h-11" onClick={handleCancel} disabled={submitting}>
         取消
       </Button>
-      <Button className="flex-1 h-11" onClick={handleSubmit}>
+      <Button className="flex-1 h-11" onClick={() => void handleSubmit()} disabled={submitting}>
         添加
       </Button>
     </div>

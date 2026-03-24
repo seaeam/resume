@@ -3,7 +3,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
-import { useTrackerUiActions } from '../../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../../store'
 
 interface ColumnCardProps {
@@ -11,8 +10,7 @@ interface ColumnCardProps {
 }
 
 export function ColumnCard({ job }: ColumnCardProps) {
-  const { isSelectMode, selectedIds } = useTrackerStore()
-  const { toggleSelect, openJobDrawer } = useTrackerUiActions()
+  const { isSelectMode, selectedIds, toggleSelect, openJobDrawer } = useTrackerStore()
   const isSelected = selectedIds.has(job.id)
 
   const handleClick = () => {
