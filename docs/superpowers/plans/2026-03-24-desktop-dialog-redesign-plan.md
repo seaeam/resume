@@ -26,24 +26,13 @@ git commit -m "feat(ui): enhance ResponsiveDialog with sidebar variant, context,
 
 ---
 
-### 任务 2：重构“新增职位”弹窗 (`AddJobDrawer`) (进行中)
+### 任务 2：重构“新增职位”弹窗 (`AddJobDrawer`) (已完成)
 
-**文件：**
-- 修改：`src/pages/tracker/components/drawer/add-job.tsx`
-
-- [ ] **步骤 1：将表单内容拆分为章节并添加 ID**
-  - 将 `formContent` 包装为多个 `section`。
-  - 移动端：为每个 `section` 顶部添加 **粘性标题 (Sticky Header)**。
-
-- [ ] **步骤 2：使用新的 `ResponsiveDialog` 侧边栏结构**
-  - 集成 `ResponsiveDialogSidebar`、`ResponsiveDialogMain` 和 `ResponsiveDialogFooter`。
-
-- [ ] **步骤 3：集成表单校验与侧边栏错误提示**
-  - 监听表单校验错误，将错误状态通过 Context 传递给侧边栏。
-
-- [ ] **步骤 4：验证桌面端（侧边栏+滚动）和移动端（平铺+粘性标题）效果**
-
-- [ ] **步骤 5：提交**
+- [x] **步骤 1：将表单内容拆分为章节并添加 ID**
+- [x] **步骤 2：使用新的 `ResponsiveDialog` 侧边栏结构**
+- [x] **步骤 3：集成表单校验与侧边栏错误提示**
+- [x] **步骤 4：验证桌面端（侧边栏+滚动）和移动端（平铺+粘性标题）效果**
+- [x] **步骤 5：提交**
 
 ```bash
 git add src/pages/tracker/components/drawer/add-job.tsx
@@ -52,16 +41,11 @@ git commit -m "refactor(tracker): redesign add-job dialog with sidebar layout an
 
 ---
 
-### 任务 3：重构“保存版本”弹窗 (`SaveVersionDialog`)
+### 任务 3：重构“保存版本”弹窗 (`SaveVersionDialog`) (已完成)
 
-**文件：**
-- 修改：`src/pages/history/components/save-version-dialog/index.tsx`
-
-- [ ] **步骤 1：应用 `ResponsiveDialog` 侧边栏布局并划分子章节**
-
-- [ ] **步骤 2：验证锚点跳转与滚动联动功能**
-
-- [ ] **步骤 3：提交**
+- [x] **步骤 1：应用 `ResponsiveDialog` 侧边栏布局并划分子章节**
+- [x] **步骤 2：验证锚点跳转与滚动联动功能**
+- [x] **步骤 3：提交**
 
 ```bash
 git add src/pages/history/components/save-version-dialog/index.tsx
@@ -70,14 +54,10 @@ git commit -m "refactor(history): redesign save-version dialog with sidebar layo
 
 ---
 
-### 任务 4：重构“问题修复”弹窗 (`IssueFix`)
+### 任务 4：重构“问题修复”弹窗 (`IssueFix`) (已完成)
 
-**文件：**
-- 修改：`src/pages/optimize/components/analysis/Issue-fix/index.tsx`
-
-- [ ] **步骤 1：将修复详情内容适配到侧边栏结构**
-
-- [ ] **步骤 2：提交**
+- [x] **步骤 1：将修复详情内容适配到侧边栏结构**
+- [x] **步骤 2：提交**
 
 ```bash
 git add src/pages/optimize/components/analysis/Issue-fix/index.tsx
@@ -86,17 +66,12 @@ git commit -m "refactor(optimize): redesign issue-fix dialog with sidebar layout
 
 ---
 
-### 任务 5：优化简单弹窗（栅格布局）
+### 任务 5：优化简单弹窗（栅格布局） (已完成)
 
-**文件：**
-- 修改：`src/pages/resume/components/EditResumeDialog.tsx`
-
-- [ ] **步骤 1：在桌面端应用 `grid-cols-2`**
-
-- [ ] **步骤 2：严格限制最大宽度 (`max-w`)**
+- [x] **步骤 1：在桌面端应用 `grid-cols-2`**
+- [x] **步骤 2：严格限制最大宽度 (`max-w`)**
   - 设置 `max-w-md` 或 `max-w-lg`，防止过度拉伸。
-
-- [ ] **步骤 3：提交**
+- [x] **步骤 3：提交**
 
 ```bash
 git add src/pages/resume/components/EditResumeDialog.tsx
