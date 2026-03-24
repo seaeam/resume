@@ -1,12 +1,21 @@
 import type { PropsWithChildren } from 'react'
 import type { Severity } from '../../../types'
-import { Wand2 } from 'lucide-react'
+import { AlertTriangle, ListOrdered, Sparkles, Wand2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogMain,
+  ResponsiveDialogSection,
+  ResponsiveDialogSidebar,
+  ResponsiveDialogSidebarItem,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog'
 import { Spinner } from '@/components/ui/spinner'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { syncAutomergeDocument } from '@/lib/automerge'
@@ -87,70 +96,47 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
   if (!finding)
     return null
 
-  if (!isMobile) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-        <DialogContent className="flex flex-col h-[85vh] max-w-5xl! w-[64vw] gap-0 p-0">
-          <DialogHeader className="px-4 pt-4 pb-3 shrink-0 border-b">
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Wand2 className="size-4 text-primary shrink-0" />
-              <span>问题修复详情</span>
-              <Badge className={cn('text-xs px-2 py-0.5 rounded-full', config.badgeBg, config.badgeText)}>
-                <config.icon className="size-3 lg:size-4" />
-              </Badge>
-            </DialogTitle>
-            <DialogDescription className={cn('text-xs text-muted-foreground/90 text-left line-clamp-2', config.badgeText)}>{finding.title}</DialogDescription>
-          </DialogHeader>
-
-          <Content id={id} severity={severity} />
-
-          <DialogFooter className="px-4 py-3 shrink-0 border-t bg-muted/30">
-            <DialogClose asChild>
-              <Button variant="outline">取消</Button>
-            </DialogClose>
-            <Button ref={triger} onClick={handleConfirm} disabled={isFixing || allFixed}>
-              {allFixed ? '已修复' : '确认'}
-              {isFixing ? <Spinner /> : null}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
+    <ResponsiveDialog open={open} onOpenChange={setOpen} variant="sidebar">
+      <div className="contents" onClick={(e) => {
+        // 防止点击触发器时冒泡导致 Dialog 立即关闭（如果触发器本身有点击事件）
+        // 这里主要用于支持 asChild 的 children
+      }}>
         {children}
-      </DrawerTrigger>
-      <DrawerContent className="flex flex-col h-[85vh]">
-        <DrawerHeader className="px-4 pt-4 pb-3 shrink-0 border-b">
-          <DrawerTitle className="flex items-center gap-2 text-base">
-            <Wand2 className="size-4 text-primary shrink-0" />
-            <span>问题修复详情</span>
-            <Badge className={cn('text-xs px-2 py-0.5 rounded-full', config.badgeBg, config.badgeText)}>
-              <config.icon className="size-3 lg:size-4" />
-            </Badge>
-          </DrawerTitle>
-          <DrawerDescription className={cn('text-xs text-muted-foreground/90 text-left line-clamp-2', config.badgeText)}>{finding.title}</DrawerDescription>
-        </DrawerHeader>
+      </div>
 
-        <Content id={id} severity={severity} />
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle className="flex items-center gap-2">
+          <Wand2 className="size-4 text-primary shrink-0" />
+          <span>问题修复详情</span>
+          <Badge className={cn('text-[10px] px-1.5 py-0 rounded-full', config.badgeBg, config.badgeText)}>
+            <config.icon className="size-3" />
+          </Badge>
+        </ResponsiveDialogTitle>
+      </ResponsiveDialogHeader>
 
-        <DrawerFooter className="px-4 py-3 shrink-0 border-t bg-muted/30 md:flex md:flex-row md:gap-2 md:justify-end">
-          <DrawerClose asChild>
-            <Button variant="outline">取消</Button>
-          </DrawerClose>
-          <Button ref={triger} onClick={handleConfirm} disabled={isFixing || allFixed}>
-            {allFixed ? '已修复' : '确认'}
-            {isFixing && <Spinner /> }
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+      <ResponsiveDialogContent>
+        <ResponsiveDialogSidebar title="问题修复" description={finding.title}>
+          <ResponsiveDialogSidebarItem id="overview" label="问题概览" icon={AlertTriangle} />
+          <ResponsiveDialogSidebarItem id="steps" label="修复步骤" icon={ListOrdered} />
+          <ResponsiveDialogSidebarItem id="comparison" label="修改对比" icon={Sparkles} />
+        </ResponsiveDialogSidebar>
+
+        <ResponsiveDialogMain>
+          <Content id={id} severity={severity} />
+        </ResponsiveDialogMain>
+      </ResponsiveDialogContent>
+
+      <ResponsiveDialogFooter>
+        <Button variant="outline" onClick={() => setOpen(false)} className="w-24">
+          取消
+        </Button>
+        <Button ref={triger} onClick={handleConfirm} disabled={isFixing || allFixed} className="px-8">
+          {allFixed ? '已修复' : '确认修复'}
+          {isFixing ? <Spinner /> : null}
+        </Button>
+      </ResponsiveDialogFooter>
+    </ResponsiveDialog>
   )
 }
 
