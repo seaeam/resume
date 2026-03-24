@@ -21,20 +21,14 @@ function Tracker() {
     if (currentState.isInitialized || currentState.loading)
       return
 
-    let cancelled = false
-
     const loadJobs = async () => {
       useTrackerStore.setState({ loading: true, error: null })
 
       try {
         const jobs = await getCompanies()
-        if (cancelled)
-          return
         useTrackerStore.setState({ jobs, loading: false, error: null, isInitialized: true })
       }
       catch (error) {
-        if (cancelled)
-          return
         const { message, description } = getTrackerLoadErrorMeta(error)
         useTrackerStore.setState({ loading: false, error: message })
         toast.error(message, { description })
@@ -42,10 +36,6 @@ function Tracker() {
     }
 
     void loadJobs()
-
-    return () => {
-      cancelled = true
-    }
   }, [])
 
   return (
