@@ -277,7 +277,7 @@ export function ResponsiveDialogSection({
     <section id={id} className={cn('scroll-mt-6', className)}>
       {(isMobile || variant === 'sidebar') && title && (
         <div className={cn(
-          'px-6 py-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 z-10 border-b border-border/40 mb-4',
+          'px-6 py-3 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 z-10 border-b border-border/40 mb-4',
           isMobile && 'sticky top-0',
         )}>
           <h3 className="text-sm font-semibold tracking-tight text-foreground/70 uppercase">{title}</h3>
@@ -374,7 +374,7 @@ export function ResponsiveDialogFooter({
     return (
       <DrawerFooter
         className={cn(
-          'shrink-0 border-t border-border/40 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80',
+          'shrink-0 border-t border-border/40 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-backdrop-filter:bg-background/80',
           className,
         )}
         {...props}
