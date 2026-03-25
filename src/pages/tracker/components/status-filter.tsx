@@ -1,7 +1,6 @@
 import type { ApplicationStatus } from '../types'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../const'
-import { useTrackerUiActions } from '../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../store'
 
 const ALL_FILTER_STATUSES: (ApplicationStatus | null)[] = [
@@ -11,8 +10,7 @@ const ALL_FILTER_STATUSES: (ApplicationStatus | null)[] = [
 ]
 
 export function StatusFilter() {
-  const { jobs, filterStatus } = useTrackerStore()
-  const { setFilterStatus } = useTrackerUiActions()
+  const { jobs, filterStatus, setFilterStatus } = useTrackerStore()
 
   const getCount = (status: ApplicationStatus | null) => {
     if (status === null)
@@ -21,7 +19,7 @@ export function StatusFilter() {
   }
 
   return (
-    <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="scrollbar-gutter-stable flex items-center gap-2 overflow-x-auto rounded-2xl border border-border/60 bg-card/60 p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {ALL_FILTER_STATUSES.map((status) => {
         const isActive = filterStatus === status
         const label = status === null ? '全部' : APPLICATION_STATUS_CONFIG[status].label
@@ -33,21 +31,19 @@ export function StatusFilter() {
             type="button"
             onClick={() => setFilterStatus(status)}
             className={cn(
-              'inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shrink-0 whitespace-nowrap',
+              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors shrink-0 whitespace-nowrap',
               isActive
-                ? 'bg-foreground text-background'
+                ? 'bg-foreground text-background shadow-sm'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
             {label}
             <span className={cn(
-              'text-xs',
+              'rounded-full px-1.5 py-0.5 text-[11px]',
               isActive ? 'opacity-80' : 'opacity-60',
             )}
             >
-              (
               {count}
-              )
             </span>
           </button>
         )

@@ -36,6 +36,28 @@ export const APPLICATION_STATUS_ORDER: ApplicationStatus[] = [
   'offer',
 ]
 
+export const TRACKER_PRIMARY_ACTION_TEXT = '新增职位'
+
+export const TRACKER_BATCH_TOOLBAR_LABEL = '批量工具'
+
+export const TRACKER_NEXT_ACTION_LABELS: Record<ApplicationStatus, string> = {
+  saved: '标记为已投递',
+  applied: '推进到筛选中',
+  screen: '推进到面试中',
+  interview: '更新面试进展',
+  offer: '查看完整记录',
+  rejected: '查看复盘记录',
+}
+
+export const TRACKER_BOARD_COLUMN_HINTS: Record<ApplicationStatus, string> = {
+  saved: '已保存但还未正式投递的岗位',
+  applied: '已经完成投递，等待初筛反馈',
+  screen: '正在进行简历筛选或沟通确认',
+  interview: '进入面试流程，重点记录每轮反馈',
+  offer: '拿到积极结果，关注决策与入职安排',
+  rejected: '流程已结束，可回看原因与复盘',
+}
+
 // 阶段状态配置
 export const STAGE_STATUS_CONFIG: Record<StageStatus, { label: string, color: string }> = {
   待处理: { label: '待处理', color: 'text-gray-500' },

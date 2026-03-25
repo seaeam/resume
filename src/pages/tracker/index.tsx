@@ -1,23 +1,42 @@
 import { useEffect } from 'react'
+import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getCompanies } from '@/lib/supabase/resume'
 import BoardView from './components/board/index'
 import JobDrawer from './components/drawer'
 import AddJobDrawer from './components/drawer/add-job'
 import TrackerHeader from './components/header'
 import ListView from './components/list'
 import { StatusFilter } from './components/status-filter'
-import { useTrackerActions } from './hooks/use-tracker-actions'
 import useTrackerStore from './store'
+import { getTrackerLoadErrorMeta } from './utils'
 
 const TRACKER_SKELETON_KEYS = ['tracker-skeleton-1', 'tracker-skeleton-2', 'tracker-skeleton-3'] as const
 
 function Tracker() {
   const { viewMode, loading } = useTrackerStore()
-  const { init } = useTrackerActions()
 
   useEffect(() => {
-    void init()
-  }, [init])
+    const currentState = useTrackerStore.getState()
+    if (currentState.isInitialized || currentState.loading)
+      return
+
+    const loadJobs = async () => {
+      useTrackerStore.setState({ loading: true, error: null })
+
+      try {
+        const jobs = await getCompanies()
+        useTrackerStore.setState({ jobs, loading: false, error: null, isInitialized: true })
+      }
+      catch (error) {
+        const { message, description } = getTrackerLoadErrorMeta(error)
+        useTrackerStore.setState({ loading: false, error: message })
+        toast.error(message, { description })
+      }
+    }
+
+    void loadJobs()
+  }, [])
 
   return (
     <>

@@ -3,7 +3,14 @@ import type { ResumeListItem } from '@/lib/schema'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -70,15 +77,16 @@ export function EditResumeDialog({ resume, open, onOpenChange, onSuccess }: Edit
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>编辑简历信息</DialogTitle>
-          <DialogDescription>更新简历的名称和描述信息</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup className="gap-4 py-4">
-            <Field>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogHeader>
+        <ResponsiveDialogTitle>编辑简历信息</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription>更新简历的名称和描述信息</ResponsiveDialogDescription>
+      </ResponsiveDialogHeader>
+
+      <ResponsiveDialogContent>
+        <form id="edit-resume-form" onSubmit={handleSubmit} className="w-full">
+          <FieldGroup className="grid grid-cols-1 gap-5 py-6 sm:grid-cols-2">
+            <Field className="sm:col-span-2">
               <FieldLabel htmlFor="display_name">简历名称</FieldLabel>
               <Input
                 id="display_name"
@@ -89,7 +97,7 @@ export function EditResumeDialog({ resume, open, onOpenChange, onSuccess }: Edit
               />
               <FieldDescription>为你的简历起一个容易识别的名称</FieldDescription>
             </Field>
-            <Field>
+            <Field className="sm:col-span-2">
               <FieldLabel htmlFor="description">简历描述</FieldLabel>
               <Textarea
                 id="description"
@@ -106,16 +114,17 @@ export function EditResumeDialog({ resume, open, onOpenChange, onSuccess }: Edit
               </FieldDescription>
             </Field>
           </FieldGroup>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              取消
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? '保存中...' : '保存'}
-            </Button>
-          </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+
+      <ResponsiveDialogFooter>
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="w-24">
+          取消
+        </Button>
+        <Button type="submit" form="edit-resume-form" disabled={loading} className="px-8">
+          {loading ? '保存中...' : '保存'}
+        </Button>
+      </ResponsiveDialogFooter>
+    </ResponsiveDialog>
   )
 }

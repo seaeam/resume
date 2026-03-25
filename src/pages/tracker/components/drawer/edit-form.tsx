@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { updateCompany } from '@/lib/supabase/resume'
 import { COMMON_CITIES, COMMON_COMPANIES, COMMON_POSITIONS } from '../../const'
-import { useTrackerActions } from '../../hooks/use-tracker-actions'
 import useTrackerStore from '../../store'
+import { getTrackerErrorMessage } from '../../utils'
 
 function parseSalaryRange(salary: string): { min: string, max: string } {
   if (!salary)
@@ -22,8 +24,8 @@ interface DrawerEditFormProps {
 }
 
 export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProps) {
-  const { selectedJob } = useTrackerStore()
-  const { updateJob } = useTrackerActions()
+  const { selectedJob, syncJob } = useTrackerStore()
+  const [saving, setSaving] = useState(false)
 
   const parsedSalary = parseSalaryRange(selectedJob?.salary || '')
 
@@ -40,25 +42,45 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedJob)
       return
-    void updateJob({
-      ...selectedJob,
-      company: formData.company,
-      position: formData.position,
-      location: formData.location,
-      salary: formData.salaryMin && formData.salaryMax
-        ? `${formData.salaryMin}K-${formData.salaryMax}K`
-        : formData.salaryMin ? `${formData.salaryMin}K` : null,
-      job_url: formData.job_url || null,
-    })
-    onSaved()
+
+    setSaving(true)
+
+    try {
+      const savedJob = await updateCompany(selectedJob.id, {
+        company: formData.company,
+        position: formData.position,
+        location: formData.location,
+        salary: formData.salaryMin && formData.salaryMax
+          ? `${formData.salaryMin}K-${formData.salaryMax}K`
+          : formData.salaryMin ? `${formData.salaryMin}K` : null,
+        job_url: formData.job_url || null,
+      })
+
+      syncJob(savedJob)
+      onSaved()
+    }
+    catch (error) {
+      console.error('Failed to update job:', error)
+      toast.error('更新失败', { description: getTrackerErrorMessage(error) })
+    }
+    finally {
+      setSaving(false)
+    }
   }
+
+  const isActionDisabled = saving || !selectedJob
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="font-semibold text-lg">编辑信息</h3>
+      <div className="rounded-3xl border border-border/60 bg-card/80 p-4 shadow-sm">
+        <h3 className="text-lg font-semibold tracking-tight">编辑信息</h3>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          这里用于补齐职位本身的信息。流程推进和阶段备注请回到上方跟进区处理。
+        </p>
+      </div>
 
       <FieldGroup className="gap-3">
         <Field>
@@ -127,11 +149,11 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
         </Field>
       </FieldGroup>
 
-      <div className="flex gap-2 pt-2">
-        <Button className="flex-1" onClick={handleSubmit}>
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
+        <Button className="flex-1" onClick={() => void handleSubmit()} disabled={isActionDisabled}>
           保存
         </Button>
-        <Button variant="outline" className="flex-1" onClick={onCancel}>
+        <Button variant="outline" className="flex-1" onClick={onCancel} disabled={isActionDisabled}>
           取消
         </Button>
       </div>

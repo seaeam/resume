@@ -1,12 +1,10 @@
 // 视图切换
 import { Kanban, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useTrackerUiActions } from '../hooks/use-tracker-ui-actions'
 import useTrackerStore from '../store'
 
 export function ViewToggle() {
-  const { viewMode } = useTrackerStore()
-  const { setViewMode } = useTrackerUiActions()
+  const { viewMode, setViewMode } = useTrackerStore()
 
   return (
     <div className="inline-flex items-center gap-1 rounded-lg border p-1">
