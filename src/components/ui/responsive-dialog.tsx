@@ -301,8 +301,13 @@ export function ResponsiveDialogHeader({
   const isMobile = useIsMobile()
   const { variant } = useResponsiveDialogContext()
 
-  if (variant === 'sidebar' && !isMobile)
-    return null
+  if (variant === 'sidebar' && !isMobile) {
+    return (
+      <div className="sr-only" {...props}>
+        {children}
+      </div>
+    )
+  }
 
   if (isMobile) {
     return (

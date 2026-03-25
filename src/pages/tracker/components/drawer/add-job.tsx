@@ -7,17 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogMain,
-  ResponsiveDialogSection,
-  ResponsiveDialogSidebar,
-  ResponsiveDialogSidebarItem,
-  ResponsiveDialogTitle,
-} from '@/components/ui/responsive-dialog'
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogMain, ResponsiveDialogSection, ResponsiveDialogSidebar, ResponsiveDialogSidebarItem, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { createCompany, getAllResumesFromUser } from '@/lib/supabase/resume'
@@ -149,6 +139,7 @@ export default function AddJobDrawer() {
     >
       <ResponsiveDialogHeader>
         <ResponsiveDialogTitle>新增职位</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription className="sr-only">填写新增职位的基本信息和状态。</ResponsiveDialogDescription>
       </ResponsiveDialogHeader>
 
       <ResponsiveDialogContent>

@@ -3,24 +3,13 @@ import type { VersionMetadataDraft } from '../../types'
 import { Bookmark, Save, Tag, TextQuote } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogMain,
-  ResponsiveDialogSection,
-  ResponsiveDialogSidebar,
-  ResponsiveDialogSidebarItem,
-  ResponsiveDialogTitle,
-} from '@/components/ui/responsive-dialog'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogMain, ResponsiveDialogSection, ResponsiveDialogSidebar, ResponsiveDialogSidebarItem, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog'
 import { Textarea } from '@/components/ui/textarea'
-import VersionTagInput from '../shared/tag-input'
-import { useIsMobile } from '@/hooks/use-mobile'
 import useHistoryStore from '../../store'
 import { applyMetadataDraftPatch, createMetadataDraft } from '../../utils'
+import VersionTagInput from '../shared/tag-input'
 
 const EMPTY_DRAFT = createMetadataDraft()
 
@@ -31,7 +20,6 @@ interface SaveVersionDialogProps {
 }
 
 export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveVersionDialogProps) {
-  const isMobile = useIsMobile()
   const { savingCurrent, saveCurrentVersion } = useHistoryStore()
   const [draft, setDraft] = useState<VersionMetadataDraft>(EMPTY_DRAFT)
 
@@ -76,6 +64,7 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
     >
       <ResponsiveDialogHeader>
         <ResponsiveDialogTitle>保存当前版本</ResponsiveDialogTitle>
+        <ResponsiveDialogDescription className="sr-only">填写版本信息并保存当前版本。</ResponsiveDialogDescription>
       </ResponsiveDialogHeader>
 
       <ResponsiveDialogContent>

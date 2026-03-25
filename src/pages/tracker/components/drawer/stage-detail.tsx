@@ -480,7 +480,7 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
         </div>
       )}
 
-      <div className="min-h-[56px] pt-2">
+      <div className="min-h-14 pt-2">
         {isDirty && (
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={handleCancel} disabled={saving}>

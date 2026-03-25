@@ -5,19 +5,8 @@ import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogFooter,
-  ResponsiveDialogHeader,
-  ResponsiveDialogMain,
-  ResponsiveDialogSection,
-  ResponsiveDialogSidebar,
-  ResponsiveDialogSidebarItem,
-  ResponsiveDialogTitle,
-} from '@/components/ui/responsive-dialog'
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogMain, ResponsiveDialogSidebar, ResponsiveDialogSidebarItem, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog'
 import { Spinner } from '@/components/ui/spinner'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { syncAutomergeDocument } from '@/lib/automerge'
 import { updateAtsConfig } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
@@ -35,7 +24,6 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
   const config = severityConfig[severity]
   const [open, setOpen] = useState(false)
   const [isFixing, setIsFixing] = useState(false)
-  const isMobile = useIsMobile()
   const { update, currentAtsConfig } = useAtsStore()
   const triger = useRef<HTMLButtonElement | null>(null)
 
@@ -98,10 +86,7 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
 
   return (
     <ResponsiveDialog open={open} onOpenChange={setOpen} variant="sidebar">
-      <div className="contents" onClick={(e) => {
-        // 防止点击触发器时冒泡导致 Dialog 立即关闭（如果触发器本身有点击事件）
-        // 这里主要用于支持 asChild 的 children
-      }}>
+      <div className="contents">
         {children}
       </div>
 
@@ -113,6 +98,7 @@ function IssueFix({ id, severity, children }: PropsWithChildren<IssueFixProps>) 
             <config.icon className="size-3" />
           </Badge>
         </ResponsiveDialogTitle>
+        <ResponsiveDialogDescription className="sr-only">查看并修复简历中的问题。</ResponsiveDialogDescription>
       </ResponsiveDialogHeader>
 
       <ResponsiveDialogContent>
