@@ -143,7 +143,6 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
           variant="outline"
           onClick={handleClose}
           disabled={savingCurrent}
-          className="w-24"
         >
           取消
         </Button>
@@ -151,7 +150,6 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
           type="submit"
           form="save-version-form"
           disabled={savingCurrent}
-          className="px-8"
         >
           <Save data-icon="inline-start" />
           {savingCurrent ? '保存中...' : '保存为新版本'}

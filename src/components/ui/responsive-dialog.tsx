@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -76,10 +75,8 @@ export function ResponsiveDialog({
       <ResponsiveDialogContext.Provider value={contextValue}>
         <Drawer open={open} onOpenChange={onOpenChange}>
           {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-          <DrawerContent className="max-h-[92dvh] overflow-hidden">
-            <div className="flex flex-col h-full">
+          <DrawerContent className="flex flex-col h-full">
               {children}
-            </div>
           </DrawerContent>
         </Drawer>
       </ResponsiveDialogContext.Provider>
@@ -92,7 +89,7 @@ export function ResponsiveDialog({
         {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
         <DialogContent
           className={cn(
-            'flex flex-col p-0 overflow-hidden duration-200',
+            'flex flex-col p-0 duration-200',
             variant === 'sidebar'
               ? 'h-[min(90vh,880px)] w-[calc(85vw)] sm:max-w-[min(1000px,calc(100vw-2rem))] lg:max-w-[min(1120px,85vw)]'
               : 'max-h-[85vh] sm:max-w-lg',
@@ -117,7 +114,7 @@ export function ResponsiveDialogContent({
   return (
     <div
       className={cn(
-        'flex flex-1 min-h-0 overflow-hidden',
+        'flex flex-1 min-h-0',
         variant === 'sidebar' ? 'flex-row' : 'flex-col',
         className,
       )}
@@ -311,14 +308,14 @@ export function ResponsiveDialogHeader({
 
   if (isMobile) {
     return (
-      <DrawerHeader className={cn('shrink-0 border-b border-border/40', className)} {...props}>
+      <DrawerHeader className={className} {...props}>
         {children}
       </DrawerHeader>
     )
   }
 
   return (
-    <DialogHeader className={cn('shrink-0 border-b border-border/40 px-6 py-4', className)} {...props}>
+    <DialogHeader className={className} {...props}>
       {children}
     </DialogHeader>
   )
@@ -377,13 +374,7 @@ export function ResponsiveDialogFooter({
 
   if (isMobile) {
     return (
-      <DrawerFooter
-        className={cn(
-          'shrink-0 border-t border-border/40 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-backdrop-filter:bg-background/80',
-          className,
-        )}
-        {...props}
-      >
+      <DrawerFooter className={className} {...props}>
         {children}
         <DrawerClose asChild>
           <button className="hidden" />
