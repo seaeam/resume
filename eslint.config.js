@@ -9,6 +9,7 @@ export default antfu({
     'react-hooks/set-state-in-effect': 'off',
     'unused-imports/no-unused-vars': 'warn',
     'no-unused-vars': 'warn',
+    'no-void': 'error',
     'no-console': 'warn',
     'no-undef': 'error',
     'react-hooks/incompatible-library': 'off',

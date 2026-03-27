@@ -89,7 +89,7 @@ export function JobCard({ job }: JobCardProps) {
 
   const handlePrimaryAction = () => {
     if (nextAction.targetStatus) {
-      void handleStatusChange(nextAction.targetStatus)
+      handleStatusChange(nextAction.targetStatus)
       return
     }
 
@@ -114,7 +114,10 @@ export function JobCard({ job }: JobCardProps) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">{job.company}</p>
-              <p className="truncate text-xs text-muted-foreground">最近更新于 {stageDate}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                最近更新于
+                {stageDate}
+              </p>
             </div>
           </div>
 
@@ -149,17 +152,17 @@ export function JobCard({ job }: JobCardProps) {
                           查看详情
                         </DropdownMenuItem>
                         {APPLICATION_STATUS_ORDER.filter(status => status !== job.status).map(status => (
-                          <DropdownMenuItem key={status} onClick={() => void handleStatusChange(status)}>
+                          <DropdownMenuItem key={status} onClick={() => handleStatusChange(status)}>
                             标记为
                             {APPLICATION_STATUS_CONFIG[status].label}
                           </DropdownMenuItem>
                         ))}
                         {job.status !== 'rejected' && (
-                          <DropdownMenuItem onClick={() => void handleStatusChange('rejected')}>
+                          <DropdownMenuItem onClick={() => handleStatusChange('rejected')}>
                             终止流程
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
+                        <DropdownMenuItem variant="destructive" onClick={() => handleDelete()}>
                           <Trash2 data-icon="inline-start" />
                           删除
                         </DropdownMenuItem>

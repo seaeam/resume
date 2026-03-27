@@ -128,7 +128,7 @@ function FormatterTool({ onResumeUpdated, resumeContext }: FormatterToolProps) {
               <Button
                 ref={actionButtonRef}
                 className="w-full sm:w-auto"
-                onClick={() => void handleApply()}
+                onClick={handleApply}
                 disabled={applying || !activeAtsConfig || batchResult.autoApplicableSuggestionCount === 0}
               >
                 <Wand2 className="size-4" />

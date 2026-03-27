@@ -486,7 +486,7 @@ export default function DrawerStageDetail({ displayStage, isViewingHistory = fal
             <Button variant="outline" className="flex-1" onClick={handleCancel} disabled={saving}>
               取消
             </Button>
-            <Button className="flex-1" onClick={() => void handleSave()} disabled={saving}>
+            <Button className="flex-1" onClick={() => handleSave()} disabled={saving}>
               保存
             </Button>
           </div>

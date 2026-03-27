@@ -118,7 +118,7 @@ function AtsPreviewTool({ resumeContext }: AtsPreviewToolProps) {
               <ToolMetaBadge tone="info">{`${preview.stats.sectionCount} 个板块`}</ToolMetaBadge>
               <ToolMetaBadge tone="success">{`${preview.stats.keywordCount} 个关键词`}</ToolMetaBadge>
               <ToolMetaBadge tone="default">{`${preview.stats.lineCount} 行文本`}</ToolMetaBadge>
-              <Button size="xs" onClick={() => void handleCopy()}>
+              <Button size="xs" onClick={handleCopy}>
                 <Copy />
                 复制纯文本
               </Button>

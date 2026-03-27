@@ -8,7 +8,7 @@ export function CreateJobCard() {
 
   return (
     <Card
-      className="group flex min-h-[340px] cursor-pointer flex-col justify-between overflow-hidden border-2 border-dashed border-primary/35 bg-gradient-to-br from-primary/[0.04] via-background to-background py-0 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/55 hover:shadow-lg"
+      className="group flex min-h-[340px] cursor-pointer flex-col justify-between overflow-hidden border-2 border-dashed border-primary/35 bg-linear-to-br from-primary/4 via-background to-background py-0 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/55 hover:shadow-lg"
       onClick={openAddDrawer}
     >
       <CardHeader className="w-full pb-4 pt-6">

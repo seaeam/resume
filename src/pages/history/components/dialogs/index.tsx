@@ -77,14 +77,14 @@ export default function HistoryDialogs({
             <Button
               variant="outline"
               disabled={restoring}
-              onClick={() => void handleRestore('without_backup')}
+              onClick={() => handleRestore('without_backup')}
             >
               {restoring && restoreStrategy === 'without_backup' && (
                 <LoaderCircle data-icon="inline-start" className="animate-spin" />
               )}
               {restoring && restoreStrategy === 'without_backup' ? '恢复中...' : '直接恢复'}
             </Button>
-            <Button disabled={restoring} onClick={() => void handleRestore('with_backup')}>
+            <Button disabled={restoring} onClick={() => handleRestore('with_backup')}>
               {restoring && restoreStrategy === 'with_backup' && (
                 <LoaderCircle data-icon="inline-start" className="animate-spin" />
               )}
@@ -119,7 +119,7 @@ export default function HistoryDialogs({
             <Button
               variant="destructive"
               disabled={Boolean(deletingVersionId)}
-              onClick={() => void onConfirmDelete()}
+              onClick={onConfirmDelete}
             >
               {deletingVersionId && <LoaderCircle data-icon="inline-start" className="animate-spin" />}
               {deletingVersionId ? '删除中...' : '确认删除'}

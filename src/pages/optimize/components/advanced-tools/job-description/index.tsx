@@ -122,7 +122,7 @@ function JobDescriptionTool({ resumeContext }: JobDescriptionToolProps) {
             placeholder="粘贴职位描述、岗位职责、任职要求或加分项。"
           />
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={() => void handleCompare()} disabled={analyzing || !jobDescription.trim()}>
+            <Button onClick={handleCompare} disabled={analyzing || !jobDescription.trim()}>
               {analyzing
                 ? <Loader2 className="size-4 animate-spin" />
                 : <Target className="size-4" />}

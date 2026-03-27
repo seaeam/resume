@@ -96,7 +96,7 @@ function scheduleOfflinePersist(flushFn: () => Promise<void>) {
     clearTimeout(syncTimer)
   }
   syncTimer = setTimeout(() => {
-    void flushFn()
+    flushFn()
   }, SYNC_DELAY)
 }
 
@@ -105,7 +105,7 @@ function scheduleOnlinePersist(flushFn: () => Promise<void>) {
     clearTimeout(onlineSyncTimer)
   }
   onlineSyncTimer = setTimeout(() => {
-    void flushFn()
+    flushFn()
   }, ONLINE_SYNC_DELAY)
 }
 

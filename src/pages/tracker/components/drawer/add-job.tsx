@@ -328,7 +328,7 @@ export default function AddJobDrawer() {
         </Button>
         <Button
           className={cn('h-10 sm:h-9', isMobile ? 'flex-1' : 'px-8')}
-          onClick={() => void handleSubmit()}
+          onClick={() => handleSubmit()}
           disabled={submitting}
         >
           {submitting ? '提交中...' : '创建并开始跟进'}

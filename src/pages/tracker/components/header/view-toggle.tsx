@@ -1,7 +1,7 @@
 // 视图切换
 import { Kanban, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import useTrackerStore from '../store'
+import useTrackerStore from '../../store'
 
 export function ViewToggle() {
   const { viewMode, setViewMode } = useTrackerStore()

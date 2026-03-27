@@ -54,12 +54,12 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
     return this.ready
   }
 
-  whenReady(): Promise<void> {
+  whenReady() {
     if (this.ready) {
       return Promise.resolve()
     }
 
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       let handlePeerCandidate = () => {}
 
       const handleClose = () => {
@@ -77,7 +77,7 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
     })
   }
 
-  connect(peerId: PeerId, peerMetadata?: PeerMetadata): void {
+  connect(peerId: PeerId, peerMetadata?: PeerMetadata) {
     this.peerId = peerId
     this.peerMetadata = peerMetadata
     this.channel = supabase.channel(this.channelName)
@@ -88,7 +88,7 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
     this.subscribeToChannel(peerMetadata)
   }
 
-  disconnect(): void {
+  disconnect() {
     if (this.channel) {
       this.channel.unsubscribe()
       this.channel = null
@@ -97,7 +97,7 @@ export class SupabaseNetworkAdapter extends NetworkAdapter {
     this.ready = false
   }
 
-  send(message: Message): void {
+  send(message: Message) {
     if (!this.channel || !this.ready || !message.data) {
       return
     }

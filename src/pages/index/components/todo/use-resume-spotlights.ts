@@ -250,7 +250,7 @@ export function useResumeSpotlights(resumes: Resume[], resumesLoading: boolean) 
       }
     }
 
-    void load()
+    load()
 
     return () => {
       cancelled = true

@@ -7,7 +7,7 @@ import JobDrawer from './components/drawer'
 import AddJobDrawer from './components/drawer/add-job'
 import TrackerHeader from './components/header'
 import ListView from './components/list'
-import { StatusFilter } from './components/status-filter'
+import StatusFilter from './components/status-filter'
 import useTrackerStore from './store'
 import { getTrackerLoadErrorMeta } from './utils'
 
@@ -35,7 +35,7 @@ function Tracker() {
       }
     }
 
-    void loadJobs()
+    loadJobs()
   }, [])
 
   return (

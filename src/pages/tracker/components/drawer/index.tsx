@@ -62,7 +62,7 @@ export default function JobDrawer() {
 
     syncJob(optimisticJob)
 
-    void updateCompany(selectedJob.id, optimisticJob)
+    updateCompany(selectedJob.id, optimisticJob)
       .then((savedJob) => {
         syncJob(savedJob)
       })
