@@ -9,7 +9,7 @@ import { fontFamilyOptions, fontSizeOptions, themeOptions } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeConfigStore from '@/store/resume/config'
 import ExportDialog from '../export/ExportDialog'
-import { ResumeHistoryVersionDropdown } from './ResumeHistoryVersionDropdown'
+import { ResumeHistoryVersionDropdown } from './HistoryVersionDropdown'
 
 export function ResumeConfigToolbar() {
   const isMobile = useIsMobile()

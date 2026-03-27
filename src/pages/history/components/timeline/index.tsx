@@ -29,7 +29,7 @@ export default function HistoryTimeline({
   const timelineCountLabel = versions.length === 0 ? '暂无版本记录' : `${versions.length} 条版本记录`
 
   return (
-    <Card className="gap-0 overflow-hidden border-border/70 bg-background/95 py-0 shadow-none md:flex md:min-h-0 md:max-h-[min(78vh,920px)] md:flex-col lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]">
+    <Card className="flex min-h-0 flex-col gap-0 overflow-hidden border-border/70 bg-background/95 py-0 shadow-none max-h-[72dvh] md:max-h-[min(78vh,920px)] lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]">
       <CardHeader className="gap-4 py-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{timelineCountLabel}</Badge>
@@ -59,10 +59,10 @@ export default function HistoryTimeline({
       <CardContent
         ref={scrollRef}
         className={cn(
-          'px-0 py-0 md:min-h-0 md:flex-1',
+          'min-h-0 flex-1 px-0 py-0',
           overflowing
-            ? 'scrollbar-thin-subtle md:overflow-y-auto md:overscroll-contain'
-            : 'md:overflow-hidden',
+            ? 'scrollbar-gutter-stable scrollbar-thin-subtle overflow-y-auto overscroll-contain'
+            : 'overflow-hidden',
         )}
       >
         <div className="flex flex-col gap-5 p-4 sm:p-5">

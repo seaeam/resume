@@ -4,6 +4,7 @@ import type { ORDERType, ProficiencyLevel, ResumeSchema } from '@/lib/schema'
 import parser from 'html-react-parser'
 import { createContext, use, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { getAge } from '@/utils'
 import { useTemplateResumeData as useResumeStore } from '../resume-data-context'
 import './basic.css'
@@ -111,7 +112,32 @@ function Entry({ title, subtitle, duration, content }: {
           </div>
         )}
       </div>
-      {content && <div className="prose">{parser(content)}</div>}
+      {content && <ProseBlock>{parser(content)}</ProseBlock>}
+    </div>
+  )
+}
+
+function ProseBlock({
+  children,
+  className,
+  style,
+}: {
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+}) {
+  const { font, spacing } = useResumeContext()
+
+  return (
+    <div
+      className={cn('prose', className)}
+      style={{
+        fontSize: font.contentSize,
+        lineHeight: spacing.proseLineHeight,
+        ...style,
+      }}
+    >
+      {children}
     </div>
   )
 }
@@ -333,7 +359,7 @@ function SkillSpecialtyModule() {
 
   return (
     <Section title="技能特长">
-      {skill_specialty.description && <div className="prose">{parser(skill_specialty.description)}</div>}
+      {skill_specialty.description && <ProseBlock>{parser(skill_specialty.description)}</ProseBlock>}
       {skill_specialty.skills?.length > 0 && (
         <div className="grid gap-4 mt-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
           {skill_specialty.skills.map((skill) => {
@@ -372,7 +398,7 @@ function HonorsCertificatesModule() {
 
   return (
     <Section title="荣誉证书">
-      {honors_certificates.description && <div className="prose">{parser(honors_certificates.description)}</div>}
+      {honors_certificates.description && <ProseBlock>{parser(honors_certificates.description)}</ProseBlock>}
       {honors_certificates.certificates?.length > 0 && (
         <div style={{ fontSize: font.contentSize, lineHeight: spacing.lineHeight }}>
           {honors_certificates.certificates.map((cert, i) => (
@@ -391,7 +417,7 @@ function SelfEvaluationModule() {
   const { self_evaluation } = useResumeStore()
   return (
     <Section title="自我评价">
-      <div className="prose">{parser(self_evaluation.content)}</div>
+      <ProseBlock>{parser(self_evaluation.content)}</ProseBlock>
     </Section>
   )
 }
@@ -402,7 +428,7 @@ function HobbiesModule() {
 
   return (
     <Section title="兴趣爱好">
-      {hobbies.description && <div className="prose">{parser(hobbies.description)}</div>}
+      {hobbies.description && <ProseBlock>{parser(hobbies.description)}</ProseBlock>}
       {hobbies.hobbies?.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {hobbies.hobbies.map(hobby => (
@@ -444,7 +470,7 @@ export default function BasicResume({ theme, spacing, font }: BasicResumeContent
 
   return (
     <ResumeProvider theme={theme} spacing={spacing} font={font}>
-      <div style={{ fontFamily: font.fontFamily }}>
+      <div style={{ fontFamily: font.fontFamily, lineHeight: spacing.lineHeight }}>
         {data.order.map((moduleType: ORDERType) => {
           const Component = MODULE_COMPONENTS[moduleType]
           if (!Component || (moduleType !== 'basics' && getVisibility(moduleType)))

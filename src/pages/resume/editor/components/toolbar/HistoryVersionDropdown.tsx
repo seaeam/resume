@@ -4,24 +4,19 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { isOfflineResumeId } from '@/lib/offline-resume-manager'
 import { listResumeHistoryVersions, restoreResumeHistoryVersion } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
-import { SOURCE_META } from '@/pages/history/const'
 import RestoreVersionDialog from '@/pages/history/components/dialogs/restore-version-dialog'
+import { SOURCE_META } from '@/pages/history/const'
 import { getVersionTitle, normalizeHistoryVersion } from '@/pages/history/utils'
 import useCurrentResumeStore from '@/store/resume/current'
 import useResumeStore from '@/store/resume/form'
 import { formatDateTime, formatRelativeTime } from '@/utils/date'
-import { useIsMobile } from '@/hooks/use-mobile'
 
-function VersionSummaryCard({
-  version,
-  mobile,
-  onRestore,
-}: {
+function VersionSummaryCard({ version, mobile, onRestore}: {
   version: ResumeHistoryVersionRecord
   mobile: boolean
   onRestore: (versionId: number) => void
@@ -75,10 +70,10 @@ function VersionSummaryCard({
       <div className={cn('shrink-0 gap-2', mobile ? 'grid grid-cols-2' : 'flex w-36 flex-col')}>
         <Button size="sm" onClick={() => onRestore(version.id)}>
           <RotateCcw data-icon="inline-start" />
-          回滚到当前版本
+          回滚
         </Button>
         <Button size="sm" variant="outline" disabled title="查看预览即将支持">
-          查看预览
+          预览
         </Button>
       </div>
     </article>
@@ -92,7 +87,6 @@ export function ResumeHistoryVersionDropdown() {
   const getHistoryRestoreSource = useResumeStore(state => state.getHistoryRestoreSource)
 
   const [desktopOpen, setDesktopOpen] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [versions, setVersions] = useState<ResumeHistoryVersionRecord[]>([])
@@ -102,7 +96,6 @@ export function ResumeHistoryVersionDropdown() {
   const [reloadKey, setReloadKey] = useState(0)
 
   const canUseHistory = Boolean(resumeId) && !isOfflineResumeId(resumeId!) && isInitialized
-  const panelOpen = isMobile ? mobileOpen : desktopOpen
 
   const restoreTarget = useMemo(
     () => versions.find(version => version.id === restoreTargetId) ?? null,
@@ -118,7 +111,7 @@ export function ResumeHistoryVersionDropdown() {
   }, [resumeId])
 
   useEffect(() => {
-    if (!panelOpen || !resumeId || isOfflineResumeId(resumeId)) {
+    if (!desktopOpen || !resumeId || isOfflineResumeId(resumeId)) {
       return
     }
 
@@ -150,11 +143,9 @@ export function ResumeHistoryVersionDropdown() {
     return () => {
       cancelled = true
     }
-  }, [panelOpen, reloadKey, resumeId])
+  }, [desktopOpen, reloadKey, resumeId])
 
   const handleRestoreRequest = (versionId: number) => {
-    setDesktopOpen(false)
-    setMobileOpen(false)
     setRestoreTargetId(versionId)
   }
 
@@ -241,44 +232,22 @@ export function ResumeHistoryVersionDropdown() {
 
   return (
     <>
-      {isMobile
-        ? (
-            <Drawer open={mobileOpen} onOpenChange={setMobileOpen}>
-              <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-              <DrawerContent className="flex h-[88dvh] max-h-[88dvh] flex-col overflow-hidden rounded-t-[28px] p-0">
-                <DrawerHeader className="shrink-0 text-left">
-                  <DrawerTitle>历史版本</DrawerTitle>
-                  <DrawerDescription>按从新到旧查看版本摘要，并恢复到当前编辑内容。</DrawerDescription>
-                </DrawerHeader>
-                <div className="min-h-0 flex-1 overflow-y-auto">
-                  {listContent}
-                </div>
-                <DrawerFooter className="shrink-0 border-t bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-backdrop-filter:bg-background/80">
-                  <DrawerClose asChild>
-                    <Button variant="outline">关闭</Button>
-                  </DrawerClose>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
-          )
-        : (
-            <DropdownMenu open={desktopOpen} onOpenChange={setDesktopOpen}>
-              <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                side="bottom"
-                className="w-[min(42rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border-border/70 p-0"
-              >
-                <DropdownMenuLabel className="px-4 py-3 text-sm font-semibold">
-                  历史版本
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="mx-0 my-0" />
-                <div className="max-h-[min(32rem,calc(100vh-10rem))] overflow-y-auto">
-                  {listContent}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+      <DropdownMenu open={desktopOpen} onOpenChange={setDesktopOpen}>
+        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          side="bottom"
+          className="overflow-hidden rounded-2xl border-border/70 p-0"
+        >
+          <DropdownMenuLabel className="px-4 py-3 text-sm font-semibold">
+            历史版本
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="mx-0 my-0" />
+          <div className="max-h-[min(32rem,calc(100vh-10rem))] overflow-y-auto">
+            {listContent}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <RestoreVersionDialog
         targetVersion={restoreTarget}

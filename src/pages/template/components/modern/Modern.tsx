@@ -5,6 +5,7 @@ import parser from 'html-react-parser'
 import { BookOpen, Briefcase, GraduationCap, Medal, Rocket, Sparkles, Target, Trophy, Users } from 'lucide-react'
 import { createContext, use, useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { getAge } from '@/utils'
 import { useTemplateResumeData as useResumeStore } from '../resume-data-context'
 
@@ -134,10 +135,35 @@ function Entry({ title, subtitle, duration, content }: {
         )}
       </div>
       {content && (
-        <div className="prose mt-2" style={{ marginTop: `calc(${spacing.itemSpacing} / 2)` }}>
+        <ProseBlock style={{ marginTop: `calc(${spacing.itemSpacing} / 2)` }} className="mt-2">
           {parser(content)}
-        </div>
+        </ProseBlock>
       )}
+    </div>
+  )
+}
+
+function ProseBlock({
+  children,
+  className,
+  style,
+}: {
+  children: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+}) {
+  const { font, spacing } = useResumeContext()
+
+  return (
+    <div
+      className={cn('prose', className)}
+      style={{
+        fontSize: font.contentSize,
+        lineHeight: spacing.proseLineHeight,
+        ...style,
+      }}
+    >
+      {children}
     </div>
   )
 }
@@ -363,9 +389,9 @@ function SkillSpecialtyModule() {
   return (
     <Section title="技能特长" icon={<Medal size={20} />}>
       {skill_specialty.description && (
-        <div className="prose" style={{ padding: spacing.itemSpacing }}>
+        <ProseBlock style={{ padding: spacing.itemSpacing }}>
           {parser(skill_specialty.description)}
-        </div>
+        </ProseBlock>
       )}
       {skill_specialty.skills?.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
@@ -411,9 +437,9 @@ function HonorsCertificatesModule() {
   return (
     <Section title="荣誉证书" icon={<Trophy size={20} />}>
       {honors_certificates.description && (
-        <div className="prose" style={{ padding: spacing.itemSpacing }}>
+        <ProseBlock style={{ padding: spacing.itemSpacing }}>
           {parser(honors_certificates.description)}
-        </div>
+        </ProseBlock>
       )}
       {honors_certificates.certificates?.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -441,9 +467,9 @@ function SelfEvaluationModule() {
   const { self_evaluation } = useResumeStore()
   return (
     <Section title="自我评价" icon={<Sparkles size={20} />}>
-      <div className="prose" style={{ padding: spacing.itemSpacing }}>
+      <ProseBlock style={{ padding: spacing.itemSpacing }}>
         {parser(self_evaluation.content)}
-      </div>
+      </ProseBlock>
     </Section>
   )
 }
@@ -455,9 +481,9 @@ function HobbiesModule() {
   return (
     <Section title="兴趣爱好" icon={<Sparkles size={20} />}>
       {hobbies.description && (
-        <div className="prose mb-3">
+        <ProseBlock className="mb-3">
           {parser(hobbies.description)}
-        </div>
+        </ProseBlock>
       )}
       {hobbies.hobbies?.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -508,7 +534,7 @@ export default function ModernResume({ theme, spacing, font }: ModernResumeConte
 
   return (
     <ResumeProvider theme={theme} spacing={spacing} font={font}>
-      <div className="modern-resume" style={{ fontFamily: font.fontFamily }}>
+      <div className="modern-resume" style={{ fontFamily: font.fontFamily, lineHeight: spacing.lineHeight }}>
         {data.order.map((moduleType: ORDERType) => {
           const Component = MODULE_COMPONENTS[moduleType]
           if (!Component || (moduleType !== 'basics' && getVisibility(moduleType)))
