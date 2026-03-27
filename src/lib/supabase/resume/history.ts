@@ -1,4 +1,5 @@
 import type { ORDERType, ResumeSchema, ResumeType, VisibilityFormType } from '@/lib/schema'
+import { replaceAutomergeDocumentSnapshot } from '@/lib/automerge'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
 import { getResumeById } from './form'
@@ -9,6 +10,8 @@ export type ResumeVersionSourceType
     | 'restore'
     | 'ai_optimize'
     | 'import'
+
+export type RestoreStrategy = 'with_backup' | 'without_backup'
 
 export interface ResumeSnapshot extends ResumeSchema {
   order: ORDERType[]
@@ -92,6 +95,14 @@ export interface UpdateResumeHistoryVersionInput {
   description?: string | null
   milestone_name?: string | null
   tags?: string[]
+}
+
+export interface RestoreResumeHistoryVersionInput {
+  resumeId: string
+  targetVersion: ResumeHistoryVersionRecord
+  currentSnapshot: ResumeSnapshot
+  currentUpdatedAt: string | null
+  strategy: RestoreStrategy
 }
 
 const VERSION_SELECTOR = `
@@ -245,6 +256,45 @@ export async function createResumeHistoryVersion(input: CreateResumeHistoryVersi
   return data as ResumeHistoryVersionRow
 }
 
+export async function restoreResumeHistoryVersion({
+  resumeId,
+  targetVersion,
+  currentSnapshot,
+  currentUpdatedAt,
+  strategy,
+}: RestoreResumeHistoryVersionInput) {
+  if (strategy === 'with_backup') {
+    await createResumeHistoryVersion({
+      resume_id: resumeId,
+      version_name: '恢复前备份',
+      description: `恢复到 V${targetVersion.version_no} 前自动保存`,
+      source_type: 'autosave',
+      tags: ['恢复前备份'],
+      snapshot: currentSnapshot,
+      content_hash: await createResumeSnapshotHash(currentSnapshot),
+      base_updated_at: currentUpdatedAt,
+    })
+  }
+
+  const restoredSnapshot = await replaceAutomergeDocumentSnapshot(resumeId, targetVersion.snapshot)
+
+  return createResumeHistoryVersion({
+    resume_id: resumeId,
+    version_name: `从 V${targetVersion.version_no} 恢复`,
+    description: trimToNull(
+      targetVersion.version_name
+        ? `从「${targetVersion.version_name}」恢复当前内容`
+        : `从 V${targetVersion.version_no} 恢复当前内容`,
+    ),
+    milestone_name: trimToNull(targetVersion.milestone_name),
+    source_type: 'restore',
+    tags: targetVersion.tags ?? [],
+    snapshot: restoredSnapshot,
+    content_hash: await createResumeSnapshotHash(restoredSnapshot),
+    base_updated_at: currentUpdatedAt,
+  })
+}
+
 export async function updateResumeHistoryVersion(id: number, input: UpdateResumeHistoryVersionInput) {
   const user = await getCurrentUser()
 
@@ -270,6 +320,62 @@ export async function updateResumeHistoryVersion(id: number, input: UpdateResume
   }
 
   return data as ResumeHistoryVersionRow
+}
+
+function trimToNull(value: string | null | undefined) {
+  const nextValue = value?.trim()
+  return nextValue || null
+}
+
+function sanitizeSnapshot(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(item => sanitizeSnapshot(item))
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .map(([key, item]) => [key, sanitizeSnapshot(item)]),
+    )
+  }
+
+  return value
+}
+
+function sortSnapshotKeys(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(item => sortSnapshotKeys(item))
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .reduce<Record<string, unknown>>((result, key) => {
+        result[key] = sortSnapshotKeys((value as Record<string, unknown>)[key])
+        return result
+      }, {})
+  }
+
+  return value
+}
+
+function stableSerializeSnapshot(snapshot: ResumeSnapshot) {
+  return JSON.stringify(sortSnapshotKeys(sanitizeSnapshot(snapshot)))
+}
+
+export async function createResumeSnapshotHash(snapshot: ResumeSnapshot) {
+  const content = stableSerializeSnapshot(snapshot)
+
+  if (!globalThis.crypto?.subtle) {
+    return content
+  }
+
+  const encoded = new TextEncoder().encode(content)
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', encoded)
+  return Array.from(new Uint8Array(digest))
+    .map(value => value.toString(16).padStart(2, '0'))
+    .join('')
 }
 
 export async function deleteResumeHistoryVersion(id: number) {

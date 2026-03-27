@@ -2,7 +2,6 @@ import type { DocHandle, Repo } from '@automerge/automerge-repo'
 import type { AutomergeResumeDocument } from './schema'
 import type { ResumeSchema } from '@/lib/schema'
 import { DEFAULT_ORDER, DEFAULT_VISIBILITY } from '@/lib/schema'
-import { generateDeterministicActor } from '../shared'
 
 interface DocumentIdentity {
   resumeId: string
@@ -47,9 +46,7 @@ export async function createResumeDocument({
   userId,
   seedData,
 }: CreateDocumentOptions): Promise<DocHandle<AutomergeResumeDocument>> {
-  const handle = repo.create<AutomergeResumeDocument>({
-    actor: generateDeterministicActor(resumeId),
-  })
+  const handle = repo.create<AutomergeResumeDocument>()
 
   handle.change((doc) => {
     doc._metadata = buildMetadata(undefined, { resumeId, userId })

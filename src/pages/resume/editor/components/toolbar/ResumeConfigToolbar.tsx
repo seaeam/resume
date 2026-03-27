@@ -9,6 +9,7 @@ import { fontFamilyOptions, fontSizeOptions, themeOptions } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeConfigStore from '@/store/resume/config'
 import ExportDialog from '../export/ExportDialog'
+import { ResumeHistoryVersionDropdown } from './ResumeHistoryVersionDropdown'
 
 export function ResumeConfigToolbar() {
   const isMobile = useIsMobile()
@@ -213,6 +214,8 @@ export function ResumeConfigToolbar() {
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ResumeHistoryVersionDropdown />
 
       <ExportDialog
         trigger={(
