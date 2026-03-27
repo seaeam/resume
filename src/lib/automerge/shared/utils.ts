@@ -1,34 +1,5 @@
 import { BASE64_CHUNK_SIZE } from './constants'
 
-function simpleHash(str: string): number {
-  let hash = 0
-
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash &= hash
-  }
-
-  return hash
-}
-
-/**
- * 生成确定性的 actor ID，确保同一份简历在不同端能映射到同一个文档 ID。
- */
-export function generateDeterministicActor(resumeId: string): Uint8Array {
-  const actor = new Uint8Array(16)
-
-  for (let i = 0; i < 4; i++) {
-    const hash = simpleHash(`${i}:${resumeId}`)
-
-    for (let j = 0; j < 4; j++) {
-      actor[i * 4 + j] = (hash >> (j * 8)) & 0xFF
-    }
-  }
-
-  return actor
-}
-
 export function encodeBytesToBase64(bytes: Uint8Array): string {
   let binary = ''
 

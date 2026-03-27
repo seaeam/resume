@@ -269,7 +269,7 @@ function AdvancedTools() {
                   <DrawerClose asChild>
                     <Button variant="outline">取消</Button>
                   </DrawerClose>
-                  <Button onClick={() => void handleRefreshContext()} disabled={!activeTool || loadingContext}>
+                  <Button onClick={handleRefreshContext} disabled={!activeTool || loadingContext}>
                     刷新数据
                   </Button>
                 </DrawerFooter>
@@ -279,7 +279,7 @@ function AdvancedTools() {
                   <DialogClose asChild>
                     <Button variant="outline">取消</Button>
                   </DialogClose>
-                  <Button onClick={() => void handleRefreshContext()} disabled={!activeTool || loadingContext}>
+                  <Button onClick={handleRefreshContext} disabled={!activeTool || loadingContext}>
                     刷新数据
                   </Button>
                 </DialogFooter>

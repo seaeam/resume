@@ -1,7 +1,7 @@
-import type { ApplicationStatus } from '../types'
+import type { ApplicationStatus } from '../../types'
 import { cn } from '@/lib/utils'
-import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../const'
-import useTrackerStore from '../store'
+import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
+import useTrackerStore from '../../store'
 
 const ALL_FILTER_STATUSES: (ApplicationStatus | null)[] = [
   null,
@@ -9,7 +9,7 @@ const ALL_FILTER_STATUSES: (ApplicationStatus | null)[] = [
   'rejected',
 ]
 
-export function StatusFilter() {
+export default function StatusFilter() {
   const { jobs, filterStatus, setFilterStatus } = useTrackerStore()
 
   const getCount = (status: ApplicationStatus | null) => {

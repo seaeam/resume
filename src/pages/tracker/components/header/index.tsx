@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { TRACKER_BATCH_TOOLBAR_LABEL, TRACKER_PRIMARY_ACTION_TEXT } from '../../const'
 import useTrackerStore from '../../store'
 import { getTrackerErrorMessage } from '../../utils'
-import { ViewToggle } from '../view-toggle'
+import { ViewToggle } from './view-toggle'
 
 export default function TrackerHeader() {
   const { jobs, loading, isSelectMode, selectedIds, selectAll, enterSelectMode, exitSelectMode, removeJobs, openAddDrawer, filterStatus } = useTrackerStore()
@@ -74,53 +74,53 @@ export default function TrackerHeader() {
             <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
               {TRACKER_BATCH_TOOLBAR_LABEL}
             </span>
-          {isSelectMode
-            ? (
-                <>
+            {isSelectMode
+              ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        'gap-2 rounded-xl',
+                        selectedCount > 0 && 'border-primary bg-primary/10 text-primary',
+                      )}
+                      onClick={selectAll}
+                    >
+                      <Checkbox
+                        checked={selectedCount === selectableCount && selectableCount > 0}
+                        className="size-4"
+                      />
+                      已选
+                      {' '}
+                      {selectedCount}
+                      {' '}
+                      个职位
+                    </Button>
+                    {selectedCount > 0 && (
+                      <Button variant="destructive" size="sm" className="gap-2 rounded-xl" onClick={() => handleDeleteSelectedJobs()}>
+                        <Trash2 className="size-4" />
+                        删除
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="rounded-xl" onClick={exitSelectMode}>
+                      退出批量管理
+                    </Button>
+                  </>
+                )
+              : (
                   <Button
                     variant="outline"
                     size="sm"
-                    className={cn(
-                      'gap-2 rounded-xl',
-                      selectedCount > 0 && 'border-primary bg-primary/10 text-primary',
-                    )}
-                    onClick={selectAll}
+                    className="gap-2 rounded-xl"
+                    onClick={enterSelectMode}
                   >
-                    <Checkbox
-                      checked={selectedCount === selectableCount && selectableCount > 0}
-                      className="size-4"
-                    />
-                    已选
-                    {' '}
-                    {selectedCount}
-                    {' '}
-                    个职位
+                    管理职位
                   </Button>
-                  {selectedCount > 0 && (
-                    <Button variant="destructive" size="sm" className="gap-2 rounded-xl" onClick={() => void handleDeleteSelectedJobs()}>
-                      <Trash2 className="size-4" />
-                      删除
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="rounded-xl" onClick={exitSelectMode}>
-                    退出批量管理
-                  </Button>
-                </>
-              )
-            : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 rounded-xl"
-                  onClick={enterSelectMode}
-                >
-                  管理职位
-                </Button>
-              )}
-        </div>
-        <div className="shrink-0 self-start lg:self-auto">
-          <ViewToggle />
-        </div>
+                )}
+          </div>
+          <div className="shrink-0 self-start lg:self-auto">
+            <ViewToggle />
+          </div>
         </div>
       </header>
     </>

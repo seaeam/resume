@@ -110,7 +110,7 @@ export default function BoardView() {
 
     syncJob(optimisticJob)
 
-    void updateCompany(draggableId, optimisticJob)
+    updateCompany(draggableId, optimisticJob)
       .then((savedJob) => {
         syncJob(savedJob)
 
@@ -152,88 +152,88 @@ export default function BoardView() {
           className="w-full min-w-0 max-w-full overflow-x-auto"
         >
           <div className="flex w-max gap-4 px-1 pb-4 min-h-[500px]">
-          {BOARD_COLUMNS.map((column) => {
-            const columnJobs = getJobsByStatus(column.status)
-            const highlighted = isColumnHighlighted(column.status)
-            return (
-              <div
-                key={column.status}
-                ref={(el) => {
-                  if (el)
-                    columnRefs.current.set(column.status, el)
-                }}
-                className="flex w-[320px] min-w-[320px] shrink-0 flex-col"
-              >
-                <div className={cn(
-                  'mb-3 rounded-2xl border border-border/60 bg-card/80 px-4 py-3 shadow-sm',
-                  highlighted && 'border-primary/60 bg-primary/5',
-                )}
+            {BOARD_COLUMNS.map((column) => {
+              const columnJobs = getJobsByStatus(column.status)
+              const highlighted = isColumnHighlighted(column.status)
+              return (
+                <div
+                  key={column.status}
+                  ref={(el) => {
+                    if (el)
+                      columnRefs.current.set(column.status, el)
+                  }}
+                  className="flex w-[320px] min-w-[320px] shrink-0 flex-col"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold">{column.label}</h3>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        {TRACKER_BOARD_COLUMN_HINTS[column.status]}
-                      </p>
-                    </div>
-                    <span className={cn(
-                      'inline-flex min-w-8 items-center justify-center rounded-full px-2 py-1 text-xs font-medium',
-                      highlighted
-                        ? 'bg-primary text-primary-foreground'
-                        : APPLICATION_STATUS_CONFIG[column.status].bgColor,
-                      !highlighted && APPLICATION_STATUS_CONFIG[column.status].color,
-                    )}
-                    >
-                      {columnJobs.length}
-                    </span>
-                  </div>
-                </div>
-
-                <Droppable droppableId={column.status}>
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className={cn(
-                        'flex-1 flex flex-col gap-3 rounded-2xl border border-border/60 p-3 transition-all duration-300',
-                        snapshot.isDraggingOver
-                          ? 'bg-primary/10 ring-2 ring-primary/20'
-                          : highlighted
-                            ? 'ring-2 ring-primary/40 bg-primary/5'
-                            : 'bg-muted/30',
-                      )}
-                    >
-                      {columnJobs.length > 0
-                        ? (
-                            columnJobs.map((job, index) => (
-                              <Draggable key={job.id} draggableId={job.id} index={index}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className={snapshot.isDragging ? 'opacity-80 rotate-2 scale-105' : ''}
-                                  >
-                                    <ColumnCard job={job} />
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))
-                          )
-                        : (
-                            <div className="flex min-h-[180px] flex-1 items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/80 px-4 text-center text-sm text-muted-foreground">
-                              拖入新的职位到这一列，或在列表里先推进到这个阶段
-                            </div>
-                          )}
-                      {provided.placeholder}
-                    </div>
+                  <div className={cn(
+                    'mb-3 rounded-2xl border border-border/60 bg-card/80 px-4 py-3 shadow-sm',
+                    highlighted && 'border-primary/60 bg-primary/5',
                   )}
-                </Droppable>
-              </div>
-            )
-          })}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold">{column.label}</h3>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          {TRACKER_BOARD_COLUMN_HINTS[column.status]}
+                        </p>
+                      </div>
+                      <span className={cn(
+                        'inline-flex min-w-8 items-center justify-center rounded-full px-2 py-1 text-xs font-medium',
+                        highlighted
+                          ? 'bg-primary text-primary-foreground'
+                          : APPLICATION_STATUS_CONFIG[column.status].bgColor,
+                        !highlighted && APPLICATION_STATUS_CONFIG[column.status].color,
+                      )}
+                      >
+                        {columnJobs.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Droppable droppableId={column.status}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn(
+                          'flex-1 flex flex-col gap-3 rounded-2xl border border-border/60 p-3 transition-all duration-300',
+                          snapshot.isDraggingOver
+                            ? 'bg-primary/10 ring-2 ring-primary/20'
+                            : highlighted
+                              ? 'ring-2 ring-primary/40 bg-primary/5'
+                              : 'bg-muted/30',
+                        )}
+                      >
+                        {columnJobs.length > 0
+                          ? (
+                              columnJobs.map((job, index) => (
+                                <Draggable key={job.id} draggableId={job.id} index={index}>
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      className={snapshot.isDragging ? 'opacity-80 rotate-2 scale-105' : ''}
+                                    >
+                                      <ColumnCard job={job} />
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))
+                            )
+                          : (
+                              <div className="flex min-h-[180px] flex-1 items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/80 px-4 text-center text-sm text-muted-foreground">
+                                拖入新的职位到这一列，或在列表里先推进到这个阶段
+                              </div>
+                            )}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
       </div>
     </DragDropContext>
   )

@@ -75,7 +75,7 @@ export default function SaveVersionDialog({ open, onOpenChange, onSaved }: SaveV
         </ResponsiveDialogSidebar>
 
         <ResponsiveDialogMain>
-          <form id="save-version-form" onSubmit={event => void handleSubmit(event)}>
+          <form id="save-version-form" onSubmit={event => handleSubmit(event)}>
             <ResponsiveDialogSection id="identity" title="基本身份">
               <FieldGroup className="gap-5">
                 <Field>

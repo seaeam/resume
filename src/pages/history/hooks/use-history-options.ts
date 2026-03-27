@@ -34,7 +34,7 @@ export function useHistoryResumeOptions(): UseHistoryResumeOptionsResult {
   }, [])
 
   useEffect(() => {
-    void loadResumeOptions()
+    loadResumeOptions()
   }, [loadResumeOptions])
 
   return {

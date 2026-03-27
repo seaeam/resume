@@ -113,3 +113,11 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## TypeScript Hygiene
+
+When editing TypeScript code:
+
+- Do not add explicit `: void` or `: Promise<void>` return annotations to implemented functions or methods when TypeScript can infer them.
+- Do not write call sites like `void foo()` or `void someAsyncTask()`. Call `foo()` directly unless a different control-flow pattern is actually required.
+- Keep `void` only in type-contract positions such as callback, prop, interface, or exported API signatures where it communicates the intended return shape.

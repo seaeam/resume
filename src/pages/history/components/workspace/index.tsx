@@ -36,7 +36,7 @@ export default function HistoryWorkspace({ activeResumeId, onReloadResumeOptions
           <EmptyDescription>{error}</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" onClick={() => void handleReload()}>
+          <Button variant="outline" onClick={handleReload}>
             <RefreshCcw data-icon="inline-start" />
             重试
           </Button>

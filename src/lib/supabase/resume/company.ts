@@ -121,7 +121,7 @@ export async function updateCompany(
 export async function updateCompanyStatus(
   id: string,
   status: ApplicationStatus,
-): Promise<void> {
+) {
   const user = await getCurrentUser()
 
   if (!user)
@@ -142,7 +142,7 @@ export async function updateCompanyStatus(
 }
 
 // 删除公司/职位
-export async function deleteCompany(id: string): Promise<void> {
+export async function deleteCompany(id: string) {
   const user = await getCurrentUser()
 
   if (!user)

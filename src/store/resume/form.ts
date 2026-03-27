@@ -1,6 +1,7 @@
 import type { DocHandle } from '@automerge/automerge-repo'
 import type { StoreApi } from 'zustand'
 import type { AutomergeResumeDocument } from '@/lib/automerge'
+import type { ResumeSnapshot } from '@/lib/supabase/resume/history'
 import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, ResumeType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { cloneDeepWith, get } from 'lodash'
@@ -76,6 +77,7 @@ interface ResumeState extends FormDataMap {
   setVisibility: (id: VisibilityItemsType, isHidden: boolean) => void
   updateActiveTabId: (newActiveTab: ORDERType) => void
   getResumeFormData: () => FormDataMap
+  getHistoryRestoreSource: () => { snapshot: ResumeSnapshot, updatedAt: string | null }
   updateForm: <K extends keyof FormDataMap>(key: K, data: Partial<FormDataMap[K]>) => void
   updateOrder: (newOrder: ORDERType[]) => void
 
@@ -96,7 +98,7 @@ function scheduleOfflinePersist(flushFn: () => Promise<void>) {
     clearTimeout(syncTimer)
   }
   syncTimer = setTimeout(() => {
-    void flushFn()
+    flushFn()
   }, SYNC_DELAY)
 }
 
@@ -105,7 +107,7 @@ function scheduleOnlinePersist(flushFn: () => Promise<void>) {
     clearTimeout(onlineSyncTimer)
   }
   onlineSyncTimer = setTimeout(() => {
-    void flushFn()
+    flushFn()
   }, ONLINE_SYNC_DELAY)
 }
 
@@ -198,6 +200,14 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       (acc as any)[key] = state[key]
       return acc
     }, {} as FormDataMap)
+  },
+
+  getHistoryRestoreSource: () => {
+    const state = get()
+    return {
+      snapshot: sanitizeDeep(getFormPayload(state)),
+      updatedAt: state.docHandle?.doc()?._metadata?.updatedAt ?? null,
+    }
   },
 
   updateActiveTabId: newActiveTab => set({ activeTabId: newActiveTab }),
@@ -541,7 +551,7 @@ function mapDocToState(doc: Partial<AutomergeResumeDocument> | null | undefined)
  * 从 state 中提取所有表单数据 + order/visibility/type 作为持久化载荷。
  * 同时服务于离线保存和在线同步。
  */
-function getFormPayload(state: ResumeState) {
+function getFormPayload(state: ResumeState): ResumeSnapshot {
   return {
     ...Object.fromEntries(
       FORM_DATA_KEYS.map(key => [key, state[key]]),
@@ -549,7 +559,7 @@ function getFormPayload(state: ResumeState) {
     order: state.order,
     visibility: state.visibility,
     type: state.type,
-  }
+  } as ResumeSnapshot
 }
 
 export default useResumeStore

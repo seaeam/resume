@@ -13,7 +13,6 @@ export interface AutomergeResumeDocument extends ResumeSchema {
     updatedAt: string
     version: number
   }
-  actor: Uint8Array<ArrayBufferLike>
 
   // 表单顺序和可见性
   order: ORDERType[]

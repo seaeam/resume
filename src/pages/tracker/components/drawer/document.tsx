@@ -80,7 +80,7 @@ export default function DrawerDocument() {
 
     syncJob(optimisticJob)
 
-    void updateCompany(job.id, { resume_id: resumeId })
+    updateCompany(job.id, { resume_id: resumeId })
       .then((savedJob) => {
         syncJob(savedJob)
       })

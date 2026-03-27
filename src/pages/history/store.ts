@@ -2,10 +2,9 @@ import type { HistoryCurrentResume, RestoreStrategy, VersionMetadataDraft } from
 import type { ResumeHistoryVersionRecord } from '@/lib/supabase/resume/history'
 import { toast } from 'sonner'
 import { create } from 'zustand'
-import { replaceAutomergeDocumentSnapshot } from '@/lib/automerge'
 import { isOfflineResumeId } from '@/lib/offline-resume-manager'
-import { createResumeHistoryVersion, deleteResumeHistoryVersion, getResumeHistoryResume, listResumeHistoryVersions, updateResumeHistoryVersion } from '@/lib/supabase/resume'
-import { buildCurrentResume, createSnapshotHash, normalizeHistoryVersion, toVersionMutationPayload, trimToNull } from './utils'
+import { createResumeHistoryVersion, createResumeSnapshotHash, deleteResumeHistoryVersion, getResumeHistoryResume, listResumeHistoryVersions, restoreResumeHistoryVersion, updateResumeHistoryVersion } from '@/lib/supabase/resume'
+import { buildCurrentResume, normalizeHistoryVersion, toVersionMutationPayload } from './utils'
 
 interface HistoryStore {
   resumeId: string | null
@@ -129,7 +128,7 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
             ...toVersionMutationPayload(draft),
             source_type: 'manual',
             snapshot: currentResume.snapshot,
-            content_hash: await createSnapshotHash(currentResume.snapshot),
+            content_hash: await createResumeSnapshotHash(currentResume.snapshot),
             base_updated_at: currentResume.updatedAt,
           }),
         )
@@ -188,36 +187,13 @@ const useHistoryStore = create<HistoryStore>()((set, get) => {
       set({ restoring: true })
 
       try {
-        if (strategy === 'with_backup') {
-          await createResumeHistoryVersion({
-            resume_id: resumeId,
-            version_name: '恢复前备份',
-            description: `恢复到 V${targetVersion.version_no} 前自动保存`,
-            source_type: 'autosave',
-            tags: ['恢复前备份'],
-            snapshot: currentResume.snapshot,
-            content_hash: await createSnapshotHash(currentResume.snapshot),
-            base_updated_at: currentResume.updatedAt,
-          })
-        }
-
-        await replaceAutomergeDocumentSnapshot(resumeId, targetVersion.snapshot)
-
         const restoredVersion = normalizeHistoryVersion(
-          await createResumeHistoryVersion({
-            resume_id: resumeId,
-            version_name: `从 V${targetVersion.version_no} 恢复`,
-            description: trimToNull(
-              targetVersion.version_name
-                ? `从「${targetVersion.version_name}」恢复当前内容`
-                : `从 V${targetVersion.version_no} 恢复当前内容`,
-            ),
-            milestone_name: trimToNull(targetVersion.milestone_name),
-            source_type: 'restore',
-            tags: targetVersion.tags ?? [],
-            snapshot: targetVersion.snapshot,
-            content_hash: targetVersion.content_hash ?? await createSnapshotHash(targetVersion.snapshot),
-            base_updated_at: currentResume.updatedAt,
+          await restoreResumeHistoryVersion({
+            resumeId,
+            targetVersion,
+            currentSnapshot: currentResume.snapshot,
+            currentUpdatedAt: currentResume.updatedAt,
+            strategy,
           }),
         )
 

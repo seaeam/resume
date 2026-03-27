@@ -267,7 +267,7 @@ export function isNodeTypeSelected(editor: Editor | null, types: string[] = []):
 /**
  * Helper to check if operation was aborted and throw if so
  */
-function checkAborted(abortSignal?: AbortSignal): void {
+function checkAborted(abortSignal?: AbortSignal) {
   if (abortSignal?.aborted) {
     throw new DOMException('Upload aborted', 'AbortError')
   }

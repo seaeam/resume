@@ -150,7 +150,7 @@ export default function DrawerEditForm({ onSaved, onCancel }: DrawerEditFormProp
       </FieldGroup>
 
       <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row">
-        <Button className="flex-1" onClick={() => void handleSubmit()} disabled={isActionDisabled}>
+        <Button className="flex-1" onClick={() => handleSubmit()} disabled={isActionDisabled}>
           保存
         </Button>
         <Button variant="outline" className="flex-1" onClick={onCancel} disabled={isActionDisabled}>

@@ -53,7 +53,7 @@ export function ColumnCard({ job }: ColumnCardProps) {
 
   const handlePrimaryAction = () => {
     if (nextAction.targetStatus) {
-      void handleStatusChange(nextAction.targetStatus)
+      handleStatusChange(nextAction.targetStatus)
       return
     }
 
@@ -80,14 +80,14 @@ export function ColumnCard({ job }: ColumnCardProps) {
       <div className="space-y-3">
         <div className="flex items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          {job.company_logo
-            ? (
-                <img src={job.company_logo} alt={job.company} className="size-6 object-contain" />
-              )
-            : (
-                <Building2 className="size-4" />
-              )}
-        </div>
+            {job.company_logo
+              ? (
+                  <img src={job.company_logo} alt={job.company} className="size-6 object-contain" />
+                )
+              : (
+                  <Building2 className="size-4" />
+                )}
+          </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">

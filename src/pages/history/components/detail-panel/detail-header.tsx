@@ -217,7 +217,7 @@ export default function DetailHeader({ state }: DetailHeaderProps) {
                   <Button variant="outline" className="w-full justify-center" onClick={state.cancelEditing} disabled={savingMetadata}>
                     取消
                   </Button>
-                  <Button className="w-full justify-center" onClick={() => void state.submitEditDraft()} disabled={savingMetadata}>
+                  <Button className="w-full justify-center" onClick={state.submitEditDraft} disabled={savingMetadata}>
                     <Save data-icon="inline-start" />
                     {savingMetadata ? '保存中...' : '保存修改'}
                   </Button>
