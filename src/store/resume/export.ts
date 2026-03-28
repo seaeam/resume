@@ -5,15 +5,105 @@ import { create } from 'zustand'
 import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
 import useResumeConfigStore from './config'
 import useResumeStore from './form'
-import { createResumeDocHtml } from './utils'
+import { createResumeDocHtml, createResumePrintHtml } from './utils'
 
 interface ResumeExportState {
   resumeRef: RefObject<HTMLDivElement | null> | null
   handlePrint: (() => void) | null
   setResumeRef: (ref: RefObject<HTMLDivElement | null>) => void
   setHandlePrint: (handlePrint: (() => void) | null) => void
-  exportToPdf: () => void
+  exportToPdf: () => Promise<void>
   exportToDoc: () => void
+}
+
+const MOBILE_PRINT_BREAKPOINT = '(max-width: 767px)'
+
+function collectPrintableStylesHtml() {
+  return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+    .map(node => node.outerHTML)
+    .join('\n')
+}
+
+function waitForPrintWindowReady(printWindow: Window) {
+  return new Promise<void>((resolve) => {
+    const finalize = () => {
+      printWindow.requestAnimationFrame(() => {
+        window.setTimeout(resolve, 80)
+      })
+    }
+
+    const styleLinks = Array.from(
+      printWindow.document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+    )
+
+    if (styleLinks.length === 0) {
+      finalize()
+      return
+    }
+
+    let remaining = styleLinks.length
+    let settled = false
+    const done = () => {
+      if (settled) {
+        return
+      }
+
+      remaining -= 1
+      if (remaining <= 0) {
+        settled = true
+        finalize()
+      }
+    }
+
+    for (const link of styleLinks) {
+      if (link.sheet) {
+        done()
+        continue
+      }
+
+      link.addEventListener('load', done, { once: true })
+      link.addEventListener('error', done, { once: true })
+    }
+
+    window.setTimeout(() => {
+      if (!settled) {
+        settled = true
+        finalize()
+      }
+    }, 1500)
+  })
+}
+
+async function printResumeFromWindow(contentHtml: string, title: string) {
+  const printWindow = window.open('', 'noopener,noreferrer')
+
+  if (!printWindow) {
+    throw new Error('浏览器阻止了导出窗口，请允许弹出窗口后重试')
+  }
+
+  const printHtml = createResumePrintHtml({
+    title,
+    contentHtml,
+    stylesHtml: collectPrintableStylesHtml(),
+  })
+
+  printWindow.document.open()
+  printWindow.document.write(printHtml)
+  printWindow.document.close()
+
+  await waitForPrintWindowReady(printWindow)
+
+  printWindow.focus()
+  printWindow.print()
+
+  const closeWindow = () => {
+    if (!printWindow.closed) {
+      printWindow.close()
+    }
+  }
+
+  printWindow.addEventListener('afterprint', closeWindow, { once: true })
+  window.setTimeout(closeWindow, 1000)
 }
 
 const useResumeExportStore = create<ResumeExportState>((set, get) => ({
@@ -28,8 +118,9 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
     set({ handlePrint })
   },
 
-  exportToPdf: () => {
+  exportToPdf: async () => {
     const { handlePrint, resumeRef } = get()
+    const resumeName = useResumeStore.getState().basics.name
 
     if (!handlePrint || !resumeRef?.current) {
       toast.warning('简历加载中')
@@ -37,6 +128,16 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
     }
 
     try {
+      const isMobilePrint = window.matchMedia(MOBILE_PRINT_BREAKPOINT).matches
+
+      if (isMobilePrint) {
+        await printResumeFromWindow(
+          resumeRef.current.innerHTML,
+          resumeName ? `${resumeName}-简历` : '我的简历',
+        )
+        return
+      }
+
       handlePrint()
     }
     catch (error) {

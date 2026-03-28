@@ -14,6 +14,12 @@ export interface DocHtmlOptions {
   textPrimary: string
 }
 
+interface ResumePrintHtmlOptions {
+  title: string
+  contentHtml: string
+  stylesHtml: string
+}
+
 export function setFormDataField<K extends keyof FormDataMap>(
   target: FormDataMap,
   key: K,
@@ -292,6 +298,75 @@ ${styles}
     <article class="resume-export">
 ${contentHtml}
     </article>
+  </body>
+</html>`
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('\'', '&#39;')
+}
+
+export function createResumePrintHtml({
+  title,
+  contentHtml,
+  stylesHtml,
+}: ResumePrintHtmlOptions) {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(title)}</title>
+${stylesHtml}
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+      }
+
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      [data-resume-print-root] {
+        display: flex;
+        flex-direction: column;
+        gap: 0 !important;
+        width: fit-content;
+        margin: 0 auto;
+      }
+
+      [data-resume-print-root] > div {
+        break-after: page;
+        page-break-after: always;
+      }
+
+      [data-resume-print-root] > div:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
+
+      [data-resume-print-root] .shadow-md {
+        box-shadow: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-resume-print-root>
+${contentHtml}
+    </div>
   </body>
 </html>`
 }
