@@ -54,7 +54,3 @@ export function decodeDocumentData(raw: unknown): Uint8Array | null {
 
   return null
 }
-
-export function getDocumentUrlFromMetadata(metadata?: Record<string, any> | null): string | undefined {
-  return typeof metadata?.documentUrl === 'string' ? metadata.documentUrl : undefined
-}

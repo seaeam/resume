@@ -320,13 +320,17 @@ export function createResumePrintHtml({
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=1280, initial-scale=1" />
     <title>${escapeHtml(title)}</title>
 ${stylesHtml}
     <style>
       @page {
         size: A4;
         margin: 0;
+      }
+
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       html, body {
@@ -341,21 +345,31 @@ ${stylesHtml}
       }
 
       [data-resume-print-root] {
-        display: flex;
-        flex-direction: column;
-        gap: 0 !important;
-        width: fit-content;
+        width: 210mm;
         margin: 0 auto;
       }
 
       [data-resume-print-root] > div {
         break-after: page;
         page-break-after: always;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        width: 210mm;
+        height: 297mm;
       }
 
       [data-resume-print-root] > div:last-child {
         break-after: auto;
         page-break-after: auto;
+      }
+
+      [data-resume-print-root] > div > div {
+        width: 210mm !important;
+        height: 297mm !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        border: none !important;
+        border-radius: 0 !important;
       }
 
       [data-resume-print-root] .shadow-md {

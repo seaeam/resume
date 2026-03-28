@@ -592,4 +592,10 @@ function buildResumeConfigPayload(
 
 registerResumeConfigPersistence(appearance => useResumeStore.getState().updateAppearanceConfig(appearance))
 
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    useResumeStore.getState().cleanup()
+  })
+}
+
 export default useResumeStore

@@ -5,7 +5,7 @@ import type { PersistedResumeSnapshot } from '@/lib/schema'
 import { next as Automerge } from '@automerge/automerge'
 import supabase from '@/lib/supabase/client'
 import { RESUME_PERSISTED_SELECTOR } from '@/lib/supabase/resume/form'
-import { decodeDocumentData, encodeBytesToBase64, getDocumentUrlFromMetadata } from '../shared'
+import { decodeDocumentData, encodeBytesToBase64 } from '../shared'
 
 interface AutomergeSnapshotRow {
   document_data: unknown
@@ -35,7 +35,9 @@ export class AutomergeDocumentPersistence {
 
   async loadHandle(repo: Repo): Promise<DocHandle<AutomergeResumeDocument> | null> {
     if (this.sharedDocumentUrl) {
-      const sharedHandle = await this.loadHandleByUrl(repo, this.sharedDocumentUrl, 'shared documentUrl')
+      const sharedHandle = await this.loadHandleByUrl(repo, this.sharedDocumentUrl, {
+        source: 'shared documentUrl',
+      })
 
       if (sharedHandle) {
         return sharedHandle
@@ -50,16 +52,6 @@ export class AutomergeDocumentPersistence {
 
     if (!snapshot) {
       return null
-    }
-
-    const metadataDocumentUrl = getDocumentUrlFromMetadata(snapshot.metadata)
-
-    if (metadataDocumentUrl) {
-      const existingHandle = await this.loadHandleByUrl(repo, metadataDocumentUrl, 'metadata documentUrl')
-
-      if (existingHandle) {
-        return existingHandle
-      }
     }
 
     if (!snapshot.document_data) {
@@ -120,7 +112,6 @@ export class AutomergeDocumentPersistence {
 
     const binary = Automerge.save(doc)
     const heads = Automerge.getHeads(doc)
-    const documentUrl = handle.url
 
     const { error } = await supabase
       .from('automerge_documents')
@@ -135,7 +126,6 @@ export class AutomergeDocumentPersistence {
           updated_at: new Date().toISOString(),
           metadata: {
             ...(doc._metadata ? { docMetadata: doc._metadata } : {}),
-            documentUrl,
           },
         },
         {
@@ -182,7 +172,7 @@ export class AutomergeDocumentPersistence {
   private async loadHandleByUrl(
     repo: Repo,
     documentUrl: string,
-    source: string,
+    options: { source: string },
   ): Promise<DocHandle<AutomergeResumeDocument> | null> {
     try {
       const handle = await repo.find<AutomergeResumeDocument>(documentUrl as any)
@@ -190,8 +180,14 @@ export class AutomergeDocumentPersistence {
       return handle
     }
     catch (error) {
-      console.warn(`[AutomergeDocumentPersistence] load handle from ${source} failed:`, error)
+      console.warn(`[AutomergeDocumentPersistence] load handle from ${options.source} failed:`, error)
       return null
     }
   }
+}
+
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    import.meta.hot?.invalidate('[AutomergeDocumentPersistence] changed')
+  })
 }
