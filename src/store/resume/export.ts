@@ -75,7 +75,7 @@ function waitForPrintWindowReady(printWindow: Window) {
 }
 
 async function printResumeFromWindow(contentHtml: string, title: string) {
-  const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+  const printWindow = window.open('', 'noopener,noreferrer')
 
   if (!printWindow) {
     throw new Error('浏览器阻止了导出窗口，请允许弹出窗口后重试')
