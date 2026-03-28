@@ -4,8 +4,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useCollaborationStore } from '@/lib/collaboration'
 import { isOfflineResumeId } from '@/lib/offline-resume-manager'
+import { DEFAULT_RESUME_APPEARANCE } from '@/lib/schema'
 import { subscribeToResumeConfigUpdates } from '@/lib/supabase/resume'
 import { getCurrentUser } from '@/lib/supabase/user'
+import useResumeConfigStore from '@/store/resume/config'
 import useCurrentResumeStore from '@/store/resume/current'
 import useResumeStore from '@/store/resume/form'
 
@@ -69,6 +71,29 @@ export function useResumeLoader() {
     loadResumeData(activeResumeId, {
       documentUrl: documentUrlParam ?? undefined,
     })
+      .then(async ({ snapshot, hasPersistedAppearance, cloudAppearanceStatus, mode }) => {
+        if (cancelled)
+          return
+
+        const configStore = useResumeConfigStore.getState()
+        const resumeStore = useResumeStore.getState()
+
+        if (mode !== 'online' || hasPersistedAppearance) {
+          configStore.hydrateFromSnapshot(snapshot)
+          return
+        }
+
+        if (cloudAppearanceStatus === 'error') {
+          configStore.hydrateFromSnapshot(snapshot)
+          return
+        }
+
+        const legacyConfig = configStore.readLegacyLocalConfig()
+        const fallbackAppearance = legacyConfig ?? DEFAULT_RESUME_APPEARANCE
+
+        configStore.replaceConfig(fallbackAppearance)
+        resumeStore.updateAppearanceConfig(fallbackAppearance)
+      })
       .catch((error: any) => {
         if (cancelled)
           return

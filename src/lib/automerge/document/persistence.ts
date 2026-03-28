@@ -1,9 +1,10 @@
 import type { DocHandle, Repo } from '@automerge/automerge-repo'
 import type { DocumentSaveResult } from '../shared'
 import type { AutomergeResumeDocument } from './schema'
-import type { ResumeSchema } from '@/lib/schema'
+import type { PersistedResumeSnapshot } from '@/lib/schema'
 import { next as Automerge } from '@automerge/automerge'
 import supabase from '@/lib/supabase/client'
+import { RESUME_PERSISTED_SELECTOR } from '@/lib/supabase/resume/form'
 import { decodeDocumentData, encodeBytesToBase64, getDocumentUrlFromMetadata } from '../shared'
 
 interface AutomergeSnapshotRow {
@@ -82,11 +83,12 @@ export class AutomergeDocumentPersistence {
     }
   }
 
-  async loadResumeConfig(): Promise<Partial<ResumeSchema> | null> {
+  async loadResumeConfig(): Promise<Partial<PersistedResumeSnapshot> | null> {
     const { data, error } = await supabase
       .from('resume_config')
-      .select('*')
+      .select(RESUME_PERSISTED_SELECTOR)
       .eq('resume_id', this.resumeId)
+      .eq('user_id', this.userId)
       .maybeSingle()
 
     if (error) {
@@ -102,21 +104,7 @@ export class AutomergeDocumentPersistence {
       return null
     }
 
-    const {
-      id,
-      created_at,
-      updated_at,
-      resume_id,
-      user_id,
-      automerge_enabled,
-      document_version,
-      total_changes_count,
-      last_automerge_sync,
-      sync_status,
-      ...resumeData
-    } = data
-
-    return resumeData
+    return data as Partial<PersistedResumeSnapshot>
   }
 
   async saveHandle(handle: DocHandle<AutomergeResumeDocument>): Promise<DocumentSaveResult> {

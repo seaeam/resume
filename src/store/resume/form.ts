@@ -1,57 +1,30 @@
 import type { DocHandle } from '@automerge/automerge-repo'
 import type { StoreApi } from 'zustand'
+import type { FormDataMap } from './const'
 import type { AutomergeResumeDocument } from '@/lib/automerge'
+import type { ORDERType, PersistedResumeSnapshot, ResumeAppearancePatch, ResumeType, VisibilityItemsType } from '@/lib/schema'
 import type { ResumeSnapshot } from '@/lib/supabase/resume/history'
-import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, ProjectExperienceFormType, ResumeType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import dayjs from 'dayjs'
-import { cloneDeepWith, get } from 'lodash'
 import { create } from 'zustand'
 import { DocumentManager } from '@/lib/automerge'
 import { getOfflineResumeById, isOfflineResumeId, updateOfflineResume } from '@/lib/offline-resume-manager'
-import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType } from '@/lib/schema'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE } from '@/lib/schema'
 import { updateResumeConfig } from '@/lib/supabase/resume'
+import { getResumeById } from '@/lib/supabase/resume/form'
 import { getCurrentUser } from '@/lib/supabase/user'
 import { getTimestamp } from '@/utils/date'
+import useResumeConfigStore, { registerResumeConfigPersistence } from './config'
+import { FORM_DATA_KEYS, FORM_FIELD_DEFAULTS, ONLINE_SYNC_DELAY, SYNC_DELAY } from './const'
 import useCurrentResumeStore from './current'
-
-/**
- * 表单数据 key 与默认值的映射，消除各处重复罗列所有 key 的冗余。
- * legacyKey 用于兼容旧版 camelCase 格式的文档数据。
- */
-const FORM_FIELD_DEFAULTS: Record<string, { default: unknown, legacyKey?: string }> = {
-  basics: { default: DEFAULT_BASICS },
-  job_intent: { default: DEFAULT_JOB_INTENT, legacyKey: 'jobIntent' },
-  application_info: { default: DEFAULT_APPLICATION_INFO, legacyKey: 'applicationInfo' },
-  edu_background: { default: DEFAULT_EDU_BACKGROUND, legacyKey: 'eduBackground' },
-  work_experience: { default: DEFAULT_WORK_EXPERIENCE, legacyKey: 'workExperience' },
-  internship_experience: { default: DEFAULT_INTERNSHIP_EXPERIENCE, legacyKey: 'internshipExperience' },
-  campus_experience: { default: DEFAULT_CAMPUS_EXPERIENCE, legacyKey: 'campusExperience' },
-  project_experience: { default: DEFAULT_PROJECT_EXPERIENCE, legacyKey: 'projectExperience' },
-  skill_specialty: { default: DEFAULT_SKILL_SPECIALTY, legacyKey: 'skillSpecialty' },
-  honors_certificates: { default: DEFAULT_HONORS_CERTIFICATES, legacyKey: 'honorsCertificates' },
-  self_evaluation: { default: DEFAULT_SELF_EVALUATION, legacyKey: 'selfEvaluation' },
-  hobbies: { default: DEFAULT_HOBBIES },
-}
-
-const FORM_DATA_KEYS = Object.keys(FORM_FIELD_DEFAULTS) as (keyof FormDataMap)[]
-
-// 表单数据映射
-interface FormDataMap {
-  basics: BasicFormType
-  job_intent: JobIntentFormType
-  application_info: ApplicationInfoFormType
-  edu_background: EduBackgroundFormType
-  work_experience: WorkExperienceFormType
-  internship_experience: InternshipExperienceFormType
-  campus_experience: CampusExperienceFormType
-  project_experience: ProjectExperienceFormType
-  skill_specialty: SkillSpecialtyFormType
-  honors_certificates: HonorsCertificatesFormType
-  self_evaluation: SelfEvaluationFormType
-  hobbies: HobbiesFormType
-}
+import { applyPatch, getFormPayload, hasPersistedAppearance, mapSnapshotToState, mapSourceToPersistedSnapshot, mergeSnapshotAppearance, sanitizeDeep } from './utils'
 
 type EditorMode = 'online' | 'offline' | null
+interface ResumeLoadResult {
+  snapshot: PersistedResumeSnapshot
+  hasPersistedAppearance: boolean
+  cloudAppearanceStatus: 'present' | 'missing' | 'error' | 'not_applicable'
+  mode: Exclude<EditorMode, null>
+}
 
 interface ResumeState extends FormDataMap {
   activeTabId: ORDERType
@@ -70,6 +43,9 @@ interface ResumeState extends FormDataMap {
   docHandle: DocHandle<AutomergeResumeDocument> | null
   cleanupFns: Array<() => void>
   isInitialized: boolean
+  cloudAppearanceStatus: ResumeLoadResult['cloudAppearanceStatus']
+  docHasPersistedAppearance: boolean
+  appearanceDirty: boolean
 
   toggleVisibility: (id: VisibilityItemsType) => void
   changeType: (type: ResumeType) => void
@@ -77,21 +53,21 @@ interface ResumeState extends FormDataMap {
   setVisibility: (id: VisibilityItemsType, isHidden: boolean) => void
   updateActiveTabId: (newActiveTab: ORDERType) => void
   getResumeFormData: () => FormDataMap
+  getPersistedSnapshot: () => PersistedResumeSnapshot
   getHistoryRestoreSource: () => { snapshot: ResumeSnapshot, updatedAt: string | null }
   updateForm: <K extends keyof FormDataMap>(key: K, data: Partial<FormDataMap[K]>) => void
   updateOrder: (newOrder: ORDERType[]) => void
+  updateAppearanceConfig: (appearance: ResumeAppearancePatch) => void
 
   syncToSupabase: () => Promise<void>
   manualSync: () => Promise<void>
-  loadResumeData: (resumeId: string, options?: { documentUrl?: string }) => Promise<void>
+  loadResumeData: (resumeId: string, options?: { documentUrl?: string }) => Promise<ResumeLoadResult>
   resetToDefaults: () => void
   cleanup: () => void
 }
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null
 let onlineSyncTimer: ReturnType<typeof setTimeout> | null = null
-const SYNC_DELAY = 3000
-const ONLINE_SYNC_DELAY = 3000
 
 function scheduleOfflinePersist(flushFn: () => Promise<void>) {
   if (syncTimer) {
@@ -113,7 +89,7 @@ function scheduleOnlinePersist(flushFn: () => Promise<void>) {
 
 function ensureSection<T extends keyof AutomergeResumeDocument>(doc: AutomergeResumeDocument, key: T) {
   if (!doc[key]) {
-    (doc as any)[key] = ({} as any)
+    doc[key] = ({} as AutomergeResumeDocument[T])
   }
 }
 
@@ -193,19 +169,24 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   docHandle: null,
   cleanupFns: [],
   isInitialized: false,
+  cloudAppearanceStatus: 'not_applicable',
+  docHasPersistedAppearance: false,
+  appearanceDirty: false,
 
   getResumeFormData: () => {
     const state = get()
     return FORM_DATA_KEYS.reduce((acc, key) => {
-      (acc as any)[key] = state[key]
+      (acc[key] as any) = state[key]
       return acc
     }, {} as FormDataMap)
   },
 
+  getPersistedSnapshot: () => getPersistedSnapshot(get()),
+
   getHistoryRestoreSource: () => {
     const state = get()
     return {
-      snapshot: sanitizeDeep(getFormPayload(state)),
+      snapshot: sanitizeDeep(getPersistedSnapshot(state)),
       updatedAt: state.docHandle?.doc()?._metadata?.updatedAt ?? null,
     }
   },
@@ -232,6 +213,30 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       { order: newOrder },
       (doc) => {
         doc.order = [...newOrder]
+      },
+    )
+  },
+
+  updateAppearanceConfig: (appearance) => {
+    const sanitized = sanitizeDeep(appearance)
+    if (Object.keys(sanitized).length === 0) {
+      return
+    }
+
+    applyResumeChange(
+      set,
+      get,
+      { appearanceDirty: true },
+      (doc) => {
+        if (sanitized.spacing) {
+          doc.spacing = { ...(doc.spacing ?? {}), ...sanitized.spacing }
+        }
+        if (sanitized.font) {
+          doc.font = { ...(doc.font ?? {}), ...sanitized.font }
+        }
+        if (sanitized.theme) {
+          doc.theme = { ...(doc.theme ?? {}), ...sanitized.theme }
+        }
       },
     )
   },
@@ -286,7 +291,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
 
     if (state.mode === 'offline' || isOfflineResumeId(resumeId)) {
       try {
-        await updateOfflineResume(resumeId, getFormPayload(state))
+        await updateOfflineResume(resumeId, getPersistedSnapshot(state))
         set({
           pendingChanges: false,
           isSyncing: false,
@@ -314,18 +319,18 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       // 使用 Automerge 文档冲突解决后的最终内容同步到 resume_config
       const resolvedDoc = state.docHandle?.doc()
       if (resolvedDoc) {
-        const resolvedFormData = mapDocToState(resolvedDoc)
-        await updateResumeConfig(resumeId, resolvedFormData)
+        await updateResumeConfig(resumeId, buildResumeConfigPayload(state, resolvedDoc))
       }
       else {
         // 降级：如果无法获取 Automerge 文档，使用本地状态
-        await updateResumeConfig(resumeId, get().getResumeFormData())
+        await updateResumeConfig(resumeId, buildResumeConfigPayload(state))
       }
       set({
         isSyncing: false,
         pendingChanges: false,
         syncError: null,
         lastSyncTime: getTimestamp(),
+        appearanceDirty: false,
       })
     }
     catch (error) {
@@ -377,17 +382,26 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       }
 
       const data = offlineResume.data || {}
+      const snapshot = mapSourceToPersistedSnapshot(data as Partial<AutomergeResumeDocument>)
 
       set({
-        ...mapDocToState(data as Partial<AutomergeResumeDocument>),
+        ...mapSnapshotToState(snapshot),
         isSyncing: false,
         pendingChanges: false,
         syncError: null,
         mode: 'offline',
         isInitialized: true,
         lastSyncTime: offlineResume.updated_at ? dayjs(offlineResume.updated_at).valueOf() : null,
+        cloudAppearanceStatus: 'not_applicable',
+        docHasPersistedAppearance: hasPersistedAppearance(data),
+        appearanceDirty: false,
       })
-      return
+      return {
+        snapshot,
+        hasPersistedAppearance: hasPersistedAppearance(data),
+        cloudAppearanceStatus: 'not_applicable',
+        mode: 'offline',
+      }
     }
 
     const user = await getCurrentUser()
@@ -401,6 +415,13 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       })
       const handle = await manager.initialize()
       const doc = handle.doc()
+      const docSnapshot = mapSourceToPersistedSnapshot(doc)
+      const cloudAppearanceResult = await getCloudAppearanceSource(resumeId)
+      const cloudHasPersistedAppearance = cloudAppearanceResult.status === 'present'
+      const docHasPersistedAppearance = hasPersistedAppearance(doc)
+      const snapshot = cloudHasPersistedAppearance
+        ? mergeSnapshotAppearance(docSnapshot, cloudAppearanceResult.appearance)
+        : docSnapshot
 
       const changeHandler = ({ doc }: { doc: AutomergeResumeDocument | null }) => {
         if (!doc)
@@ -408,13 +429,13 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
 
         set(prev => ({
           ...prev,
-          ...mapDocToState(doc),
+          ...mapSnapshotToState(mapSourceToPersistedSnapshot(doc)),
           isInitialized: true,
         }))
       }
 
-      handle.on('change', changeHandler as any)
-      const offChange = () => handle.off('change', changeHandler as any)
+      handle.on('change', changeHandler)
+      const offChange = () => handle.off('change', changeHandler)
 
       const offSaveStart = manager.onSaveStart(() => {
         set({ isSyncing: true })
@@ -438,7 +459,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       })
 
       set({
-        ...mapDocToState(doc),
+        ...mapSnapshotToState(snapshot),
         docManager: manager,
         docHandle: handle,
         cleanupFns: [offChange, offSaveStart, offSave],
@@ -447,19 +468,30 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
         syncError: null,
         mode: 'online',
         isInitialized: true,
+        cloudAppearanceStatus: cloudAppearanceResult.status,
+        docHasPersistedAppearance,
+        appearanceDirty: false,
       })
+      return {
+        snapshot,
+        hasPersistedAppearance: cloudHasPersistedAppearance || docHasPersistedAppearance,
+        cloudAppearanceStatus: cloudAppearanceResult.status,
+        mode: 'online',
+      }
     }
     catch (error) {
       set({
         isSyncing: false,
         syncError: error instanceof Error ? error.message : '初始化失败',
         mode: 'online',
+        cloudAppearanceStatus: 'error',
       })
       throw error
     }
   },
 
   resetToDefaults: () => {
+    useResumeConfigStore.getState().resetConfig()
     const defaultState = {
       ...Object.fromEntries(
         FORM_DATA_KEYS.map(key => [key, FORM_FIELD_DEFAULTS[key].default]),
@@ -473,7 +505,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       get,
       defaultState,
       (doc) => {
-        Object.assign(doc, mapDocToState(null))
+        Object.assign(doc, mapSourceToPersistedSnapshot(null))
       },
     )
   },
@@ -497,69 +529,67 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       mode: null,
       currentResumeId: null,
       isInitialized: false,
+      cloudAppearanceStatus: 'not_applicable',
+      docHasPersistedAppearance: false,
+      appearanceDirty: false,
     })
   },
 }))
 
-/** 深拷贝并过滤掉所有值为 undefined 的属性 */
-function sanitizeDeep<T>(value: T): T {
-  return cloneDeepWith(value, (val) => {
-    if (val && typeof val === 'object' && !Array.isArray(val)) {
-      return Object.fromEntries(
-        Object.entries(val).filter(([, v]) => v !== undefined),
-      )
+async function getCloudAppearanceSource(resumeId: string): Promise<{
+  status: 'present' | 'missing' | 'error'
+  appearance: ResumeAppearancePatch | null
+}> {
+  try {
+    const appearance = await getResumeById(resumeId, 'spacing,font,theme')
+    return {
+      status: hasPersistedAppearance(appearance) ? 'present' : 'missing',
+      appearance,
     }
-  }) as T
-}
-
-function applyPatch(target: Record<string, any>, patch: Record<string, unknown>) {
-  for (const [field, value] of Object.entries(patch)) {
-    if (value !== undefined) {
-      target[field] = value
+  }
+  catch (error) {
+    console.warn('Failed to read cloud appearance snapshot:', error)
+    return {
+      status: 'error',
+      appearance: null,
     }
   }
 }
 
-/**
- * 将 Automerge 文档（或空值）映射为 Zustand store 状态。
- *
- * 数据库中可能存在 camelCase（旧格式）或 snake_case（新格式）的 key，
- * 需要按优先级 snake_case > camelCase > 默认值 依次回退。
- */
-function mapDocToState(doc: Partial<AutomergeResumeDocument> | null | undefined) {
-  const source = doc as Record<string, any> | undefined
-
-  const formData = Object.fromEntries(
-    FORM_DATA_KEYS.map((key) => {
-      const { default: defaultVal, legacyKey } = FORM_FIELD_DEFAULTS[key]
-      const val = get(source, key)
-        ?? (legacyKey ? get(source, legacyKey) : undefined)
-        ?? defaultVal
-      return [key, sanitizeDeep(val)]
-    }),
-  )
-
+function getPersistedSnapshot(state: ResumeState): PersistedResumeSnapshot {
+  const { spacing, font, theme } = useResumeConfigStore.getState()
   return {
-    ...formData,
-    order: migrateOrder(sanitizeDeep(get(source, 'order', DEFAULT_ORDER))),
-    visibility: migrateVisibility(sanitizeDeep(get(source, 'visibility', DEFAULT_VISIBILITY))),
-    type: normalizeResumeType(get(source, 'type', 'default')),
+    ...getFormPayload(state),
+    spacing,
+    font,
+    theme,
   }
 }
 
-/**
- * 从 state 中提取所有表单数据 + order/visibility/type 作为持久化载荷。
- * 同时服务于离线保存和在线同步。
- */
-function getFormPayload(state: ResumeState): ResumeSnapshot {
-  return {
-    ...Object.fromEntries(
-      FORM_DATA_KEYS.map(key => [key, state[key]]),
-    ),
-    order: state.order,
-    visibility: state.visibility,
-    type: state.type,
-  } as ResumeSnapshot
+function shouldPersistAppearance(state: ResumeState, source: Partial<AutomergeResumeDocument> | null | undefined) {
+  return hasPersistedAppearance(source)
+    || state.docHasPersistedAppearance
+    || state.appearanceDirty
+    || state.cloudAppearanceStatus === 'present'
+    || state.cloudAppearanceStatus === 'missing'
 }
+
+function buildResumeConfigPayload(
+  state: ResumeState,
+  source?: Partial<AutomergeResumeDocument> | null,
+) {
+  const baseSnapshot = source
+    ? mapSourceToPersistedSnapshot(source)
+    : getPersistedSnapshot(state)
+
+  if (shouldPersistAppearance(state, source)) {
+    return mergeSnapshotAppearance(baseSnapshot, useResumeConfigStore.getState())
+  }
+
+  const { spacing, font, theme, ...payload } = baseSnapshot
+  return payload
+}
+
+registerResumeConfigPersistence(appearance => useResumeStore.getState().updateAppearanceConfig(appearance))
 
 export default useResumeStore

@@ -1,5 +1,29 @@
+import { DEFAULT_RESUME_APPEARANCE } from '@/lib/schema'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
+
+const RESUME_PERSISTED_FIELDS = [
+  'basics',
+  'job_intent',
+  'application_info',
+  'edu_background',
+  'work_experience',
+  'internship_experience',
+  'campus_experience',
+  'project_experience',
+  'skill_specialty',
+  'honors_certificates',
+  'self_evaluation',
+  'hobbies',
+  'order',
+  'visibility',
+  'type',
+  'spacing',
+  'font',
+  'theme',
+] as const
+
+export const RESUME_PERSISTED_SELECTOR = RESUME_PERSISTED_FIELDS.join(',')
 
 export async function getAllResumesFromUser() {
   const user = await getCurrentUser()
@@ -51,22 +75,7 @@ export async function uploadOfflineResumeToCloud(
     throw new Error('用户未登陆')
 
   // 安全字段白名单，避免覆盖 user_id 等安全字段
-  const ALLOWED_FIELDS = [
-    'basics',
-    'job_intent',
-    'application_info',
-    'edu_background',
-    'work_experience',
-    'internship_experience',
-    'campus_experience',
-    'project_experience',
-    'skill_specialty',
-    'honors_certificates',
-    'self_evaluation',
-    'hobbies',
-    'order',
-    'visibility',
-  ]
+  const ALLOWED_FIELDS = [...RESUME_PERSISTED_FIELDS]
   const safeData: Record<string, unknown> = {}
   for (const key of ALLOWED_FIELDS) {
     if (key in resumeData) {
@@ -79,6 +88,7 @@ export async function uploadOfflineResumeToCloud(
     .insert({
       user_id: user.id,
       type,
+      ...DEFAULT_RESUME_APPEARANCE,
       ...info,
       ...safeData,
     })
@@ -109,6 +119,7 @@ export async function createNewResume(
     .insert({
       user_id: user.id,
       type,
+      ...DEFAULT_RESUME_APPEARANCE,
       ...info,
     })
     .select()

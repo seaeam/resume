@@ -12,7 +12,7 @@ import type {
   ResumeSnapshot,
 } from '@/lib/supabase/resume/history'
 import dayjs from 'dayjs'
-import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType } from '@/lib/schema'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeAppearance, normalizeResumeType } from '@/lib/schema'
 import { RESUME_TYPE_LABEL_MAP } from './const'
 
 interface SnapshotFieldConfig {
@@ -20,7 +20,7 @@ interface SnapshotFieldConfig {
   legacyKey?: string
 }
 
-type SnapshotSectionKey = Exclude<keyof ResumeSnapshot, 'order' | 'visibility' | 'type'>
+type SnapshotSectionKey = Exclude<keyof ResumeSnapshot, 'order' | 'visibility' | 'type' | 'spacing' | 'font' | 'theme'>
 
 const SNAPSHOT_FIELD_DEFAULTS: Record<SnapshotSectionKey, SnapshotFieldConfig> = {
   basics: { default: DEFAULT_BASICS },
@@ -105,6 +105,7 @@ export function buildResumeSnapshot(source: unknown): ResumeSnapshot {
     order: migrateOrder(orderValue as string[]),
     visibility: migrateVisibility(visibilityValue),
     type: normalizeResumeType(sourceRecord?.type),
+    ...normalizeResumeAppearance(sourceRecord),
   }
 }
 

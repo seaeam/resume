@@ -19,7 +19,7 @@ function SharedResumePreview({ data }: { data: ResumePreviewData }) {
 
   return (
     <div className="scrollbar-gutter-stable scrollbar-thin-subtle h-full overflow-y-auto bg-muted/30 p-3 sm:p-4">
-      <ScaledReadonlyPreview data={normalizedData} />
+      <ScaledReadonlyPreview data={normalizedData} appearance={data} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
+import type { ResumeAppearanceConfig } from '@/lib/schema'
 import { useMemo } from 'react'
-import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
+import { getFontFamilyCSS, normalizeResumeAppearance, themeColorMap } from '@/lib/schema'
 import useResumeConfigStore from '@/store/resume/config'
 
 /**
@@ -15,10 +16,23 @@ import useResumeConfigStore from '@/store/resume/config'
  *
  * @returns 包含 `font`、`spacing` 和 `theme` 的样式配置对象
  */
-export function useResumeStyles() {
-  const spacingConfig = useResumeConfigStore(state => state.spacing)
-  const fontConfig = useResumeConfigStore(state => state.font)
-  const themeConfig = useResumeConfigStore(state => state.theme)
+export function useResumeStyles(appearanceOverride?: Partial<ResumeAppearanceConfig> | null) {
+  const storeSpacingConfig = useResumeConfigStore(state => state.spacing)
+  const storeFontConfig = useResumeConfigStore(state => state.font)
+  const storeThemeConfig = useResumeConfigStore(state => state.theme)
+
+  const appearance = useMemo(
+    () => appearanceOverride
+      ? normalizeResumeAppearance(appearanceOverride)
+      : {
+          spacing: storeSpacingConfig,
+          font: storeFontConfig,
+          theme: storeThemeConfig,
+        },
+    [appearanceOverride, storeFontConfig, storeSpacingConfig, storeThemeConfig],
+  )
+
+  const { spacing: spacingConfig, font: fontConfig, theme: themeConfig } = appearance
 
   const resumeTheme = useMemo(() => themeColorMap[themeConfig.theme], [themeConfig.theme])
 
@@ -47,6 +61,7 @@ export function useResumeStyles() {
   }), [spacingConfig.pageMargin, spacingConfig.sectionSpacing, spacingConfig.lineHeight])
 
   return {
+    appearance,
     font,
     spacing,
     theme: resumeTheme,

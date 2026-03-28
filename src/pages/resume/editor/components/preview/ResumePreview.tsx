@@ -44,11 +44,11 @@ export function ResumePreview({ resumeRef, scrollContainerRef }: ResumePreviewPr
 
         const nextScale = Math.min(1, availableWidth / contentWidth)
         setScale(current => Math.abs(current - nextScale) < 0.001 ? current : nextScale)
-        setScaledWidth(current => {
+        setScaledWidth((current) => {
           const nextWidth = contentWidth * nextScale
           return current !== null && Math.abs(current - nextWidth) < 1 ? current : nextWidth
         })
-        setScaledHeight(current => {
+        setScaledHeight((current) => {
           const nextHeight = contentHeight * nextScale
           return current !== null && Math.abs(current - nextHeight) < 1 ? current : nextHeight
         })

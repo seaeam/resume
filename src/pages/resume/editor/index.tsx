@@ -99,7 +99,7 @@ function Editor() {
         <Drawer open={open} onOpenChange={setOpen} handleOnly>
           <DrawerTrigger asChild>
             <Button
-              variant="secondary"
+              variant="outline"
               className="fixed bottom-6 left-1/2 z-1 -transform -translate-x-1/2"
               size={isMobile ? 'icon' : 'default'}
             >
