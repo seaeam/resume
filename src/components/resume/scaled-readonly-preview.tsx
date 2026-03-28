@@ -1,3 +1,4 @@
+import type { ResumeAppearanceConfig } from '@/lib/schema'
 import type { TemplateResumeData } from '@/pages/template/components/resume-data-context'
 import { useLayoutEffect, useState } from 'react'
 import { useResumeStyles } from '@/hooks/use-resume-styles'
@@ -8,10 +9,11 @@ import PagedResumeShell from './paged-resume-shell'
 
 interface ScaledReadonlyPreviewProps {
   data: TemplateResumeData
+  appearance?: Partial<ResumeAppearanceConfig> | null
 }
 
-export default function ScaledReadonlyPreview({ data }: ScaledReadonlyPreviewProps) {
-  const { font, spacing, theme } = useResumeStyles()
+export default function ScaledReadonlyPreview({ data, appearance }: ScaledReadonlyPreviewProps) {
+  const { font, spacing, theme } = useResumeStyles(appearance)
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null)
   const [canvas, setCanvas] = useState<HTMLDivElement | null>(null)
   const [scale, setScale] = useState(1)
@@ -42,11 +44,11 @@ export default function ScaledReadonlyPreview({ data }: ScaledReadonlyPreviewPro
 
         const nextScale = Math.min(1, availableWidth / contentWidth)
         setScale(current => Math.abs(current - nextScale) < 0.001 ? current : nextScale)
-        setScaledWidth(current => {
+        setScaledWidth((current) => {
           const nextWidth = contentWidth * nextScale
           return current !== null && Math.abs(current - nextWidth) < 1 ? current : nextWidth
         })
-        setScaledHeight(current => {
+        setScaledHeight((current) => {
           const nextHeight = contentHeight * nextScale
           return current !== null && Math.abs(current - nextHeight) < 1 ? current : nextHeight
         })
@@ -89,7 +91,7 @@ export default function ScaledReadonlyPreview({ data }: ScaledReadonlyPreviewPro
             }}
           >
             <TemplateResumeDataProvider value={data}>
-              <PagedResumeShell>
+              <PagedResumeShell appearance={appearance}>
                 <ResumeComponent font={font} spacing={spacing} theme={theme} />
               </PagedResumeShell>
             </TemplateResumeDataProvider>

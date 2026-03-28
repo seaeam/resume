@@ -1,4 +1,4 @@
-import type { ORDERType, ResumeSchema, ResumeType, VisibilityFormType } from '@/lib/schema'
+import type { ORDERType, PersistedResumeSnapshot, ResumeType, VisibilityFormType } from '@/lib/schema'
 import { replaceAutomergeDocumentSnapshot } from '@/lib/automerge'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
@@ -13,11 +13,7 @@ export type ResumeVersionSourceType
 
 export type RestoreStrategy = 'with_backup' | 'without_backup'
 
-export interface ResumeSnapshot extends ResumeSchema {
-  order: ORDERType[]
-  visibility: VisibilityFormType
-  type: ResumeType
-}
+export type ResumeSnapshot = PersistedResumeSnapshot
 
 interface ResumeHistoryVersionBase<TSnapshot> {
   id: number
@@ -60,6 +56,9 @@ export interface ResumeHistoryResumeRecord {
   hobbies: Record<string, unknown> | null
   order: ORDERType[] | string[] | null
   visibility: VisibilityFormType | Record<string, boolean> | null
+  spacing: Record<string, unknown> | null
+  font: Record<string, unknown> | null
+  theme: Record<string, unknown> | null
 }
 
 export interface ResumeHistoryOptionRecord {
@@ -141,7 +140,10 @@ const RESUME_SELECTOR = `
   self_evaluation,
   hobbies,
   order,
-  visibility
+  visibility,
+  spacing,
+  font,
+  theme
 `
 
 const RESUME_OPTION_SELECTOR = `

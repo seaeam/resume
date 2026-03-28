@@ -1,10 +1,10 @@
-import type { ORDERType, ResumeSchema, ResumeType, VisibilityItemsType } from '@/lib/schema'
+import type { PersistedResumeSnapshot } from '@/lib/schema'
 
 /**
  * Automerge 文档结构
- * 扩展自现有的 ResumeSchema
+ * 扩展自完整持久化快照
  */
-export interface AutomergeResumeDocument extends ResumeSchema {
+export interface AutomergeResumeDocument extends PersistedResumeSnapshot {
   // 文档元数据
   _metadata: {
     resumeId: string
@@ -15,10 +15,6 @@ export interface AutomergeResumeDocument extends ResumeSchema {
   }
 
   // 表单顺序和可见性
-  order: ORDERType[]
-  visibility: Record<VisibilityItemsType, boolean>
-  type: ResumeType
-
   // 协作者信息（运行时状态，不持久化到 Supabase）
   _collaborators?: {
     [userId: string]: {

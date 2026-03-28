@@ -8,12 +8,14 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { fontFamilyOptions, fontSizeOptions, themeOptions } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeConfigStore from '@/store/resume/config'
+import useResumeStore from '@/store/resume/form'
 import ExportDialog from '../export/ExportDialog'
 import { ResumeHistoryVersionDropdown } from './HistoryVersionDropdown'
 
 export function ResumeConfigToolbar() {
   const isMobile = useIsMobile()
   const { spacing, font, theme, updateSpacing, updateFont, updateTheme } = useResumeConfigStore()
+  const isToolbarLoading = useResumeStore(state => !state.isInitialized)
 
   return (
     <div className={cn('flex flex-row gap-2')}>
@@ -25,6 +27,7 @@ export function ResumeConfigToolbar() {
             variant="outline"
             size={isMobile ? 'icon' : 'sm'}
             className={cn(isMobile && 'size-9')}
+            disabled={isToolbarLoading}
           >
             <Space data-icon="inline-start" />
             {!isMobile && <span>间距</span>}
@@ -50,6 +53,7 @@ export function ResumeConfigToolbar() {
               <Slider
                 value={[spacing.sectionSpacing]}
                 onValueChange={([value]) => updateSpacing({ sectionSpacing: value })}
+                disabled={isToolbarLoading}
                 min={0}
                 max={100}
                 step={2}
@@ -66,6 +70,7 @@ export function ResumeConfigToolbar() {
               <Slider
                 value={[spacing.lineHeight * 10]}
                 onValueChange={([value]) => updateSpacing({ lineHeight: value / 10 })}
+                disabled={isToolbarLoading}
                 min={10}
                 max={30}
                 step={1}
@@ -85,6 +90,7 @@ export function ResumeConfigToolbar() {
               <Slider
                 value={[spacing.pageMargin]}
                 onValueChange={([value]) => updateSpacing({ pageMargin: value })}
+                disabled={isToolbarLoading}
                 min={0}
                 max={100}
                 step={2}
@@ -102,6 +108,7 @@ export function ResumeConfigToolbar() {
             variant="outline"
             size={isMobile ? 'icon' : 'sm'}
             className={cn(isMobile && 'size-9')}
+            disabled={isToolbarLoading}
           >
             <Type data-icon="inline-start" />
             {!isMobile && <span>字体</span>}
@@ -122,6 +129,7 @@ export function ResumeConfigToolbar() {
               <Label className="text-sm font-medium">字体样式</Label>
               <Select
                 value={font.fontFamily}
+                disabled={isToolbarLoading}
                 onValueChange={(value: typeof font.fontFamily) =>
                   updateFont({
                     fontFamily: value,
@@ -147,6 +155,7 @@ export function ResumeConfigToolbar() {
               <Label className="text-sm font-medium">文字大小</Label>
               <Select
                 value={font.fontSize.toString()}
+                disabled={isToolbarLoading}
                 onValueChange={value =>
                   updateFont({
                     fontSize: Number.parseInt(value),
@@ -177,6 +186,7 @@ export function ResumeConfigToolbar() {
             variant="outline"
             size={isMobile ? 'icon' : 'sm'}
             className={cn(isMobile && 'size-9')}
+            disabled={isToolbarLoading}
           >
             <Palette data-icon="inline-start" />
             {!isMobile && <span>皮肤</span>}
@@ -193,6 +203,7 @@ export function ResumeConfigToolbar() {
             <Label className="text-sm font-medium">选择主题</Label>
             <Select
               value={theme.theme}
+              disabled={isToolbarLoading}
               onValueChange={value =>
                 updateTheme({
                   theme: value as typeof theme.theme,

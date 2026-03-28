@@ -128,7 +128,7 @@ function EduBackgroundForm({ className }: { className?: string }) {
                     return (
                       <FormItem>
                         <FormLabel>就读时间</FormLabel>
-                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
@@ -171,7 +171,7 @@ function EduBackgroundForm({ className }: { className?: string }) {
                               />
                             </PopoverContent>
                           </Popover>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center">
                             <Label htmlFor="up-to-now">至今</Label>
                             <Checkbox
                               id="up-to-now"

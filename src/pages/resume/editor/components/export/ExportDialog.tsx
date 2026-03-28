@@ -13,9 +13,9 @@ export default function ExportDialog({ trigger }: ExportDialogProps) {
   const { exportToPdf, exportToDoc } = useResumeExportStore()
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     setExportDialogOpen(false)
-    exportToPdf()
+    await exportToPdf()
   }
 
   const handleExportDoc = () => {

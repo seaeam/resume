@@ -1,7 +1,7 @@
 import type { DocHandle, Repo } from '@automerge/automerge-repo'
 import type { AutomergeResumeDocument } from './schema'
-import type { ResumeSchema } from '@/lib/schema'
-import { DEFAULT_ORDER, DEFAULT_VISIBILITY } from '@/lib/schema'
+import type { PersistedResumeSnapshot } from '@/lib/schema'
+import { DEFAULT_ORDER, DEFAULT_VISIBILITY, normalizeResumeAppearance } from '@/lib/schema'
 
 interface DocumentIdentity {
   resumeId: string
@@ -10,7 +10,7 @@ interface DocumentIdentity {
 
 interface CreateDocumentOptions extends DocumentIdentity {
   repo: Repo
-  seedData?: Partial<ResumeSchema> | null
+  seedData?: Partial<PersistedResumeSnapshot> | null
 }
 
 function buildMetadata(
@@ -50,6 +50,7 @@ export async function createResumeDocument({
 
   handle.change((doc) => {
     doc._metadata = buildMetadata(undefined, { resumeId, userId })
+    const appearance = normalizeResumeAppearance(seedData)
 
     if (seedData) {
       Object.assign(doc, seedData)
@@ -62,6 +63,10 @@ export async function createResumeDocument({
     if (!doc.visibility) {
       doc.visibility = { ...DEFAULT_VISIBILITY } as AutomergeResumeDocument['visibility']
     }
+
+    doc.spacing = { ...appearance.spacing } as AutomergeResumeDocument['spacing']
+    doc.font = { ...appearance.font } as AutomergeResumeDocument['font']
+    doc.theme = { ...appearance.theme } as AutomergeResumeDocument['theme']
   })
 
   await handle.whenReady()

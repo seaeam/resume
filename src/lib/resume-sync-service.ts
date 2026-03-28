@@ -9,8 +9,7 @@
 
 import { toast } from 'sonner'
 import { getAllOfflineResumes, migrateOfflineResumesToCloud } from './offline-resume-manager'
-import { updateResumeConfig } from './supabase/resume'
-import { createNewResume } from './supabase/resume/form'
+import { uploadOfflineResumeToCloud } from './supabase/resume/form'
 import { getCurrentUser } from './supabase/user'
 
 /**
@@ -40,8 +39,8 @@ export async function syncOfflineResumesToCloud(selectedIds?: string[]) {
 
   // 执行迁移
   const result = await migrateOfflineResumesToCloud(async (resume) => {
-    // 创建新的云端简历
-    const newResume = await createNewResume(
+    const onlineResume = await uploadOfflineResumeToCloud(
+      resume.data,
       {
         display_name: resume.display_name,
         description: resume.description,
@@ -49,14 +48,7 @@ export async function syncOfflineResumesToCloud(selectedIds?: string[]) {
       resume.type,
     )
 
-    // 如果有简历数据，更新到云端
-    if (resume.data && Object.keys(resume.data).length > 0) {
-      const data = resume.data
-
-      await updateResumeConfig(newResume.resume_id, data)
-    }
-
-    return newResume.resume_id
+    return onlineResume.resume_id
   }, selectedIds)
 
   return result

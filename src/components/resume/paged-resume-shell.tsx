@@ -1,16 +1,15 @@
 import type { PropsWithChildren, Ref } from 'react'
+import type { ResumeAppearanceConfig } from '@/lib/schema'
 import { useEffect, useRef, useState } from 'react'
-import useResumeConfigStore from '@/store/resume/config'
+import { useResumeStyles } from '@/hooks/use-resume-styles'
 
 const A4_HEIGHT_MM = 297
 const MM_TO_PX = 3.7795275591
 
-export default function PagedResumeShell({
-  children,
-  ref,
-}: PropsWithChildren<{ ref?: Ref<HTMLDivElement> | null }>) {
-  const spacingConfig = useResumeConfigStore(state => state.spacing)
-  const fontConfig = useResumeConfigStore(state => state.font)
+export default function PagedResumeShell({ children, ref, appearance}: PropsWithChildren<{ ref?: Ref<HTMLDivElement> | null, appearance?: Partial<ResumeAppearanceConfig> | null }>) {
+  const { appearance: resolvedAppearance } = useResumeStyles(appearance)
+  const spacingConfig = resolvedAppearance.spacing
+  const fontConfig = resolvedAppearance.font
   const contentRef = useRef<HTMLDivElement>(null)
   const [pageCount, setPageCount] = useState(1)
 

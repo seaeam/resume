@@ -1,5 +1,5 @@
 import type { AutomergeResumeDocument } from './schema'
-import type { ORDERType, ResumeSchema, ResumeType, VisibilityFormType } from '@/lib/schema'
+import type { PersistedResumeSnapshot } from '@/lib/schema'
 import type { Suggestion } from '@/pages/optimize/types'
 import { set, toPath } from 'lodash'
 import { toast } from 'sonner'
@@ -8,11 +8,7 @@ import { getCurrentUser } from '@/lib/supabase/user'
 import { setLeaf } from '@/pages/optimize/utils'
 import { DocumentManager } from './manager'
 
-export interface ResumeDocumentSnapshot extends ResumeSchema {
-  order: ORDERType[]
-  visibility: VisibilityFormType
-  type: ResumeType
-}
+export type ResumeDocumentSnapshot = PersistedResumeSnapshot
 
 export async function syncAutomergeDocument(
   resumeId: string,
@@ -113,6 +109,9 @@ function applySnapshotToDocument(
   doc.order = [...payload.order] as AutomergeResumeDocument['order']
   doc.visibility = { ...payload.visibility } as AutomergeResumeDocument['visibility']
   doc.type = payload.type as AutomergeResumeDocument['type']
+  doc.spacing = { ...payload.spacing } as AutomergeResumeDocument['spacing']
+  doc.font = { ...payload.font } as AutomergeResumeDocument['font']
+  doc.theme = { ...payload.theme } as AutomergeResumeDocument['theme']
 }
 
 function pickResumePayload(
@@ -135,6 +134,9 @@ function pickResumePayload(
     order: cloneResumeValue(source.order ?? fallback.order),
     visibility: cloneResumeValue(source.visibility ?? fallback.visibility),
     type: cloneResumeValue(source.type ?? fallback.type),
+    spacing: cloneResumeValue(source.spacing ?? fallback.spacing),
+    font: cloneResumeValue(source.font ?? fallback.font),
+    theme: cloneResumeValue(source.theme ?? fallback.theme),
   }
 }
 

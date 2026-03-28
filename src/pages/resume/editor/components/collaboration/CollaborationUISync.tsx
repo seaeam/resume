@@ -53,9 +53,7 @@ export function CollaborationUISync({
   const spacing = useResumeConfigStore(s => s.spacing)
   const font = useResumeConfigStore(s => s.font)
   const theme = useResumeConfigStore(s => s.theme)
-  const updateSpacing = useResumeConfigStore(s => s.updateSpacing)
-  const updateFont = useResumeConfigStore(s => s.updateFont)
-  const updateTheme = useResumeConfigStore(s => s.updateTheme)
+  const replaceConfig = useResumeConfigStore(s => s.replaceConfig)
 
   const config = useMemo(() => ({ spacing, font, theme }), [spacing, font, theme])
 
@@ -208,15 +206,15 @@ export function CollaborationUISync({
         break
 
       case 'config-spacing':
-        updateSpacing(action.data)
+        replaceConfig({ spacing: action.data })
         break
 
       case 'config-font':
-        updateFont(action.data)
+        replaceConfig({ font: action.data })
         break
 
       case 'config-theme':
-        updateTheme(action.data)
+        replaceConfig({ theme: action.data })
         toast.info(`${userName} 更改了主题`, { duration: 1500, position: 'bottom-left' })
         break
 
@@ -241,7 +239,7 @@ export function CollaborationUISync({
     requestAnimationFrame(() => {
       isApplyingRemote.current = false
     })
-  }, [setDrawerOpen, onUpdateActiveTabId, scrollContainerRef, suppressScrollSync, updateSpacing, updateFont, updateTheme])
+  }, [setDrawerOpen, onUpdateActiveTabId, replaceConfig, scrollContainerRef, suppressScrollSync])
 
   // 响应最新的远程 UI 动作
   useEffect(() => {

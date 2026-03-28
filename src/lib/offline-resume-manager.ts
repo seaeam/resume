@@ -8,9 +8,10 @@
  */
 
 import type { DBSchema, IDBPDatabase } from 'idb'
-import type { ResumeSchema, ResumeType } from '@/lib/schema'
+import type { PersistedResumeSnapshot, ResumeAppearanceConfig, ResumeType } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { openDB } from 'idb'
+import { DEFAULT_RESUME_APPEARANCE, normalizeResumeAppearance } from '@/lib/schema'
 
 interface ResumeDB extends DBSchema {
   resumes: {
@@ -22,7 +23,7 @@ interface ResumeDB extends DBSchema {
       type: ResumeType
       created_at: string
       updated_at: string
-      data: Partial<ResumeSchema>
+      data: Partial<PersistedResumeSnapshot>
     }
     indexes: {
       created_at: string
@@ -35,6 +36,67 @@ const DB_NAME = 'offline-resumes'
 const DB_VERSION = 1
 
 let dbInstance: IDBPDatabase<ResumeDB> | null = null
+const LEGACY_STORAGE_KEY = 'resume-config-storage'
+
+function hasPersistedAppearance(data: unknown): data is Partial<ResumeAppearanceConfig> {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return false
+  }
+
+  const record = data as Record<string, unknown>
+  return record.spacing !== undefined || record.font !== undefined || record.theme !== undefined
+}
+
+function readLegacyLocalAppearance(): ResumeAppearanceConfig | null {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null
+  }
+
+  const raw = window.localStorage.getItem(LEGACY_STORAGE_KEY)
+  if (!raw) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(raw)
+    return normalizeResumeAppearance(parsed?.state)
+  }
+  catch {
+    return null
+  }
+}
+
+function hydrateOfflineResumeData(data: Partial<PersistedResumeSnapshot> | undefined): Partial<PersistedResumeSnapshot> {
+  if (hasPersistedAppearance(data)) {
+    return data
+  }
+
+  const appearance = readLegacyLocalAppearance() ?? DEFAULT_RESUME_APPEARANCE
+  return {
+    ...(data ?? {}),
+    ...appearance,
+  }
+}
+
+async function hydrateOfflineResumeRecord(
+  db: IDBPDatabase<ResumeDB>,
+  resume: ResumeDB['resumes']['value'] | undefined,
+) {
+  if (!resume) {
+    return resume
+  }
+
+  if (hasPersistedAppearance(resume.data)) {
+    return resume
+  }
+
+  const nextResume = {
+    ...resume,
+    data: hydrateOfflineResumeData(resume.data),
+  }
+  await db.put('resumes', nextResume)
+  return nextResume
+}
 
 /**
  * 获取或创建数据库实例
@@ -93,7 +155,7 @@ export async function createOfflineResume(options: {
     type: options.type || 'default',
     created_at: dayjs().toISOString(),
     updated_at: dayjs().toISOString(),
-    data: {},
+    data: { ...DEFAULT_RESUME_APPEARANCE },
   }
 
   await db.add('resumes', resume)
@@ -107,9 +169,10 @@ export async function createOfflineResume(options: {
 export async function getAllOfflineResumes() {
   const db = await getDB()
   const resumes = await db.getAllFromIndex('resumes', 'created_at')
+  const hydratedResumes = await Promise.all(resumes.map(resume => hydrateOfflineResumeRecord(db, resume)))
 
   // 按创建时间倒序排列
-  return resumes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  return hydratedResumes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 }
 
 /**
@@ -117,7 +180,7 @@ export async function getAllOfflineResumes() {
  */
 export async function getOfflineResumeById(resumeId: string) {
   const db = await getDB()
-  return await db.get('resumes', resumeId)
+  return await hydrateOfflineResumeRecord(db, await db.get('resumes', resumeId))
 }
 
 /**
@@ -125,7 +188,7 @@ export async function getOfflineResumeById(resumeId: string) {
  */
 export async function updateOfflineResume(
   resumeId: string,
-  data: Partial<ResumeSchema> & { order?: any, visibility?: any },
+  data: Partial<PersistedResumeSnapshot>,
 ) {
   const db = await getDB()
   const resume = await db.get('resumes', resumeId)
@@ -134,7 +197,7 @@ export async function updateOfflineResume(
     throw new Error('简历不存在')
   }
 
-  resume.data = { ...resume.data, ...data }
+  resume.data = { ...hydrateOfflineResumeData(resume.data), ...data }
   resume.updated_at = dayjs().toISOString()
 
   await db.put('resumes', resume)
@@ -258,6 +321,7 @@ export async function importOfflineResume(jsonData: string): Promise<string> {
     resume_id: newResumeId,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    data: hydrateOfflineResumeData(data.data),
   }
 
   await db.add('resumes', resume)
