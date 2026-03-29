@@ -230,7 +230,7 @@ export function ResumeConfigToolbar() {
 
       <ExportDialog
         trigger={(
-          <Button variant="outline" size={isMobile ? 'icon' : 'sm'}>
+          <Button variant="outline" size={isMobile ? 'icon' : 'sm'} disabled={isToolbarLoading}>
             <FileDown data-icon="inline-start" />
             {!isMobile && <span>导出</span>}
           </Button>

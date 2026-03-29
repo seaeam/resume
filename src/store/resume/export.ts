@@ -1,34 +1,79 @@
 import type { RefObject } from 'react'
 import { saveAs } from 'file-saver'
+import { createElement } from 'react'
+import { createRoot } from 'react-dom/client'
 import { toast } from 'sonner'
 import { create } from 'zustand'
+import PrintResumeDocument from '@/components/resume/print-resume-document'
 import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
 import useResumeConfigStore from './config'
 import useResumeStore from './form'
-import { createResumeDocHtml, createResumePrintHtml } from './utils'
+import { createResumeDocHtml, createResumePrintStyles } from './utils'
 
 interface ResumeExportState {
   resumeRef: RefObject<HTMLDivElement | null> | null
-  handlePrint: (() => void) | null
   setResumeRef: (ref: RefObject<HTMLDivElement | null>) => void
-  setHandlePrint: (handlePrint: (() => void) | null) => void
   exportToPdf: () => Promise<void>
   exportToDoc: () => void
 }
 
-const MOBILE_PRINT_BREAKPOINT = '(max-width: 767px)'
+function clonePrintableStyles(targetDocument: Document) {
+  const styleNodes = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+  styleNodes.forEach((node) => {
+    if (node instanceof HTMLLinkElement) {
+      const link = targetDocument.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = node.href
+      if (node.media) {
+        link.media = node.media
+      }
+      if (node.crossOrigin) {
+        link.crossOrigin = node.crossOrigin
+      }
+      if (node.referrerPolicy) {
+        link.referrerPolicy = node.referrerPolicy
+      }
+      targetDocument.head.appendChild(link)
+      return
+    }
 
-function collectPrintableStylesHtml() {
-  return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-    .map(node => node.outerHTML)
-    .join('\n')
+    targetDocument.head.appendChild(node.cloneNode(true))
+  })
+}
+
+function setupPrintWindowDocument(printWindow: Window, title: string) {
+  const { document: targetDocument } = printWindow
+  targetDocument.documentElement.lang = 'zh-CN'
+  targetDocument.head.replaceChildren()
+  targetDocument.body.replaceChildren()
+
+  const charsetMeta = targetDocument.createElement('meta')
+  charsetMeta.setAttribute('charset', 'utf-8')
+  targetDocument.head.appendChild(charsetMeta)
+
+  const viewportMeta = targetDocument.createElement('meta')
+  viewportMeta.name = 'viewport'
+  viewportMeta.content = 'width=1280, initial-scale=1'
+  targetDocument.head.appendChild(viewportMeta)
+
+  targetDocument.title = title
+  clonePrintableStyles(targetDocument)
+
+  const printStyle = targetDocument.createElement('style')
+  printStyle.textContent = createResumePrintStyles()
+  targetDocument.head.appendChild(printStyle)
+
+  const rootElement = targetDocument.createElement('div')
+  rootElement.id = 'resume-print-root'
+  targetDocument.body.appendChild(rootElement)
+  return rootElement
 }
 
 function waitForPrintWindowReady(printWindow: Window) {
   return new Promise<void>((resolve) => {
     const finalize = () => {
       printWindow.requestAnimationFrame(() => {
-        window.setTimeout(resolve, 80)
+        printWindow.setTimeout(resolve, 80)
       })
     }
 
@@ -55,17 +100,17 @@ function waitForPrintWindowReady(printWindow: Window) {
       }
     }
 
-    for (const link of styleLinks) {
+    styleLinks.forEach((link) => {
       if (link.sheet) {
         done()
-        continue
+        return
       }
 
       link.addEventListener('load', done, { once: true })
       link.addEventListener('error', done, { once: true })
-    }
+    })
 
-    window.setTimeout(() => {
+    printWindow.setTimeout(() => {
       if (!settled) {
         settled = true
         finalize()
@@ -74,71 +119,116 @@ function waitForPrintWindowReady(printWindow: Window) {
   })
 }
 
-async function printResumeFromWindow(contentHtml: string, title: string) {
-  const printWindow = window.open('', 'noopener,noreferrer')
+function delay(win: Window, ms: number) {
+  return new Promise<void>(resolve => win.setTimeout(resolve, ms))
+}
+
+function nextFrame(win: Window) {
+  return new Promise<void>(resolve => win.requestAnimationFrame(() => resolve()))
+}
+
+async function waitForFonts(printWindow: Window) {
+  const fonts = printWindow.document.fonts
+  if (!fonts) {
+    return
+  }
+
+  try {
+    await Promise.race([
+      fonts.ready.then(() => undefined),
+      delay(printWindow, 2000),
+    ])
+  }
+  catch {
+    // 忽略字体等待失败，继续走分页稳定检测
+  }
+}
+
+async function waitForPrintLayout(printWindow: Window) {
+  await waitForPrintWindowReady(printWindow)
+  await waitForFonts(printWindow)
+
+  const deadline = Date.now() + 4000
+  let stablePasses = 0
+  let previousSignature = ''
+
+  while (Date.now() < deadline && stablePasses < 2) {
+    await nextFrame(printWindow)
+    await nextFrame(printWindow)
+
+    const pages = Array.from(
+      printWindow.document.querySelectorAll<HTMLElement>('[data-resume-page]'),
+    )
+    const content = printWindow.document.querySelector<HTMLElement>('[data-resume-content]')
+    const signature = [
+      pages.length,
+      content?.scrollHeight ?? 0,
+      ...pages.map(page => Math.round(page.getBoundingClientRect().height)),
+    ].join(':')
+
+    if (pages.length > 0 && signature === previousSignature) {
+      stablePasses += 1
+    }
+    else {
+      previousSignature = signature
+      stablePasses = 0
+    }
+  }
+
+  await delay(printWindow, 120)
+}
+
+async function printResumeFromWindow(title: string) {
+  const snapshot = useResumeStore.getState().getPersistedSnapshot()
+  const printWindow = window.open('about:blank', '_blank', 'popup=yes,width=1280,height=900')
 
   if (!printWindow) {
     throw new Error('浏览器阻止了导出窗口，请允许弹出窗口后重试')
   }
 
-  const printHtml = createResumePrintHtml({
-    title,
-    contentHtml,
-    stylesHtml: collectPrintableStylesHtml(),
-  })
+  const rootElement = setupPrintWindowDocument(printWindow, title)
+  const root = createRoot(rootElement)
+  root.render(createElement(PrintResumeDocument, { snapshot }))
 
-  printWindow.document.open()
-  printWindow.document.write(printHtml)
-  printWindow.document.close()
+  await waitForPrintLayout(printWindow)
 
-  await waitForPrintWindowReady(printWindow)
+  let cleanedUp = false
+  const cleanup = () => {
+    if (cleanedUp) {
+      return
+    }
 
-  printWindow.focus()
-  printWindow.print()
-
-  const closeWindow = () => {
+    cleanedUp = true
+    root.unmount()
     if (!printWindow.closed) {
       printWindow.close()
     }
   }
 
-  printWindow.addEventListener('afterprint', closeWindow, { once: true })
-  window.setTimeout(closeWindow, 1000)
+  printWindow.addEventListener('afterprint', cleanup, { once: true })
+  printWindow.focus()
+  printWindow.print()
+  printWindow.setTimeout(cleanup, 1500)
 }
 
 const useResumeExportStore = create<ResumeExportState>((set, get) => ({
   resumeRef: null,
-  handlePrint: null,
 
   setResumeRef: (ref) => {
     set({ resumeRef: ref })
   },
 
-  setHandlePrint: (handlePrint) => {
-    set({ handlePrint })
-  },
-
   exportToPdf: async () => {
-    const { handlePrint, resumeRef } = get()
-    const resumeName = useResumeStore.getState().basics.name
+    const resumeState = useResumeStore.getState()
+    const resumeName = resumeState.basics.name
 
-    if (!handlePrint || !resumeRef?.current) {
+    if (!resumeState.isInitialized) {
       toast.warning('简历加载中')
       return
     }
 
     try {
-      const isMobilePrint = window.matchMedia(MOBILE_PRINT_BREAKPOINT).matches
-
-      if (isMobilePrint) {
-        await printResumeFromWindow(
-          resumeRef.current.innerHTML,
-          resumeName ? `${resumeName}-简历` : '我的简历',
-        )
-        return
-      }
-
-      handlePrint()
+      await printResumeFromWindow(resumeName ? `${resumeName}-简历` : '我的简历')
     }
     catch (error) {
       toast.error(`导出 PDF 失败,请稍后重试${error instanceof Error ? `: ${error.message}` : ''}`)
@@ -161,11 +251,9 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
       const resumeTheme = themeColorMap[themeConfig.theme]
       const fontSize = fontConfig.fontSize
 
-      // 只获取第一个页面的内容
       const firstPage = resumeRef.current.querySelector('[data-resume-content]')
       const rawHtml = firstPage ? firstPage.innerHTML : resumeRef.current.innerHTML
 
-      // 对 innerHTML 进行基本消毒，移除 script 标签和事件处理属性以防止 XSS
       const contentHtml = rawHtml
         .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
         .replace(/\s*on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '')
@@ -179,7 +267,6 @@ const useResumeExportStore = create<ResumeExportState>((set, get) => ({
         textPrimary: resumeTheme.textPrimary,
       })
 
-      // 创建一个 Blob 对象,类型为 Word 文档
       const blob = new Blob([html], {
         type: 'application/msword',
       })

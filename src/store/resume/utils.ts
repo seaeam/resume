@@ -14,12 +14,6 @@ export interface DocHtmlOptions {
   textPrimary: string
 }
 
-interface ResumePrintHtmlOptions {
-  title: string
-  contentHtml: string
-  stylesHtml: string
-}
-
 export function setFormDataField<K extends keyof FormDataMap>(
   target: FormDataMap,
   key: K,
@@ -302,85 +296,72 @@ ${contentHtml}
 </html>`
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('\'', '&#39;')
-}
+export function createResumePrintStyles() {
+  return `
+    @page {
+      size: A4;
+      margin: 0;
+    }
 
-export function createResumePrintHtml({
-  title,
-  contentHtml,
-  stylesHtml,
-}: ResumePrintHtmlOptions) {
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=1280, initial-scale=1" />
-    <title>${escapeHtml(title)}</title>
-${stylesHtml}
-    <style>
-      @page {
-        size: A4;
-        margin: 0;
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-width: 1280px;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    [data-resume-print-app] {
+      width: fit-content;
+      margin: 0 auto;
+    }
+
+    [data-resume-page] {
+      break-after: page;
+      page-break-after: always;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    [data-resume-page]:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+
+    [data-resume-page-shell] {
+      margin: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    @media screen {
+      body {
+        padding: 24px 0;
       }
+    }
 
-      *, *::before, *::after {
-        box-sizing: border-box;
-      }
-
+    @media print {
       html, body {
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
+        min-width: 0;
       }
 
       body {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        padding: 0;
       }
 
-      [data-resume-print-root] {
-        width: 210mm;
-        margin: 0 auto;
+      [data-resume-print-app] {
+        margin: 0;
       }
-
-      [data-resume-print-root] > div {
-        break-after: page;
-        page-break-after: always;
-        break-inside: avoid;
-        page-break-inside: avoid;
-        width: 210mm;
-        height: 297mm;
-      }
-
-      [data-resume-print-root] > div:last-child {
-        break-after: auto;
-        page-break-after: auto;
-      }
-
-      [data-resume-print-root] > div > div {
-        width: 210mm !important;
-        height: 297mm !important;
-        margin: 0 !important;
-        overflow: hidden !important;
-        border: none !important;
-        border-radius: 0 !important;
-      }
-
-      [data-resume-print-root] .shadow-md {
-        box-shadow: none !important;
-      }
-    </style>
-  </head>
-  <body>
-    <div data-resume-print-root>
-${contentHtml}
-    </div>
-  </body>
-</html>`
+    }
+  `
 }
