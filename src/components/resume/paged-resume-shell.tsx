@@ -51,10 +51,9 @@ export default function PagedResumeShell({ children, ref, appearance}: PropsWith
   return (
     <div className="flex flex-col gap-4" ref={ref}>
       {Array.from({ length: pageCount }).map((_, pageIndex) => (
-        <div key={`page-${pageIndex + 1}`} data-resume-page>
+        <div key={`page-${pageIndex + 1}`}>
           <div
             className="mx-auto overflow-hidden rounded-md border bg-white shadow-md"
-            data-resume-page-shell
             style={{
               width: '210mm',
               height: '297mm',

@@ -1,5 +1,6 @@
 import { Edit } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useReactToPrint } from 'react-to-print'
 import { RealtimeCursors } from '@/components/realtime-cursors'
 import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
@@ -28,11 +29,22 @@ function Editor() {
   const resumeRef = useRef<HTMLDivElement | null>(null)
   const previewScrollRef = useRef<HTMLDivElement | null>(null)
 
+  const resumeName = useResumeStore(state => state.basics.name)
   const setResumeRef = useResumeExportStore(state => state.setResumeRef)
+  const setHandlePrint = useResumeExportStore(state => state.setHandlePrint)
+
+  const handlePrint = useReactToPrint({
+    contentRef: resumeRef,
+    documentTitle: resumeName ? `${resumeName}-简历` : '我的简历',
+  })
 
   useEffect(() => {
     setResumeRef(resumeRef)
   }, [setResumeRef])
+
+  useEffect(() => {
+    setHandlePrint(handlePrint)
+  }, [setHandlePrint, handlePrint])
 
   const activeTabId = useResumeStore(state => state.activeTabId)
   const order = useResumeStore(state => state.order)
