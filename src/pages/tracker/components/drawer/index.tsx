@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
@@ -16,7 +17,6 @@ import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
 import DrawerDocument from './document'
 import DrawerEditForm from './edit-form'
 import DrawerHeaderInfo from './header'
-import DrawerNav from './nav'
 import DrawerProgress from './progress'
 import DrawerStageDetail from './stage-detail'
 
@@ -85,7 +85,6 @@ export default function JobDrawer() {
   const description = [
     selectedJob.location,
     selectedJob.salary,
-    activeTab === 'document' ? '确认当前绑定简历' : '管理当前流程与阶段记录',
   ].filter(Boolean).join(' · ')
 
   const dialogHeaderContent = (
@@ -121,75 +120,75 @@ export default function JobDrawer() {
     </div>
   )
 
-  const footerHint = activeTab === 'document'
-    ? '这里展示当前职位绑定的简历预览，方便确认投递版本。'
-    : isEditing
-      ? '编辑完成后会直接同步到当前职位记录。'
-      : '高频动作优先在上方流程区完成，深入补充信息再进入当前阶段详情。'
-
   const footerActions = (
-    <>
-      <p className="text-xs leading-5 text-muted-foreground">{footerHint}</p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-        {activeTab === 'information' && selectedJob.job_url && (
-          <Button variant="outline" asChild>
-            <a href={selectedJob.job_url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="size-4" />
-              打开 JD
-            </a>
-          </Button>
-        )}
-        <Button variant="outline" onClick={() => handleOpenChange(false)}>
-          关闭
+    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+      {activeTab === 'information' && selectedJob.job_url && (
+        <Button variant="outline" asChild>
+          <a href={selectedJob.job_url} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="size-4" />
+            打开 JD
+          </a>
         </Button>
-      </div>
-    </>
+      )}
+      <Button variant="outline" onClick={() => handleOpenChange(false)}>
+        关闭
+      </Button>
+    </div>
   )
 
   const drawerBody = (
     <div className="scrollbar-gutter-stable scrollbar-thin-subtle min-h-0 flex-1 overflow-y-auto overscroll-contain">
       <div className="px-4 py-4 pb-6 sm:px-6 sm:py-5 sm:pb-6 lg:px-8 lg:py-6">
-        <DrawerNav activeTab={activeTab} onTabChange={setActiveTab} />
+        <Tabs
+          value={activeTab}
+          className="min-h-0"
+          onValueChange={value => setActiveTab(value as DrawerTab)}
+        >
+          <TabsList className="w-full">
+            <TabsTrigger value="information" className="flex-1">
+              跟进详情
+            </TabsTrigger>
+            <TabsTrigger value="document" className="flex-1">
+              投递简历
+            </TabsTrigger>
+          </TabsList>
 
-        {activeTab === 'information'
-          ? (
-              isEditing
-                ? (
-                    <div className="mt-5">
-                      <DrawerEditForm
-                        onSaved={handleSaved}
-                        onCancel={() => setIsEditing(false)}
-                      />
-                    </div>
-                  )
-                : (
-                    <div className="mt-5 space-y-5">
-                      <DrawerHeaderInfo onEdit={() => setIsEditing(true)} />
-                      <DrawerProgress
-                        viewingStage={viewingStage}
-                        onStageClick={(stage) => {
-                          setViewingStage(stage === selectedJob.status ? null : stage)
-                        }}
-                        onStatusChange={handleProgressChange}
-                        onFocusCurrentStage={focusCurrentStage}
-                      />
-                      {selectedJob.status !== 'rejected' && (
-                        <div ref={stageDetailRef}>
-                          <DrawerStageDetail
-                            displayStage={displayStage}
-                            isViewingHistory={viewingStage !== null && viewingStage !== selectedJob.status}
-                            onSaved={() => setViewingStage(null)}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )
-            )
-          : (
-              <div className="mt-5">
-                <DrawerDocument />
-              </div>
-            )}
+          <TabsContent value="information" className="mt-5">
+            {isEditing
+              ? (
+                  <DrawerEditForm
+                    onSaved={handleSaved}
+                    onCancel={() => setIsEditing(false)}
+                  />
+                )
+              : (
+                  <div className="space-y-5">
+                    <DrawerHeaderInfo onEdit={() => setIsEditing(true)} />
+                    <DrawerProgress
+                      viewingStage={viewingStage}
+                      onStageClick={(stage) => {
+                        setViewingStage(stage === selectedJob.status ? null : stage)
+                      }}
+                      onStatusChange={handleProgressChange}
+                      onFocusCurrentStage={focusCurrentStage}
+                    />
+                    {selectedJob.status !== 'rejected' && (
+                      <div ref={stageDetailRef}>
+                        <DrawerStageDetail
+                          displayStage={displayStage}
+                          isViewingHistory={viewingStage !== null && viewingStage !== selectedJob.status}
+                          onSaved={() => setViewingStage(null)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+          </TabsContent>
+
+          <TabsContent value="document" className="mt-5">
+            <DrawerDocument />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

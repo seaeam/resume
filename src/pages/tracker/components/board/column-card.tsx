@@ -1,5 +1,5 @@
 import type { JobApplication } from '../../types'
-import { ArrowRight, Building2, CalendarClock, Link2, MapPin } from 'lucide-react'
+import { ArrowRight, Building2, Link2, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -116,14 +116,10 @@ export function ColumnCard({ job }: ColumnCardProps) {
                 <MapPin className="size-3.5" />
                 {job.location}
               </span>
-              <span className="inline-flex items-center gap-1">
-                <CalendarClock className="size-3.5" />
-                最近更新
-              </span>
               {metaSummary.hasJobUrl && (
                 <span className="inline-flex items-center gap-1 text-sky-700">
                   <Link2 className="size-3.5" />
-                  已保存 JD
+                  JD
                 </span>
               )}
             </div>
@@ -133,10 +129,7 @@ export function ColumnCard({ job }: ColumnCardProps) {
         <div className="rounded-xl border border-border/60 bg-muted/40 px-3 py-2.5">
           <p className="text-sm font-medium leading-6 text-foreground">{progressHint}</p>
           {metaSummary.activeSubStageLabel && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              当前轮次：
-              {metaSummary.activeSubStageLabel}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{metaSummary.activeSubStageLabel}</p>
           )}
         </div>
 

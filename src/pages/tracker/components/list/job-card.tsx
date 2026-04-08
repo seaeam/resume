@@ -114,10 +114,7 @@ export function JobCard({ job }: JobCardProps) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">{job.company}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                最近更新于
-                {stageDate}
-              </p>
+              <p className="truncate text-xs text-muted-foreground">{stageDate}</p>
             </div>
           </div>
 
@@ -200,7 +197,7 @@ export function JobCard({ job }: JobCardProps) {
           )}
           >
             <FileText className="size-3.5" />
-            {metaSummary.hasResume ? '已绑定简历' : '待绑定简历'}
+            {metaSummary.hasResume ? '简历' : '未绑'}
           </span>
           <span className={cn(
             'inline-flex items-center gap-1 rounded-full px-2.5 py-1',
@@ -208,13 +205,12 @@ export function JobCard({ job }: JobCardProps) {
           )}
           >
             <Link2 className="size-3.5" />
-            {metaSummary.hasJobUrl ? '已保存 JD' : '无 JD 链接'}
+            {metaSummary.hasJobUrl ? 'JD' : '无 JD'}
           </span>
         </div>
 
         <div className="rounded-2xl border border-border/60 bg-muted/40 px-3.5 py-3">
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground/80">下一步提示</p>
-          <p className="mt-1.5 text-sm font-medium leading-6 text-foreground">{progressHint}</p>
+          <p className="text-sm font-medium leading-6 text-foreground">{progressHint}</p>
         </div>
       </CardContent>
 

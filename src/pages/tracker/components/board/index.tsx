@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
-import { APPLICATION_STATUS_CONFIG, BOARD_COLUMNS, TRACKER_BOARD_COLUMN_HINTS } from '../../const'
+import { APPLICATION_STATUS_CONFIG, BOARD_COLUMNS } from '../../const'
 import useTrackerStore from '../../store'
 import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
 import { ColumnCard } from './column-card'
@@ -140,13 +140,6 @@ export default function BoardView() {
   return (
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="space-y-4">
-        <div className="rounded-2xl border border-border/60 bg-card/60 px-4 py-3">
-          <p className="text-sm font-medium text-foreground">看板视图</p>
-          <p className="text-xs text-muted-foreground">
-            适合横向观察整体流程。可以直接拖拽改状态，也可以在卡片上完成下一步推进。
-          </p>
-        </div>
-
         <div
           ref={scrollContainerRef}
           className="w-full min-w-0 max-w-full overflow-x-auto"
@@ -170,11 +163,8 @@ export default function BoardView() {
                   )}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-semibold">{column.label}</h3>
-                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                          {TRACKER_BOARD_COLUMN_HINTS[column.status]}
-                        </p>
                       </div>
                       <span className={cn(
                         'inline-flex min-w-8 items-center justify-center rounded-full px-2 py-1 text-xs font-medium',
@@ -222,7 +212,7 @@ export default function BoardView() {
                             )
                           : (
                               <div className="flex min-h-[180px] flex-1 items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/80 px-4 text-center text-sm text-muted-foreground">
-                                拖入新的职位到这一列，或在列表里先推进到这个阶段
+                                暂无职位
                               </div>
                             )}
                         {provided.placeholder}

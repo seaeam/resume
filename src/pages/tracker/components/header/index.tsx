@@ -1,4 +1,4 @@
-import { Plus, Rows3, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -41,21 +41,17 @@ export default function TrackerHeader() {
       <header className="flex flex-col gap-4 rounded-3xl border border-border/70 bg-card/80 p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/8 px-3 py-1 text-xs font-medium text-primary">
-              <Rows3 className="size-3.5" />
-              求职流程工作台
-            </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">你的求职跟进</h1>
               {loading
                 ? <Skeleton className="mt-2 h-5 w-48" />
                 : (
                     <p className="mt-2 text-sm text-muted-foreground">
-                      当前共
+                      共
                       {' '}
                       <span className="font-semibold text-foreground">{jobCount}</span>
                       {' '}
-                      个职位，优先在列表中快速推进状态，需要补充细节时再进入详情。
+                      个职位
                     </p>
                   )}
             </div>

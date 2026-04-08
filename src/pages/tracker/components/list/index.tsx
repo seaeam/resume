@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { APPLICATION_STATUS_CONFIG } from '../../const'
 import useTrackerStore from '../../store'
-import { CreateJobCard } from './create-job-card'
 import { JobCard } from './job-card'
 
 const LIST_SKELETON_KEYS = [
@@ -103,7 +102,6 @@ export default function ListView() {
         {filteredJobs.map(job => (
           <JobCard key={job.id} job={job} />
         ))}
-        {!filterStatus && <CreateJobCard />}
       </div>
     </div>
   )
