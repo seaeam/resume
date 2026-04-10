@@ -19,6 +19,34 @@ export interface ResumeAppearancePatch {
   theme?: Partial<ThemeConfigType>
 }
 
+export interface ResumeTemplateBinding {
+  source: 'official' | 'community' | 'user'
+  templateId: string
+  basedOnResumeType?: ResumeType
+}
+
+export function createLegacyResumeTemplateBinding(type: ResumeType): ResumeTemplateBinding {
+  return {
+    source: 'official',
+    templateId: type,
+    basedOnResumeType: type,
+  }
+}
+
+export function resolveResumeTemplateBinding(
+  binding: ResumeTemplateBinding | null | undefined,
+  type: ResumeType,
+): ResumeTemplateBinding {
+  if (!binding?.templateId) {
+    return createLegacyResumeTemplateBinding(type)
+  }
+
+  return {
+    ...binding,
+    basedOnResumeType: binding.basedOnResumeType ?? type,
+  }
+}
+
 export const DEFAULT_RESUME_APPEARANCE: ResumeAppearanceConfig = {
   spacing: DEFAULT_SPACING_CONFIG,
   font: DEFAULT_FONT_CONFIG,
@@ -63,4 +91,5 @@ export interface PersistedResumeSnapshot extends ResumeSchema, ResumeAppearanceC
   order: ORDERType[]
   visibility: VisibilityFormType
   type: ResumeType
+  templateBinding?: ResumeTemplateBinding
 }

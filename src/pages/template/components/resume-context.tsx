@@ -1,3 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
+import type { PropsWithChildren } from 'react'
+import type { ResolvedTemplateManifest } from '@/lib/resume-template/schema'
 import { createContext, use } from 'react'
 
 /**
@@ -21,6 +24,7 @@ export interface ResumeTheme {
 export interface ResumeSpacing {
   pagePadding: string
   sectionMargin: string
+  entrySpacing: string
   sectionTitleMargin: string
   itemSpacing: string
   paragraphSpacing: string
@@ -50,10 +54,22 @@ export interface ResumeContextType {
   theme: ResumeTheme
   spacing: ResumeSpacing
   font: ResumeFont
+  layout: ResolvedTemplateManifest['layout']
 }
 
 // 创建 Context
 const ResumeContext = createContext<ResumeContextType | null>(null)
+
+export function ResumeContextProvider({
+  children,
+  value,
+}: PropsWithChildren<{ value: ResumeContextType }>) {
+  return (
+    <ResumeContext value={value}>
+      {children}
+    </ResumeContext>
+  )
+}
 
 /**
  * 使用简历上下文的 Hook
@@ -122,6 +138,7 @@ export const themes = {
 export const defaultSpacing: ResumeSpacing = {
   pagePadding: '1rem',
   sectionMargin: '1rem',
+  entrySpacing: '1rem',
   sectionTitleMargin: '0.75rem',
   itemSpacing: '0.55rem',
   paragraphSpacing: '0.25rem',

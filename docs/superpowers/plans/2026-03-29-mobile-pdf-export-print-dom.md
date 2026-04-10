@@ -13,49 +13,52 @@
 ### 任务 1：梳理并替换 PDF 导出入口
 
 **文件：**
+
 - 修改：`/Users/shemingcong/Downloads/resume/src/store/resume/export.ts`
 - 修改：`/Users/shemingcong/Downloads/resume/src/pages/resume/editor/index.tsx`
 
 - [x] **步骤 1：移除旧的预览 DOM 克隆打印依赖**
-执行记录：已删除 `src/store/resume/export.ts` 中基于 `resumeRef.current.innerHTML` 和 `document.write` 的 PDF 打印实现。
+      执行记录：已删除 `src/store/resume/export.ts` 中基于 `resumeRef.current.innerHTML` 和 `document.write` 的 PDF 打印实现。
 
 - [x] **步骤 2：改成统一的独立打印窗口导出链路**
-执行记录：已改为在打印窗口内使用 `createRoot` 渲染 `PrintResumeDocument`，并等待样式、字体和分页稳定后再触发 `print()`。
+      执行记录：已改为在打印窗口内使用 `createRoot` 渲染 `PrintResumeDocument`，并等待样式、字体和分页稳定后再触发 `print()`。
 
 - [x] **步骤 3：清理编辑器中不再需要的 `handlePrint` 接线**
-执行记录：已移除 `/src/pages/resume/editor/index.tsx` 中 `react-to-print` 的引入和 `setHandlePrint` 相关逻辑。
+      执行记录：已移除 `/src/pages/resume/editor/index.tsx` 中 `react-to-print` 的引入和 `setHandlePrint` 相关逻辑。
 
 ### 任务 2：新增导出专用打印组件
 
 **文件：**
+
 - 新建：`/Users/shemingcong/Downloads/resume/src/components/resume/print-resume-document.tsx`
 - 修改：`/Users/shemingcong/Downloads/resume/src/store/resume/utils.ts`
 
 - [x] **步骤 1：实现只依赖快照和 appearance 的打印组件**
-执行记录：已新增 `src/components/resume/print-resume-document.tsx`，从 `PersistedResumeSnapshot` 重建模板数据、appearance 和分页壳。
+      执行记录：已新增 `src/components/resume/print-resume-document.tsx`，从 `PersistedResumeSnapshot` 重建模板数据、appearance 和分页壳。
 
 - [x] **步骤 2：补充打印窗口基础样式与等待布局稳定的辅助逻辑**
-执行记录：已在 `src/store/resume/utils.ts` 增加打印样式生成函数，并在 `src/store/resume/export.ts` 中加入样式绝对链接注入、字体等待和分页稳定检测。
+      执行记录：已在 `src/store/resume/utils.ts` 增加打印样式生成函数，并在 `src/store/resume/export.ts` 中加入样式绝对链接注入、字体等待和分页稳定检测。
 
 ### 任务 3：验证导出链路
 
 **文件：**
+
 - 验证：`/Users/shemingcong/Downloads/resume/src/store/resume/export.ts`
 - 验证：`/Users/shemingcong/Downloads/resume/src/components/resume/print-resume-document.tsx`
 - 验证：`/Users/shemingcong/Downloads/resume/src/pages/resume/editor/index.tsx`
 - 验证：`/Users/shemingcong/Downloads/resume/src/store/resume/utils.ts`
 
 - [x] **步骤 1：运行 ESLint**
-运行：`pnpm exec eslint src/store/resume/export.ts src/components/resume/print-resume-document.tsx src/pages/resume/editor/index.tsx src/store/resume/utils.ts`
-预期：PASS
-执行记录：PASS
+      运行：`pnpm exec eslint src/store/resume/export.ts src/components/resume/print-resume-document.tsx src/pages/resume/editor/index.tsx src/store/resume/utils.ts`
+      预期：PASS
+      执行记录：PASS
 
 - [ ] **步骤 2：运行类型检查**
-运行：`pnpm exec tsc -p tsconfig.app.json --noEmit --pretty false`
-预期：PASS
-执行记录：未满足。仓库存在既有全量 TypeScript 错误，但 `pnpm exec tsc -p tsconfig.app.json --noEmit --pretty false 2>&1 | rg "src/store/resume/export.ts|src/components/resume/print-resume-document.tsx|src/pages/resume/editor/index.tsx|src/store/resume/utils.ts|src/components/resume/paged-resume-shell.tsx"` 无输出，说明本次改动文件未引入新的类型错误。
+      运行：`pnpm exec tsc -p tsconfig.app.json --noEmit --pretty false`
+      预期：PASS
+      执行记录：未满足。仓库存在既有全量 TypeScript 错误，但 `pnpm exec tsc -p tsconfig.app.json --noEmit --pretty false 2>&1 | rg "src/store/resume/export.ts|src/components/resume/print-resume-document.tsx|src/pages/resume/editor/index.tsx|src/store/resume/utils.ts|src/components/resume/paged-resume-shell.tsx"` 无输出，说明本次改动文件未引入新的类型错误。
 
 - [x] **步骤 3：运行构建**
-运行：`pnpm build`
-预期：PASS，允许保留既有 chunk size warning
-执行记录：PASS，保留既有 Vite chunk size warning
+      运行：`pnpm build`
+      预期：PASS，允许保留既有 chunk size warning
+      执行记录：PASS，保留既有 Vite chunk size warning

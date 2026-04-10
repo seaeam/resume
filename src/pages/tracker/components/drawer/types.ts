@@ -1,4 +1,4 @@
-import type { ORDERType, PersistedResumeSnapshot, ResumeSchema, ResumeType, VisibilityFormType } from '@/lib/schema'
+import type { ORDERType, PersistedResumeSnapshot, ResumeSchema, ResumeTemplateBinding, ResumeType, VisibilityFormType } from '@/lib/schema'
 
 export interface ResumeOption {
   id: string
@@ -9,6 +9,7 @@ export interface ResumeOption {
 
 export type ResumePreviewData = Partial<ResumeSchema> & Pick<Partial<PersistedResumeSnapshot>, 'spacing' | 'font' | 'theme'> & {
   type?: ResumeType
+  templateBinding?: ResumeTemplateBinding
   order?: ORDERType[]
   visibility?: Partial<VisibilityFormType> | Record<string, boolean>
 }

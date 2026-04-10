@@ -1,4 +1,4 @@
-import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, PersistedResumeSnapshot, ProjectExperienceFormType, ResumeAppearanceConfig, ResumeType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
+import type { ApplicationInfoFormType, BasicFormType, CampusExperienceFormType, EduBackgroundFormType, HobbiesFormType, HonorsCertificatesFormType, InternshipExperienceFormType, JobIntentFormType, ORDERType, PersistedResumeSnapshot, ProjectExperienceFormType, ResumeAppearanceConfig, ResumeTemplateBinding, ResumeType, SelfEvaluationFormType, SkillSpecialtyFormType, VisibilityItemsType, WorkExperienceFormType } from '@/lib/schema'
 import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_WORK_EXPERIENCE } from '@/lib/schema'
 
 export interface FormDataMap {
@@ -20,6 +20,7 @@ export type PersistableResumeState = FormDataMap & {
   order: ORDERType[]
   visibility: Record<VisibilityItemsType, boolean>
   type: ResumeType
+  templateBinding?: ResumeTemplateBinding
 }
 
 export type ResumeFormPayload = Omit<PersistedResumeSnapshot, keyof ResumeAppearanceConfig>

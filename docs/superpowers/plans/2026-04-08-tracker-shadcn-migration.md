@@ -38,6 +38,7 @@ Validation for this plan should be:
 ## Task 1: Replace the Header View Switch with `ToggleGroup`
 
 **Files:**
+
 - Modify: `src/pages/tracker/components/header/view-toggle.tsx`
 - Reference: `src/components/ui/toggle-group.tsx`
 - Reference: `src/pages/tracker/types.ts`
@@ -100,6 +101,7 @@ git commit -m "refactor(tracker): use shadcn toggle group for view switch"
 ## Task 2: Replace the Status Filter with `ToggleGroup`
 
 **Files:**
+
 - Modify: `src/pages/tracker/components/status-filter/index.tsx`
 - Reference: `src/components/ui/toggle-group.tsx`
 - Reference: `src/components/ui/badge.tsx`
@@ -181,6 +183,7 @@ git commit -m "refactor(tracker): use shadcn toggle group for status filter"
 ## Task 3: Replace Drawer Navigation with Direct shadcn `Tabs`
 
 **Files:**
+
 - Modify: `src/pages/tracker/components/drawer/index.tsx`
 - Delete: `src/pages/tracker/components/drawer/nav.tsx`
 - Reference: `src/components/ui/tabs.tsx`
@@ -269,6 +272,7 @@ git commit -m "refactor(tracker): replace drawer nav with shadcn tabs"
 ## Task 4: Full Verification and Regression Pass
 
 **Files:**
+
 - Verify: `src/pages/tracker/components/header/view-toggle.tsx`
 - Verify: `src/pages/tracker/components/status-filter/index.tsx`
 - Verify: `src/pages/tracker/components/drawer/index.tsx`

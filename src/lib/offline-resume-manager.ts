@@ -11,7 +11,7 @@ import type { DBSchema, IDBPDatabase } from 'idb'
 import type { PersistedResumeSnapshot, ResumeAppearanceConfig, ResumeType } from '@/lib/schema'
 import dayjs from 'dayjs'
 import { openDB } from 'idb'
-import { DEFAULT_RESUME_APPEARANCE, normalizeResumeAppearance } from '@/lib/schema'
+import { createLegacyResumeTemplateBinding, DEFAULT_RESUME_APPEARANCE, normalizeResumeAppearance } from '@/lib/schema'
 
 interface ResumeDB extends DBSchema {
   resumes: {
@@ -31,6 +31,8 @@ interface ResumeDB extends DBSchema {
     }
   }
 }
+
+type OfflineResumeRecord = ResumeDB['resumes']['value']
 
 const DB_NAME = 'offline-resumes'
 const DB_VERSION = 1
@@ -80,8 +82,8 @@ function hydrateOfflineResumeData(data: Partial<PersistedResumeSnapshot> | undef
 
 async function hydrateOfflineResumeRecord(
   db: IDBPDatabase<ResumeDB>,
-  resume: ResumeDB['resumes']['value'] | undefined,
-) {
+  resume: OfflineResumeRecord | undefined,
+): Promise<OfflineResumeRecord | undefined> {
   if (!resume) {
     return resume
   }
@@ -155,7 +157,10 @@ export async function createOfflineResume(options: {
     type: options.type || 'default',
     created_at: dayjs().toISOString(),
     updated_at: dayjs().toISOString(),
-    data: { ...DEFAULT_RESUME_APPEARANCE },
+    data: {
+      ...DEFAULT_RESUME_APPEARANCE,
+      templateBinding: createLegacyResumeTemplateBinding(options.type || 'default'),
+    },
   }
 
   await db.add('resumes', resume)
@@ -169,7 +174,8 @@ export async function createOfflineResume(options: {
 export async function getAllOfflineResumes() {
   const db = await getDB()
   const resumes = await db.getAllFromIndex('resumes', 'created_at')
-  const hydratedResumes = await Promise.all(resumes.map(resume => hydrateOfflineResumeRecord(db, resume)))
+  const hydratedResumes = (await Promise.all(resumes.map(resume => hydrateOfflineResumeRecord(db, resume))))
+    .filter((resume): resume is OfflineResumeRecord => Boolean(resume))
 
   // 按创建时间倒序排列
   return hydratedResumes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -251,7 +257,7 @@ export async function clearAllOfflineResumes() {
  * 用于登录后同步本地数据
  */
 export async function migrateOfflineResumesToCloud(
-  uploadFn: (resume: { display_name: string, description?: string, type: string, data: any }) => Promise<string>,
+  uploadFn: (resume: { display_name: string, description?: string, type: ResumeType, data: Partial<PersistedResumeSnapshot> }) => Promise<string>,
   selectedIds?: string[],
 ): Promise<{ success: number, failed: number, errors: string[] }> {
   let offlineResumes = await getAllOfflineResumes()

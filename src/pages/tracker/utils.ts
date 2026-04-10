@@ -1,7 +1,7 @@
 import type { ResumePreviewData } from './components/drawer/types'
 import type { ApplicationStatus, JobApplication, StageDetail } from './types'
 import type { TemplateResumeDataInput } from '@/pages/template/components/resume-data-context'
-import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType } from '@/lib/schema'
+import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType, resolveResumeTemplateBinding } from '@/lib/schema'
 import { APPLICATION_STATUS_ORDER, TRACKER_NEXT_ACTION_LABELS } from './const'
 
 export interface TrackerNextAction {
@@ -88,6 +88,8 @@ export function autoCompleteStages(
 }
 
 export function normalizeResumePreviewData(data: ResumePreviewData): TemplateResumeDataInput {
+  const type = normalizeResumeType(data.type)
+
   return {
     basics: data.basics ?? DEFAULT_BASICS,
     job_intent: data.job_intent ?? DEFAULT_JOB_INTENT,
@@ -103,7 +105,8 @@ export function normalizeResumePreviewData(data: ResumePreviewData): TemplateRes
     hobbies: data.hobbies ?? DEFAULT_HOBBIES,
     order: migrateOrder(data.order ?? DEFAULT_ORDER),
     visibility: migrateVisibility(data.visibility ?? DEFAULT_VISIBILITY),
-    type: normalizeResumeType(data.type),
+    type,
+    templateBinding: resolveResumeTemplateBinding(data.templateBinding, type),
   }
 }
 

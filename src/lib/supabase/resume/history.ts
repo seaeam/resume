@@ -163,8 +163,7 @@ const VERSION_SUMMARY_SELECTOR = `
 `
 
 export async function getResumeHistoryResume(resumeId: string) {
-  const data = await getResumeById(resumeId, RESUME_SELECTOR)
-  return data as ResumeHistoryResumeRecord
+  return getResumeById<ResumeHistoryResumeRecord>(resumeId, RESUME_SELECTOR)
 }
 
 export async function listResumeHistoryOptions() {

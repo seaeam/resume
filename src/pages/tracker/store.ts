@@ -98,7 +98,7 @@ const useTrackerStore = create<TrackerStore>()(set => ({
   openAddDrawer: () => set({ addDrawerOpen: true }),
   closeAddDrawer: () => set({ addDrawerOpen: false }),
   syncJob: (job) => {
-    set((state) => ({
+    set(state => ({
       jobs: state.jobs.map(current => current.id === job.id ? job : current),
       selectedJob: state.selectedJob?.id === job.id ? job : state.selectedJob,
     }))

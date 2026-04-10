@@ -37,8 +37,16 @@ export function CreateResumeCard() {
           selectedType,
         )
           .then((data) => {
+            addResume({
+              resume_id: data.resume_id,
+              created_at: data.created_at,
+              updated_at: data.updated_at,
+              type: data.type,
+              display_name: data.display_name,
+              description: data.description,
+              isOffline: false,
+            })
             setCurrentResume(data.resume_id, data.type)
-            // 在线模式下，订阅会自动处理 INSERT 事件，无需手动添加
             return data
           })
           .finally(() => {
@@ -113,8 +121,8 @@ export function CreateResumeCard() {
               <DialogTitle className="text-2xl font-bold">创建新简历</DialogTitle>
               <DialogDescription className="text-base">
                 {isOnline
-                  ? '填写简历信息，选择合适的模板。简历将保存到云端。'
-                  : '填写简历信息，选择合适的模板。简历将保存在本地。'}
+                  ? '填写简历信息并选择基础模板类型。更多官方模板、社区模板和我的模板请前往“简历模板”页面。'
+                  : '填写简历信息并选择基础模板类型。更多官方模板、社区模板和我的模板请前往“简历模板”页面。'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateResume}>
@@ -156,23 +164,24 @@ export function CreateResumeCard() {
                   </FieldDescription>
                 </Field>
 
-                {/* TODO 暂时先写成这样 */}
-                {/* 模板类型 */}
                 <Field>
-                  <FieldLabel htmlFor="template_type">模板类型</FieldLabel>
+                  <FieldLabel htmlFor="template_type">基础模板类型</FieldLabel>
                   <Select value={selectedType} onValueChange={value => setSelectedType(value as ResumeType)}>
                     <SelectTrigger className="h-11" id="template_type">
-                      <SelectValue placeholder="选择模板类型" />
+                      <SelectValue placeholder="选择基础模板类型" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectLabel>可用模板</SelectLabel>
+                        <SelectLabel>兼容模板类型</SelectLabel>
                         <SelectItem value="default">默认</SelectItem>
                         <SelectItem value="modern">现代</SelectItem>
                         <SelectItem value="simple">简约</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
+                  <FieldDescription>
+                    这是兼容旧流程的基础模板类型。更多可直接使用或自定义的模板，请前往“简历模板”页。
+                  </FieldDescription>
                 </Field>
               </FieldGroup>
 

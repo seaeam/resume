@@ -58,8 +58,8 @@ export default function TrackerHeader() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button className="gap-2 rounded-xl shadow-sm" onClick={openAddDrawer}>
-              <Plus className="size-4" />
+            <Button onClick={openAddDrawer}>
+              <Plus />
               {TRACKER_PRIMARY_ACTION_TEXT}
             </Button>
           </div>

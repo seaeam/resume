@@ -43,6 +43,7 @@
 ### 任务 1：抽取模板共享的数据读取通道
 
 **文件：**
+
 - 新建：`src/pages/template/components/resume-data-context.tsx`
 - 修改：`src/pages/template/components/basic/Basic.tsx`
 - 修改：`src/pages/template/components/modern/Modern.tsx`
@@ -107,6 +108,7 @@ pnpm build
 ### 任务 2：抽取共享分页预览壳
 
 **文件：**
+
 - 新建：`src/components/resume/paged-resume-shell.tsx`
 - 修改：`src/pages/resume/editor/components/preview/ResumeWrapper.tsx`
 - 修改：`src/pages/resume/editor/components/preview/ResumePreview.tsx`
@@ -152,6 +154,7 @@ pnpm build
 ### 任务 3：新增 history 只读简历预览
 
 **文件：**
+
 - 新建：`src/pages/history/components/shared/history-resume-preview.tsx`
 - 修改：`src/pages/history/components/detail-panel/detail-content.tsx`
 
@@ -204,6 +207,7 @@ pnpm build
 ### 任务 4：手工验证与收尾
 
 **文件：**
+
 - 验证：`src/pages/history/components/detail-panel/detail-content.tsx`
 - 验证：`src/pages/history/components/shared/history-resume-preview.tsx`
 - 验证：`src/pages/template/components/basic/Basic.tsx`

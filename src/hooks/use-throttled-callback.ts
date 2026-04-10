@@ -1,3 +1,4 @@
+import type { DebouncedFunc } from 'lodash'
 import { throttle } from 'lodash'
 import * as React from 'react'
 
@@ -31,11 +32,7 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
   wait = 250,
   dependencies: React.DependencyList = [],
   options: ThrottleSettings = defaultOptions,
-): {
-  (this: ThisParameterType<T>, ...args: Parameters<T>): ReturnType<T>
-  cancel: () => void
-  flush: () => void
-} {
+): DebouncedFunc<T> {
   const fnRef = React.useRef(fn)
   const { leading = false, trailing = true } = options
 

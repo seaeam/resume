@@ -90,7 +90,7 @@ export function migrateVisibility(visibility?: Partial<Record<string, boolean>> 
 
   for (const [key, value] of Object.entries(visibility)) {
     const normalizedKey = LEGACY_KEY_MAP[key] ?? key
-    if (normalizedKey in result) {
+    if (normalizedKey in result && typeof value === 'boolean') {
       result[normalizedKey as keyof VisibilityFormType] = value
     }
   }

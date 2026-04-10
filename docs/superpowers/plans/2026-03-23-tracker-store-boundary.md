@@ -52,6 +52,7 @@
 ## 任务 1：先做类型与边界确认
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/drawer/types.ts`
 - 修改：`src/lib/schema/resume/form/index.ts`
 - 修改：`src/pages/tracker/utils.ts`
@@ -91,6 +92,7 @@ pnpm exec tsc --noEmit
 ## 任务 2：收紧 store 边界并移除错误抽象
 
 **文件：**
+
 - 修改：`src/pages/tracker/store.ts`
 - 删除：`src/pages/tracker/hooks/use-tracker-actions.ts`
 - 删除：`src/pages/tracker/hooks/use-tracker-ui-actions.ts`
@@ -119,6 +121,7 @@ pnpm exec tsc --noEmit
 ## 任务 3：替换各业务组件的调用点
 
 **文件：**
+
 - 修改：`src/pages/tracker/index.tsx`
 - 修改：`src/pages/tracker/components/header/index.tsx`
 - 修改：`src/pages/tracker/components/view-toggle.tsx`
@@ -154,6 +157,7 @@ pnpm exec tsc --noEmit
 ## 任务 4：验证与收尾
 
 **文件：**
+
 - 验证：`src/pages/tracker`
 - 验证：`src/lib/schema/resume/form/index.ts`
 

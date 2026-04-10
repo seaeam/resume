@@ -48,6 +48,7 @@
 ## 任务 1：先补齐派生逻辑与 UI 配置
 
 **文件：**
+
 - 修改：`src/pages/tracker/utils.ts`
 - 修改：`src/pages/tracker/const.ts`
 
@@ -88,6 +89,7 @@ pnpm exec tsc --noEmit
 ## 任务 2：重构页面头部与顶层操作流
 
 **文件：**
+
 - 修改：`src/pages/tracker/index.tsx`
 - 修改：`src/pages/tracker/components/header/index.tsx`
 - 修改：`src/pages/tracker/components/status-filter.tsx`
@@ -130,6 +132,7 @@ pnpm exec tsc --noEmit
 ## 任务 3：重构列表卡片为主工作流
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/list/index.tsx`
 - 修改：`src/pages/tracker/components/list/job-card.tsx`
 - 修改：`src/pages/tracker/components/list/status-select.tsx`
@@ -171,6 +174,7 @@ pnpm exec tsc --noEmit
 ## 任务 4：让看板与列表共享操作心智
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/board/index.tsx`
 - 修改：`src/pages/tracker/components/board/column-card.tsx`
 
@@ -206,6 +210,7 @@ pnpm exec tsc --noEmit
 ## 任务 5：把 Drawer 收缩为详情工作区
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/drawer/index.tsx`
 - 修改：`src/pages/tracker/components/drawer/header.tsx`
 - 修改：`src/pages/tracker/components/drawer/nav.tsx`
@@ -244,6 +249,7 @@ pnpm exec tsc --noEmit
 ## 任务 6：最终验证与收尾
 
 **文件：**
+
 - 验证：`src/pages/tracker`
 
 - [x] **步骤 1：执行完整 TypeScript 验证**

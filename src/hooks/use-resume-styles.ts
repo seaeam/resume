@@ -53,6 +53,7 @@ export function useResumeStyles(appearanceOverride?: Partial<ResumeAppearanceCon
   const spacing = useMemo(() => ({
     pagePadding: `${spacingConfig.pageMargin}px`,
     sectionMargin: `${spacingConfig.sectionSpacing}px`,
+    entrySpacing: `${spacingConfig.sectionSpacing}px`,
     sectionTitleMargin: '0.75rem',
     itemSpacing: '0.55rem',
     paragraphSpacing: '0.25rem',

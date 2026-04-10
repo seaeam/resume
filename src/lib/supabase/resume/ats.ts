@@ -3,6 +3,11 @@ import type { FixChecklistItem } from '@/pages/optimize/types'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
 
+export type CreateAtsConfigInput
+  = Pick<AtsEvaluationResult, 'resume_id'>
+    & Partial<Omit<AtsEvaluationResult, 'id' | 'user_id' | 'created_at' | 'resume_id'>>
+    & { created_at?: string }
+
 export interface AtsSummaryRecord {
   id: string
   resume_id: string
@@ -68,7 +73,7 @@ export async function updateAtsConfig(id: string, payload: Record<string, any>) 
   }
 }
 
-export async function createAtsConfig(payload: Omit<AtsEvaluationResult, 'id'>) {
+export async function createAtsConfig(payload: CreateAtsConfigInput) {
   const user = await getCurrentUser()
 
   if (!user) {

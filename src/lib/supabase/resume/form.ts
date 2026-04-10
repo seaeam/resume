@@ -1,4 +1,7 @@
-import { DEFAULT_RESUME_APPEARANCE } from '@/lib/schema'
+import type { ResumeTemplateBinding, ResumeType } from '@/lib/schema'
+import type { TemplateSourceKind } from '@/lib/supabase/template'
+import { getResumeTypeFromTemplateSource } from '@/lib/resume-template/runtime'
+import { createLegacyResumeTemplateBinding, DEFAULT_RESUME_APPEARANCE } from '@/lib/schema'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
 
@@ -18,6 +21,7 @@ const RESUME_PERSISTED_FIELDS = [
   'order',
   'visibility',
   'type',
+  'template_binding',
   'spacing',
   'font',
   'theme',
@@ -44,7 +48,7 @@ export async function getAllResumesFromUser() {
   return data
 }
 
-export async function getResumeById<T extends string>(id: string, selector = '*' as T) {
+export async function getResumeById<T = Record<string, unknown>>(id: string, selector = '*') {
   const user = await getCurrentUser()
 
   if (!user)
@@ -61,13 +65,13 @@ export async function getResumeById<T extends string>(id: string, selector = '*'
     throw error
   }
 
-  return data
+  return data as T
 }
 
 export async function uploadOfflineResumeToCloud(
   resumeData: Record<string, unknown>,
   info: { display_name: string, description?: string },
-  type: string = 'default',
+  type: ResumeType = 'default',
 ) {
   const user = await getCurrentUser()
 
@@ -81,6 +85,9 @@ export async function uploadOfflineResumeToCloud(
     if (key in resumeData) {
       safeData[key] = resumeData[key]
     }
+  }
+  if (!('template_binding' in safeData) && 'templateBinding' in resumeData) {
+    safeData.template_binding = resumeData.templateBinding
   }
 
   const { data, error } = await supabase
@@ -107,7 +114,8 @@ export async function createNewResume(
     display_name: '简历',
     description: new Date().toLocaleDateString(),
   },
-  type: string = 'default',
+  type: ResumeType = 'default',
+  options?: { templateBinding?: ResumeTemplateBinding },
 ) {
   const user = await getCurrentUser()
 
@@ -119,6 +127,7 @@ export async function createNewResume(
     .insert({
       user_id: user.id,
       type,
+      template_binding: options?.templateBinding ?? createLegacyResumeTemplateBinding(type),
       ...DEFAULT_RESUME_APPEARANCE,
       ...info,
     })
@@ -130,6 +139,29 @@ export async function createNewResume(
   }
 
   return data
+}
+
+export async function createResumeFromTemplate(input: {
+  source: TemplateSourceKind
+  templateId: string
+  display_name?: string
+  description?: string
+}) {
+  const fallbackType = await getResumeTypeFromTemplateSource(input.source, input.templateId)
+  const templateBinding: ResumeTemplateBinding = {
+    source: input.source,
+    templateId: input.templateId,
+    basedOnResumeType: fallbackType,
+  }
+
+  return createNewResume(
+    {
+      display_name: input.display_name,
+      description: input.description,
+    },
+    fallbackType,
+    { templateBinding },
+  )
 }
 
 /**
