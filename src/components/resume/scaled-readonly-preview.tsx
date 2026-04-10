@@ -5,18 +5,21 @@ import { useEffect, useLayoutEffect, useState } from 'react'
 import { ResumeTemplateRuntime } from '@/components/resume/runtime/ResumeTemplateRuntime'
 import { getBuiltInTemplateManifest } from '@/lib/resume-template/runtime/get-built-in-manifest'
 import { getManifestFromTemplateBinding } from '@/lib/resume-template/runtime/get-manifest-from-binding'
+import { cn } from '@/lib/utils'
 import PagedResumeShell from './paged-resume-shell'
 
 interface ScaledReadonlyPreviewProps {
   data: TemplateResumeData
   appearance?: Partial<ResumeAppearanceConfig> | null
   manifest?: TemplateManifest | null
+  className?: string
 }
 
 export default function ScaledReadonlyPreview({
   data,
   appearance,
   manifest: manifestOverride,
+  className,
 }: ScaledReadonlyPreviewProps) {
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null)
   const [canvas, setCanvas] = useState<HTMLDivElement | null>(null)
@@ -109,7 +112,7 @@ export default function ScaledReadonlyPreview({
   }, [canvas, data, viewport])
 
   return (
-    <div ref={setViewport} className="w-full min-w-0">
+    <div ref={setViewport} className={cn('w-full min-w-0', className)}>
       <div className="flex justify-center">
         <div
           className="relative"

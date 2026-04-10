@@ -14,7 +14,7 @@ export function TemplateEditorShell({
   propertiesPanel,
 }: TemplateEditorShellProps) {
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-[1680px] flex-col gap-4 p-4 md:p-6">
+    <div className="mx-auto flex w-full flex-col gap-4 p-4 md:p-6">
       {toolbar}
       <div className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)_320px]">
         <div className="order-2 lg:order-1">{structurePanel}</div>

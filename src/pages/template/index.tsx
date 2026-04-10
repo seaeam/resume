@@ -13,13 +13,8 @@ import { TemplateWorkbench } from './components/workbench/TemplateWorkbench'
 
 function Template() {
   const navigate = useNavigate()
-  const mode = useTemplateWorkbenchStore(state => state.mode)
-  const loading = useTemplateWorkbenchStore(state => state.loading)
-  const error = useTemplateWorkbenchStore(state => state.error)
-  const setNavigate = useTemplateWorkbenchStore(state => state.setNavigate)
-  const loadTemplates = useTemplateWorkbenchStore(state => state.loadTemplates)
-  const manifestDraft = useTemplateEditorStore(state => state.manifestDraft)
-  const dirty = useTemplateEditorStore(state => state.dirty)
+  const { mode, loading, error, setNavigate, loadTemplates } = useTemplateWorkbenchStore()
+  const { manifestDraft, dirty } = useTemplateEditorStore()
 
   useEffect(() => {
     setNavigate(navigate)

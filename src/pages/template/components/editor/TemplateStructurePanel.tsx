@@ -139,7 +139,7 @@ export function TemplateStructurePanel() {
   }
 
   return (
-    <Card className="min-h-0 min-w-0">
+    <Card className="max-h-[65vh] overflow-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Layers3 className="h-4 w-4" />
@@ -148,7 +148,7 @@ export function TemplateStructurePanel() {
         <CardDescription>拖拽排序、切换区域，决定模板的整体结构。</CardDescription>
       </CardHeader>
       <CardContent className="min-w-0">
-        <ScrollArea className="h-[360px] pr-4 md:h-[420px] lg:h-[540px]">
+        <div>
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="space-y-6">
               <SectionList
@@ -175,7 +175,7 @@ export function TemplateStructurePanel() {
             <h3 className="font-medium">模块库</h3>
             <TemplateSectionPalette manifest={manifest} onChange={applyManifest} />
           </div>
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   )

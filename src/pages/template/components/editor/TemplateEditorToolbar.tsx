@@ -80,7 +80,7 @@ export function TemplateEditorToolbar() {
           value={publishIntent}
           onValueChange={value => setPublishIntent(value as 'private' | 'published')}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

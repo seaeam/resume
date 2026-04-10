@@ -18,7 +18,7 @@ export function TemplatePropertiesPanel() {
   const selectedSection = manifest.sections.find(section => section.sectionId === selectedSectionId) ?? null
 
   return (
-    <Card className="min-h-0 min-w-0">
+    <Card className="max-h-[65vh] overflow-auto">
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">

@@ -19,7 +19,7 @@ export function TemplateCanvas() {
   const appearance = normalizeResumeAppearance(getAppearanceOverrideFromTemplateManifest(manifest))
 
   return (
-    <Card className="min-h-0 min-w-0">
+    <Card className="max-h-[65vh]">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
         <div className="space-y-1">
           <CardTitle>实时预览</CardTitle>
@@ -31,22 +31,20 @@ export function TemplateCanvas() {
           onValueChange={setPreviewResumeId}
         />
       </CardHeader>
-      <CardContent className="min-w-0">
-        <div className="max-h-[70vh] overflow-auto rounded-xl border bg-muted/10 p-3 sm:p-4">
-          {loading
-            ? (
-                <div className="flex min-h-[420px] items-center justify-center rounded-lg bg-background text-sm text-muted-foreground">
-                  预览加载中...
-                </div>
-              )
-            : (
-                <ScaledReadonlyPreview
-                  data={previewData}
-                  appearance={appearance}
-                  manifest={manifest}
-                />
-              )}
-        </div>
+      <CardContent className="overflow-auto">
+        {loading
+          ? (
+              <div className="flex items-center justify-center rounded-lg bg-background text-sm text-muted-foreground">
+                预览加载中...
+              </div>
+            )
+          : (
+              <ScaledReadonlyPreview
+                data={previewData}
+                appearance={appearance}
+                manifest={manifest}
+              />
+            )}
       </CardContent>
     </Card>
   )
