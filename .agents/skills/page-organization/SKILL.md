@@ -51,6 +51,7 @@ src/pages/<page-name>/
 - Colocate private subcomponents, helper hooks, and related files inside the component folder.
 - Prefer default exports for page components and component-folder entry files.
 - Keep the public surface small: callers should usually import from the folder `index.tsx`, not deep internal files.
+- The `index.tsx` of a component folder must export a **single assembled component** (default export) that composes its child components internally. Do **not** use `index.tsx` as a barrel of re-exports (e.g. `export { Foo } from './foo'`). The page entry should only need to import one component per feature folder.
 
 ## Store vs Props
 
@@ -58,6 +59,13 @@ src/pages/<page-name>/
 - If a prop is passed through multiple intermediate components mainly for transport, stop and move it to the page store.
 - If state or action functions are used across sibling branches or multiple nested layers, prefer the page store over repeated prop plumbing.
 - Keep truly local UI-only state local; use the store for page-global shared variables and logic functions.
+
+## Store Usage
+
+- Use destructured calls: `const { foo, bar } = useStore()`.
+- Do **not** use selector-style calls like `const foo = useStore(state => state.foo)`. Repeated selectors are verbose and harder to scan.
+- When a store field needs a local alias, use destructuring rename: `const { manifestDraft: manifest } = useStore()`.
+- Group all fields from the same store into a single destructure.
 
 ## Quick Check
 

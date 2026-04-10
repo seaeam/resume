@@ -1,13 +1,11 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
-import useTemplateWorkbenchStore from '@/store/template/workbench'
-import { TemplateCard } from './TemplateCard'
-import { TemplateThumbnail } from './TemplateThumbnail'
+import { useTemplateWorkbenchStore } from '../../store'
+import { TemplateCard } from './template-card'
+import { TemplateThumbnail } from './template-thumbnail'
 
 export function OfficialTemplateSection() {
-  const templates = useTemplateWorkbenchStore(state => state.officialTemplates)
-  const createResumeWithTemplate = useTemplateWorkbenchStore(state => state.createResumeWithTemplate)
-  const customizeOfficialTemplate = useTemplateWorkbenchStore(state => state.customizeOfficialTemplate)
+  const { officialTemplates: templates, createResumeWithTemplate, customizeOfficialTemplate } = useTemplateWorkbenchStore()
 
   return (
     <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">

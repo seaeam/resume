@@ -1,5 +1,5 @@
-import type { ResumeFont, ResumeSpacing, ResumeTheme } from '@/pages/template/components/resume-context'
-import { useResumeContext } from '@/pages/template/components/resume-context'
+import type { ResumeFont, ResumeSpacing, ResumeTheme } from '@/pages/template/context/resume-context'
+import { useResumeContext } from '@/pages/template/context/resume-context'
 
 export function useRuntimeStyles(): { font: ResumeFont, spacing: ResumeSpacing, theme: ResumeTheme } {
   const { font, spacing, theme } = useResumeContext()

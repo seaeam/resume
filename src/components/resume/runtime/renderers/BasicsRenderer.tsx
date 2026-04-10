@@ -1,4 +1,4 @@
-import { useTemplateResumeData } from '@/pages/template/components/resume-data-context'
+import { useTemplateResumeData } from '@/pages/template/context/resume-data-context'
 import { getAge } from '@/utils/date'
 import { useRuntimeLayout, useRuntimeStyles } from './utils'
 

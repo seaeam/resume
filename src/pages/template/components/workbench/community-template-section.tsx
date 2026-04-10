@@ -1,15 +1,9 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import useTemplateWorkbenchStore from '@/store/template/workbench'
-import { TemplateCard } from './TemplateCard'
-import { TemplateThumbnail } from './TemplateThumbnail'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { useTemplateWorkbenchStore } from '../../store'
+import { TemplateCard } from './template-card'
+import { TemplateThumbnail } from './template-thumbnail'
 
 function formatSkeletonLabel(skeleton: string) {
   switch (skeleton) {
@@ -27,9 +21,7 @@ function formatSkeletonLabel(skeleton: string) {
 }
 
 export function CommunityTemplateSection() {
-  const templates = useTemplateWorkbenchStore(state => state.communityTemplates)
-  const createResumeWithTemplate = useTemplateWorkbenchStore(state => state.createResumeWithTemplate)
-  const customizeCommunityTemplate = useTemplateWorkbenchStore(state => state.customizeCommunityTemplate)
+  const { communityTemplates: templates, createResumeWithTemplate, customizeCommunityTemplate } = useTemplateWorkbenchStore()
 
   if (templates.length === 0) {
     return (

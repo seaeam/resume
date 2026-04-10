@@ -20,10 +20,10 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty'
-import useTemplateWorkbenchStore from '@/store/template/workbench'
 import { formatRelativeTime } from '@/utils/date'
-import { TemplateCard } from './TemplateCard'
-import { TemplateThumbnail } from './TemplateThumbnail'
+import { useTemplateWorkbenchStore } from '../../store'
+import { TemplateCard } from './template-card'
+import { TemplateThumbnail } from './template-thumbnail'
 
 function formatSkeletonLabel(skeleton: string) {
   switch (skeleton) {
@@ -45,7 +45,7 @@ function DeleteTemplateButton({
 }: {
   template: TemplateRecord
 }) {
-  const deleteUserTemplateRecord = useTemplateWorkbenchStore(state => state.deleteUserTemplateRecord)
+  const { deleteUserTemplateRecord } = useTemplateWorkbenchStore()
   const [open, setOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -109,10 +109,7 @@ function DeleteTemplateButton({
 }
 
 export function UserTemplateSection() {
-  const templates = useTemplateWorkbenchStore(state => state.userTemplates)
-  const createResumeWithTemplate = useTemplateWorkbenchStore(state => state.createResumeWithTemplate)
-  const openUserTemplateEditor = useTemplateWorkbenchStore(state => state.openUserTemplateEditor)
-  const toggleUserTemplatePublish = useTemplateWorkbenchStore(state => state.toggleUserTemplatePublish)
+  const { userTemplates: templates, createResumeWithTemplate, openUserTemplateEditor, toggleUserTemplatePublish } = useTemplateWorkbenchStore()
 
   if (templates.length === 0) {
     return (

@@ -2,26 +2,10 @@ import type { TemplateManifest, TemplateSection } from '@/lib/resume-template/sc
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import {
-  canTemplateSectionDelete,
-  getTemplateEditorCapabilities,
-  getTemplateSectionVariants,
-  isTemplateSectionLocked,
-  isTemplateSectionRequired,
-  moveSectionRegion,
-  removeSection,
-  toggleSectionVisibility,
-  updateSectionVariant,
-} from '../../components'
-import { TEMPLATE_SECTION_LABELS } from './const'
+import { TEMPLATE_SECTION_LABELS } from '../../const'
+import { canTemplateSectionDelete, getTemplateEditorCapabilities, getTemplateSectionVariants, isTemplateSectionLocked, isTemplateSectionRequired, moveSectionRegion, removeSection, toggleSectionVisibility, updateSectionVariant } from '../../utils'
 
 interface TemplateSectionSettingsProps {
   manifest: TemplateManifest

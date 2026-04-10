@@ -1,9 +1,9 @@
-import type { TemplateResumeData, TemplateResumeDataInput } from '../components/resume-data-context'
+import type { TemplateResumeData, TemplateResumeDataInput } from '@/pages/template/context/resume-data-context'
 import { useEffect, useMemo, useState } from 'react'
 import { getAllResumesFromUser, getResumeById, RESUME_PERSISTED_SELECTOR } from '@/lib/supabase/resume/form'
 import useCurrentResumeStore from '@/store/resume/current'
 import useResumeStore from '@/store/resume/form'
-import { buildTemplateResumeData } from '../components/resume-data-context'
+import { buildTemplateResumeData } from '@/pages/template/context/resume-data-context'
 import { demoResumeData } from '../data/demo-resume'
 
 export interface TemplatePreviewResumeOption {

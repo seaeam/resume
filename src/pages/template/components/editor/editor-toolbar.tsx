@@ -1,27 +1,11 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import useTemplateEditorStore from '@/store/template/editor'
-import useTemplateWorkbenchStore from '@/store/template/workbench'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTemplateEditorStore, useTemplateWorkbenchStore } from '../../store'
 
 export function TemplateEditorToolbar() {
-  const manifestDraft = useTemplateEditorStore(state => state.manifestDraft)
-  const dirty = useTemplateEditorStore(state => state.dirty)
-  const saving = useTemplateEditorStore(state => state.saving)
-  const publishIntent = useTemplateEditorStore(state => state.publishIntent)
-  const templateId = useTemplateEditorStore(state => state.templateId)
-  const setPublishIntent = useTemplateEditorStore(state => state.setPublishIntent)
-
-  const openLibrary = useTemplateWorkbenchStore(state => state.openLibrary)
-  const resetActiveTemplateDraft = useTemplateWorkbenchStore(state => state.resetActiveTemplateDraft)
-  const saveActiveTemplate = useTemplateWorkbenchStore(state => state.saveActiveTemplate)
-  const saveActiveTemplateAsCopy = useTemplateWorkbenchStore(state => state.saveActiveTemplateAsCopy)
+  const { manifestDraft, dirty, saving, publishIntent, templateId, setPublishIntent } = useTemplateEditorStore()
+  const { openLibrary, resetActiveTemplateDraft, saveActiveTemplate, saveActiveTemplateAsCopy } = useTemplateWorkbenchStore()
 
   if (!manifestDraft) {
     return null

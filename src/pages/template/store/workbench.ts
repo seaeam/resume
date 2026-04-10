@@ -14,13 +14,13 @@ import {
   updateUserTemplate,
 } from '@/lib/supabase/template'
 import useResumeListStore from '@/pages/resume/store'
+import useCurrentResumeStore from '@/store/resume/current'
 import {
   createTemplateDraftFromOfficialTemplate,
   updateTemplateMeta,
   validateTemplateForPublish,
   validateTemplateForSave,
-} from '@/pages/template/components'
-import useCurrentResumeStore from '@/store/resume/current'
+} from '../utils'
 import useTemplateEditorStore from './editor'
 
 export type TemplateWorkbenchMode = 'library' | 'editor'

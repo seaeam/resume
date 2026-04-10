@@ -1,15 +1,13 @@
 import ScaledReadonlyPreview from '@/components/resume/scaled-readonly-preview'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { normalizeResumeAppearance } from '@/lib/schema'
-import useTemplateEditorStore from '@/store/template/editor'
-import { getAppearanceOverrideFromTemplateManifest } from '../../components'
 import { useTemplatePreviewResume } from '../../hooks/use-template-preview-resume'
-import { TemplatePreviewResumeSelect } from './TemplatePreviewResumeSelect'
+import { useTemplateEditorStore } from '../../store'
+import { getAppearanceOverrideFromTemplateManifest } from '../../utils'
+import { TemplatePreviewResumeSelect } from './preview-resume-select'
 
 export function TemplateCanvas() {
-  const manifest = useTemplateEditorStore(state => state.manifestDraft)
-  const previewResumeId = useTemplateEditorStore(state => state.previewResumeId)
-  const setPreviewResumeId = useTemplateEditorStore(state => state.setPreviewResumeId)
+  const { manifestDraft: manifest, previewResumeId, setPreviewResumeId } = useTemplateEditorStore()
   const { loading, previewData, resumeOptions, selectedResumeId } = useTemplatePreviewResume(previewResumeId)
 
   if (!manifest) {
@@ -19,7 +17,7 @@ export function TemplateCanvas() {
   const appearance = normalizeResumeAppearance(getAppearanceOverrideFromTemplateManifest(manifest))
 
   return (
-    <Card className="max-h-[65vh]">
+    <Card className="max-h-[69vh]">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
         <div className="space-y-1">
           <CardTitle>实时预览</CardTitle>

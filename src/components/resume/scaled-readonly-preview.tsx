@@ -1,6 +1,6 @@
 import type { TemplateManifest } from '@/lib/resume-template/schema'
 import type { ResumeAppearanceConfig } from '@/lib/schema'
-import type { TemplateResumeData } from '@/pages/template/components/resume-data-context'
+import type { TemplateResumeData } from '@/pages/template/context/resume-data-context'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { ResumeTemplateRuntime } from '@/components/resume/runtime/ResumeTemplateRuntime'
 import { getBuiltInTemplateManifest } from '@/lib/resume-template/runtime/get-built-in-manifest'

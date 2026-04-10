@@ -3,16 +3,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { getTemplateEditorCapabilities, updateLayoutConfig, updateTemplateMeta, updateTokenConfig } from '../../components'
-import {
-  TEMPLATE_COLOR_PRESET_LABELS,
-  TEMPLATE_DENSITY_LABELS,
-  TEMPLATE_FONT_PRESET_LABELS,
-  TEMPLATE_HEADER_VARIANT_LABELS,
-  TEMPLATE_RADIUS_PRESET_LABELS,
-  TEMPLATE_SKELETON_LABELS,
-  TEMPLATE_SPACING_PRESET_LABELS,
-} from './const'
+import { TEMPLATE_COLOR_PRESET_LABELS, TEMPLATE_DENSITY_LABELS, TEMPLATE_FONT_PRESET_LABELS, TEMPLATE_HEADER_VARIANT_LABELS, TEMPLATE_RADIUS_PRESET_LABELS, TEMPLATE_SKELETON_LABELS, TEMPLATE_SPACING_PRESET_LABELS } from '../../const'
+import { getTemplateEditorCapabilities, updateLayoutConfig, updateTemplateMeta, updateTokenConfig } from '../../utils'
 
 interface TemplateAppearanceSettingsProps {
   manifest: TemplateManifest

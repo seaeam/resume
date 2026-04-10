@@ -2,19 +2,14 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import useTemplateEditorStore from '@/store/template/editor'
-import useTemplateWorkbenchStore from '@/store/template/workbench'
-import { TemplateCanvas } from './components/editor/TemplateCanvas'
-import { TemplateEditorShell } from './components/editor/TemplateEditorShell'
-import { TemplateEditorToolbar } from './components/editor/TemplateEditorToolbar'
-import { TemplatePropertiesPanel } from './components/editor/TemplatePropertiesPanel'
-import { TemplateStructurePanel } from './components/editor/TemplateStructurePanel'
-import { TemplateWorkbench } from './components/workbench/TemplateWorkbench'
+import TemplateEditor from './components/editor'
+import TemplateWorkbench from './components/workbench'
+import { useTemplateEditorStore, useTemplateWorkbenchStore } from './store'
 
 function Template() {
   const navigate = useNavigate()
   const { mode, loading, error, setNavigate, loadTemplates } = useTemplateWorkbenchStore()
-  const { manifestDraft, dirty } = useTemplateEditorStore()
+  const { dirty } = useTemplateEditorStore()
 
   useEffect(() => {
     setNavigate(navigate)
@@ -48,27 +43,7 @@ function Template() {
   }
 
   if (mode === 'editor') {
-    if (!manifestDraft) {
-      return (
-        <div className="flex min-h-full items-center justify-center p-6">
-          <Card className="max-w-md">
-            <CardHeader>
-              <CardTitle>没有可编辑的模板</CardTitle>
-              <CardDescription>请先从模板列表选择一个官方模板或个人模板。</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      )
-    }
-
-    return (
-      <TemplateEditorShell
-        toolbar={<TemplateEditorToolbar />}
-        structurePanel={<TemplateStructurePanel />}
-        canvas={<TemplateCanvas />}
-        propertiesPanel={<TemplatePropertiesPanel />}
-      />
-    )
+    return <TemplateEditor />
   }
 
   return (

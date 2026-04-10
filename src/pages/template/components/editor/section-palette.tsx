@@ -1,8 +1,8 @@
 import type { TemplateManifest } from '@/lib/resume-template/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { addSection, canTemplateSectionMoveToRegion, getTemplateEditorCapabilities } from '../../components'
-import { TEMPLATE_SECTION_LABELS } from './const'
+import { TEMPLATE_SECTION_LABELS } from '../../const'
+import { addSection, canTemplateSectionMoveToRegion, getTemplateEditorCapabilities } from '../../utils'
 
 interface TemplateSectionPaletteProps {
   manifest: TemplateManifest

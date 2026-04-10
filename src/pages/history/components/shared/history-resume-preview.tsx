@@ -1,7 +1,7 @@
 import type { ResumeSnapshot } from '@/lib/supabase/resume/history'
 import { useMemo } from 'react'
 import ScaledReadonlyPreview from '@/components/resume/scaled-readonly-preview'
-import { buildTemplateResumeData } from '@/pages/template/components/resume-data-context'
+import { buildTemplateResumeData } from '@/pages/template/context/resume-data-context'
 
 interface HistoryResumePreviewProps {
   snapshot: ResumeSnapshot

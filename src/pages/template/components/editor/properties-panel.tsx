@@ -1,15 +1,12 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import useTemplateEditorStore from '@/store/template/editor'
-import { TemplateAppearanceSettings } from './TemplateAppearanceSettings'
-import { TemplateSectionSettings } from './TemplateSectionSettings'
+import { useTemplateEditorStore } from '../../store'
+import { TemplateAppearanceSettings } from './appearance-settings'
+import { TemplateSectionSettings } from './section-settings'
 
 export function TemplatePropertiesPanel() {
-  const manifest = useTemplateEditorStore(state => state.manifestDraft)
-  const selectedSectionId = useTemplateEditorStore(state => state.selectedSectionId)
-  const setSelectedSection = useTemplateEditorStore(state => state.setSelectedSection)
-  const applyManifest = useTemplateEditorStore(state => state.applyManifest)
+  const { manifestDraft: manifest, selectedSectionId, setSelectedSection, applyManifest } = useTemplateEditorStore()
 
   if (!manifest) {
     return null
@@ -18,7 +15,7 @@ export function TemplatePropertiesPanel() {
   const selectedSection = manifest.sections.find(section => section.sectionId === selectedSectionId) ?? null
 
   return (
-    <Card className="max-h-[65vh] overflow-auto">
+    <Card className="max-h-[69vh] overflow-auto">
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">

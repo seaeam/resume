@@ -7,7 +7,7 @@ import ScaledReadonlyPreview from '@/components/resume/scaled-readonly-preview'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { getAllResumesFromUser, getResumeById, updateCompany } from '@/lib/supabase/resume'
-import { buildTemplateResumeData } from '@/pages/template/components/resume-data-context'
+import { buildTemplateResumeData } from '@/pages/template/context/resume-data-context'
 import useTrackerStore from '../../store'
 import { getTrackerErrorMessage, normalizeResumePreviewData } from '../../utils'
 

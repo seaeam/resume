@@ -1,4 +1,4 @@
-import type { TemplateResumeDataInput } from '../components/resume-data-context'
+import type { TemplateResumeDataInput } from '@/pages/template/context/resume-data-context'
 import {
   DEFAULT_APPLICATION_INFO,
   DEFAULT_CAMPUS_EXPERIENCE,

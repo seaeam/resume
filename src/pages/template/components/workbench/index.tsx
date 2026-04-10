@@ -1,13 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import useTemplateWorkbenchStore from '@/store/template/workbench'
-import { CommunityTemplateSection } from './CommunityTemplateSection'
-import { OfficialTemplateSection } from './OfficialTemplateSection'
-import { UserTemplateSection } from './UserTemplateSection'
+import { useTemplateWorkbenchStore } from '../../store'
+import { CommunityTemplateSection } from './community-template-section'
+import { OfficialTemplateSection } from './official-template-section'
+import { UserTemplateSection } from './user-template-section'
 
-export function TemplateWorkbench() {
-  const activeTab = useTemplateWorkbenchStore(state => state.activeTab)
-  const setTab = useTemplateWorkbenchStore(state => state.setTab)
+function TemplateWorkbench() {
+  const { activeTab, setTab } = useTemplateWorkbenchStore()
 
   return (
     <Card>
@@ -39,3 +38,5 @@ export function TemplateWorkbench() {
     </Card>
   )
 }
+
+export default TemplateWorkbench

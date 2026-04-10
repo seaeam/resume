@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ResumeTemplateRuntime } from '@/components/resume/runtime/ResumeTemplateRuntime'
 import { getBuiltInTemplateManifest } from '@/lib/resume-template/runtime/get-built-in-manifest'
 import { getManifestFromTemplateBinding } from '@/lib/resume-template/runtime/get-manifest-from-binding'
-import { buildTemplateResumeData } from '@/pages/template/components/resume-data-context'
+import { buildTemplateResumeData } from '@/pages/template/context/resume-data-context'
 import useResumeStore from '@/store/resume/form'
 import ResumeWrapper from './ResumeWrapper'
 

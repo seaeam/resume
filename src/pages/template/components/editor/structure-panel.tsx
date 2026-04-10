@@ -4,17 +4,12 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { Layers3 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import useTemplateEditorStore from '@/store/template/editor'
-import {
-  moveSectionRegion,
-  reorderSections,
-  toggleSectionVisibility,
-} from '../../components'
-import { TEMPLATE_SECTION_LABELS } from './const'
-import { TemplateSectionPalette } from './TemplateSectionPalette'
+import { TEMPLATE_SECTION_LABELS } from '../../const'
+import { useTemplateEditorStore } from '../../store'
+import { moveSectionRegion, reorderSections, toggleSectionVisibility } from '../../utils'
+import { TemplateSectionPalette } from './section-palette'
 
 function reorderIds(items: TemplateSection[], sourceIndex: number, destinationIndex: number) {
   const next = [...items.map(item => item.sectionId)]
@@ -103,10 +98,7 @@ function SectionList({
 }
 
 export function TemplateStructurePanel() {
-  const manifest = useTemplateEditorStore(state => state.manifestDraft)
-  const selectedSectionId = useTemplateEditorStore(state => state.selectedSectionId)
-  const setSelectedSection = useTemplateEditorStore(state => state.setSelectedSection)
-  const applyManifest = useTemplateEditorStore(state => state.applyManifest)
+  const { manifestDraft: manifest, selectedSectionId, setSelectedSection, applyManifest } = useTemplateEditorStore()
 
   if (!manifest) {
     return null
@@ -139,7 +131,7 @@ export function TemplateStructurePanel() {
   }
 
   return (
-    <Card className="max-h-[65vh] overflow-auto">
+    <Card className="max-h-[69vh] overflow-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Layers3 className="h-4 w-4" />

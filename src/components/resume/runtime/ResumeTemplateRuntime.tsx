@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { ResolvedTemplateManifest, TemplateManifest } from '@/lib/resume-template/schema'
 import type { ResumeAppearanceConfig } from '@/lib/schema'
-import type { TemplateResumeData } from '@/pages/template/components/resume-data-context'
+import type { TemplateResumeData } from '@/pages/template/context/resume-data-context'
 import { layoutSkeletonRegistry } from '@/lib/resume-template/registry/layout-skeletons'
 import { sectionRendererOrderKeyMap, sectionRendererRegistry } from '@/lib/resume-template/registry/section-renderers'
 import { resolveTemplateManifest } from '@/lib/resume-template/runtime'
