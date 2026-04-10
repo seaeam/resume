@@ -189,13 +189,11 @@ export async function listUserTemplates() {
 }
 
 export async function listPublishedCommunityTemplates() {
-  const user = await requireCurrentUser()
   const { data, error } = await supabase
     .from('resume_templates')
     .select('template_id,user_id,family_id,based_on_template_id,name,description,visibility,status,manifest,created_at,updated_at')
     .eq('visibility', 'published')
     .eq('status', 'active')
-    .neq('user_id', user.id)
     .order('updated_at', { ascending: false })
 
   if (error) {
@@ -222,14 +220,12 @@ export async function getUserTemplateById(templateId: string) {
 }
 
 export async function getPublishedCommunityTemplateById(templateId: string) {
-  const user = await requireCurrentUser()
   const { data, error } = await supabase
     .from('resume_templates')
     .select('template_id,user_id,family_id,based_on_template_id,name,description,visibility,status,manifest,created_at,updated_at')
     .eq('template_id', templateId)
     .eq('visibility', 'published')
     .eq('status', 'active')
-    .neq('user_id', user.id)
     .single()
 
   if (error) {
@@ -326,13 +322,17 @@ export async function updateUserTemplate(templateId: string, patch: UpdateUserTe
     .eq('user_id', user.id)
     .eq('template_id', templateId)
     .select('template_id,user_id,family_id,based_on_template_id,name,description,visibility,status,manifest,created_at,updated_at')
-    .single()
 
   if (error) {
     throw error
   }
 
-  return mapRowToTemplateRecord(data as ResumeTemplateRow)
+  if (data && data.length > 0) {
+    return mapRowToTemplateRecord(data[0] as ResumeTemplateRow)
+  }
+
+  // UPDATE 未返回行（可能因 RLS 策略），回退到重新查询
+  return getUserTemplateById(templateId)
 }
 
 export async function publishUserTemplate(templateId: string) {

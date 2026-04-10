@@ -110,6 +110,7 @@ function DeleteTemplateButton({
 
 export function UserTemplateSection() {
   const { userTemplates: templates, createResumeWithTemplate, openUserTemplateEditor, toggleUserTemplatePublish } = useTemplateWorkbenchStore()
+  const [publishingId, setPublishingId] = useState<string | null>(null)
 
   if (templates.length === 0) {
     return (
@@ -122,8 +123,18 @@ export function UserTemplateSection() {
     )
   }
 
+  const handleTogglePublish = async (templateId: string, nextVisibility: 'private' | 'published') => {
+    setPublishingId(templateId)
+    try {
+      await toggleUserTemplatePublish(templateId, nextVisibility)
+    }
+    finally {
+      setPublishingId(null)
+    }
+  }
+
   return (
-    <div className="grid gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <AnimatePresence mode="popLayout">
         {templates.map((template, index) => (
           <motion.div
@@ -163,19 +174,23 @@ export function UserTemplateSection() {
                 {
                   label: '直接使用',
                   onClick: () => createResumeWithTemplate('user', template.id),
+                  disabled: publishingId === template.id,
                 },
                 {
                   label: '继续编辑',
                   onClick: () => openUserTemplateEditor(template.id),
                   variant: 'outline',
+                  disabled: publishingId === template.id,
                 },
                 {
                   label: template.meta.visibility === 'published' ? '取消发布' : '发布',
-                  onClick: () => toggleUserTemplatePublish(
+                  onClick: () => handleTogglePublish(
                     template.id,
                     template.meta.visibility === 'published' ? 'private' : 'published',
                   ),
                   variant: 'outline',
+                  loading: publishingId === template.id,
+                  disabled: publishingId != null,
                 },
               ]}
               tags={(

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { LoaderCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -7,6 +8,8 @@ interface TemplateCardAction {
   onClick: () => void
   variant?: 'default' | 'outline' | 'secondary'
   className?: string
+  loading?: boolean
+  disabled?: boolean
 }
 
 interface TemplateCardProps {
@@ -27,8 +30,10 @@ function ActionButton({ action, large = false }: { action: TemplateCardAction, l
       variant={action.variant ?? 'default'}
       size={large ? 'default' : 'sm'}
       className={cn(action.className)}
+      disabled={action.loading || action.disabled}
       onClick={action.onClick}
     >
+      {action.loading ? <LoaderCircle data-icon="inline-start" className="animate-spin" /> : null}
       {action.label}
     </Button>
   )
@@ -62,24 +67,24 @@ export function TemplateCard({
           : null}
       </div>
 
-      <div className={cn('space-y-3 pt-3', contentClassName)}>
+      <div className={cn('space-y-2 pt-3', contentClassName)}>
         {title || trailing
           ? (
               <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  {title ? <h3 className="text-lg font-semibold tracking-tight">{title}</h3> : null}
-                  {description ? <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p> : null}
+                <div className="space-y-0.5">
+                  {title ? <h3 className="text-sm font-semibold tracking-tight">{title}</h3> : null}
+                  {description ? <p className="line-clamp-2 text-xs text-muted-foreground">{description}</p> : null}
                 </div>
                 {trailing}
               </div>
             )
           : null}
 
-        {meta ? <div className="text-sm text-muted-foreground">{meta}</div> : null}
+        {meta ? <div className="text-xs text-muted-foreground">{meta}</div> : null}
 
         {footerActions?.length
           ? (
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {footerActions.map(action => (
                   <ActionButton key={action.label} action={action} />
                 ))}
@@ -87,7 +92,7 @@ export function TemplateCard({
             )
           : null}
 
-        {tags ? <div className="flex flex-wrap items-center gap-2">{tags}</div> : null}
+        {tags ? <div className="flex flex-wrap items-center gap-1.5">{tags}</div> : null}
       </div>
     </div>
   )
