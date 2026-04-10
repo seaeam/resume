@@ -138,7 +138,7 @@ export const themes = {
 export const defaultSpacing: ResumeSpacing = {
   pagePadding: '1rem',
   sectionMargin: '1rem',
-  entrySpacing: '1rem',
+  entrySpacing: '0.55rem',
   sectionTitleMargin: '0.75rem',
   itemSpacing: '0.55rem',
   paragraphSpacing: '0.25rem',

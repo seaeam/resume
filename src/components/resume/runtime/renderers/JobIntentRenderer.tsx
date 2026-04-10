@@ -19,7 +19,7 @@ export default function JobIntentRenderer() {
 
   return (
     <RuntimeSection title="求职意向">
-      {values.length > 0 ? <p>{values.join(' | ')}</p> : null}
+      {values.length > 0 ? <p className="m-0">{values.join(' | ')}</p> : null}
     </RuntimeSection>
   )
 }

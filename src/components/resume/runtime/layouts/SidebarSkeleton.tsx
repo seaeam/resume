@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useRuntimeStyles } from '../renderers/utils'
 
 interface SidebarSkeletonProps {
   header?: ReactNode
@@ -13,28 +14,36 @@ export default function SidebarSkeleton({
   sidebar,
   sidebarPosition = 'left',
 }: SidebarSkeletonProps) {
+  const { spacing } = useRuntimeStyles()
+
   const content = (
     <>
-      <aside className="flex flex-col gap-5">
+      <aside className="flex flex-col" style={{ gap: spacing.sectionMargin }}>
         {sidebar}
       </aside>
-      <main className="flex min-w-0 flex-col gap-6">
+      <main className="flex min-w-0 flex-col" style={{ gap: spacing.sectionMargin }}>
         {main}
       </main>
     </>
   )
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col" style={{ lineHeight: spacing.lineHeight }}>
       {header}
-      <div className="grid gap-6 md:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+      <div
+        className="grid md:grid-cols-[minmax(0,220px)_minmax(0,1fr)]"
+        style={{
+          rowGap: spacing.sectionMargin,
+          columnGap: '1.5rem',
+        }}
+      >
         {sidebarPosition === 'right'
           ? (
               <>
-                <main className="flex min-w-0 flex-col gap-6">
+                <main className="flex min-w-0 flex-col" style={{ gap: spacing.sectionMargin }}>
                   {main}
                 </main>
-                <aside className="flex flex-col gap-5">
+                <aside className="flex flex-col" style={{ gap: spacing.sectionMargin }}>
                   {sidebar}
                 </aside>
               </>

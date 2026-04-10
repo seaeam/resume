@@ -12,7 +12,7 @@ export function RuntimeSection({
   const { font, spacing, theme } = useRuntimeStyles()
 
   return (
-    <section style={{ marginBottom: spacing.sectionMargin }}>
+    <section>
       <h2
         className="m-0 border-b-2"
         style={{
@@ -47,7 +47,13 @@ export function RuntimeEntry({
   const { font, theme, spacing } = useRuntimeStyles()
 
   return (
-    <div className="flex flex-col" style={{ gap: `calc(${spacing.itemSpacing} / 2)` }}>
+    <div
+      className="flex flex-col"
+      style={{
+        gap: spacing.paragraphSpacing,
+        lineHeight: spacing.lineHeight,
+      }}
+    >
       <div className="flex justify-between items-start gap-4">
         <div className="flex flex-wrap items-baseline gap-2 flex-1">
           <h3
@@ -98,7 +104,7 @@ export function RuntimeRichText({ html }: { html: string }) {
 
   return (
     <div
-      className="prose max-w-none [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-1 [&_p]:my-0"
+      className="max-w-none break-words [&_blockquote]:m-0 [&_li]:my-0 [&_li>p]:m-0 [&_ol]:m-0 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:m-0 [&_ul]:m-0 [&_ul]:list-disc [&_ul]:pl-5"
       style={{
         fontSize: font.contentSize,
         lineHeight: spacing.proseLineHeight,

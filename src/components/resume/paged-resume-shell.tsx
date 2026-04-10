@@ -12,6 +12,9 @@ export default function PagedResumeShell({ children, ref, appearance}: PropsWith
   const fontConfig = resolvedAppearance.font
   const contentRef = useRef<HTMLDivElement>(null)
   const [pageCount, setPageCount] = useState(1)
+  const a4HeightPx = A4_HEIGHT_MM * MM_TO_PX
+  const firstPageViewportHeight = Math.max(1, a4HeightPx - spacingConfig.pageMargin)
+  const followingPageViewportHeight = a4HeightPx
 
   useEffect(() => {
     const updatePageCount = () => {
@@ -20,12 +23,11 @@ export default function PagedResumeShell({ children, ref, appearance}: PropsWith
       }
 
       const contentHeight = contentRef.current.scrollHeight
-      const pageMargin = spacingConfig.pageMargin
-      const a4HeightPx = A4_HEIGHT_MM * MM_TO_PX
       const tolerance = 5
       const adjustedContentHeight = Math.max(0, contentHeight - tolerance)
-      const heightWithTopMargin = adjustedContentHeight + pageMargin
-      const calculatedPages = Math.max(1, Math.ceil(heightWithTopMargin / a4HeightPx))
+      const calculatedPages = adjustedContentHeight <= firstPageViewportHeight
+        ? 1
+        : 1 + Math.ceil((adjustedContentHeight - firstPageViewportHeight) / followingPageViewportHeight)
 
       setPageCount(calculatedPages)
     }
@@ -46,6 +48,8 @@ export default function PagedResumeShell({ children, ref, appearance}: PropsWith
     spacingConfig.lineHeight,
     fontConfig.fontSize,
     fontConfig.fontFamily,
+    firstPageViewportHeight,
+    followingPageViewportHeight,
   ])
 
   return (
@@ -61,22 +65,32 @@ export default function PagedResumeShell({ children, ref, appearance}: PropsWith
             }}
           >
             <div
+              className="absolute overflow-hidden"
               style={{
-                position: 'absolute',
-                top: `${-pageIndex * (A4_HEIGHT_MM * MM_TO_PX) + spacingConfig.pageMargin}px`,
+                top: pageIndex === 0 ? `${spacingConfig.pageMargin}px` : 0,
+                bottom: 0,
                 left: `${spacingConfig.pageMargin}px`,
                 right: `${spacingConfig.pageMargin}px`,
               }}
             >
-              {pageIndex === 0
-                ? (
-                    <div ref={contentRef} data-resume-content>
-                      {children}
-                    </div>
-                  )
-                : (
-                    children
-                  )}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: `${pageIndex === 0 ? 0 : -(firstPageViewportHeight + (pageIndex - 1) * followingPageViewportHeight)}px`,
+                  left: 0,
+                  right: 0,
+                }}
+              >
+                {pageIndex === 0
+                  ? (
+                      <div ref={contentRef} data-resume-content>
+                        {children}
+                      </div>
+                    )
+                  : (
+                      children
+                    )}
+              </div>
             </div>
           </div>
         </div>
