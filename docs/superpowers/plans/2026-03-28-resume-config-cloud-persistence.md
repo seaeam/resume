@@ -59,6 +59,7 @@
 ### 任务 1：定义持久化配置模型并完成数据库迁移
 
 **文件：**
+
 - 新建：`supabase/migrations/20260328090000_add_resume_appearance_to_resume_config.sql`
 - 新建：`src/lib/schema/resume/persisted.ts`
 - 修改：`src/lib/schema/resume/index.ts`
@@ -128,6 +129,7 @@ pnpm build
 ### 任务 2：重构配置 store，使样式跟随简历加载与切换
 
 **文件：**
+
 - 修改：`src/store/resume/config.ts`
 - 修改：`src/pages/resume/editor/hooks/useResumeLoader.ts`
 - 修改：`src/store/resume/form.ts`
@@ -187,6 +189,7 @@ pnpm build
 ### 任务 3：将样式配置纳入 Automerge 与云端镜像
 
 **文件：**
+
 - 修改：`src/lib/automerge/document/schema.ts`
 - 修改：`src/lib/automerge/document/factory.ts`
 - 修改：`src/lib/automerge/document/persistence.ts`
@@ -248,6 +251,7 @@ pnpm build
 ### 任务 4：接通 toolbar 编辑、协作广播与最终持久化
 
 **文件：**
+
 - 修改：`src/pages/resume/editor/components/toolbar/ResumeConfigToolbar.tsx`
 - 修改：`src/pages/resume/editor/components/collaboration/CollaborationUISync.tsx`
 - 修改：`src/lib/collaboration/ui/types.ts`
@@ -302,6 +306,7 @@ pnpm build
 ### 任务 5：扩展历史版本、只读预览与分页渲染
 
 **文件：**
+
 - 修改：`src/lib/supabase/resume/history.ts`
 - 修改：`src/pages/history/utils.ts`
 - 修改：`src/pages/history/store.ts`
@@ -367,6 +372,7 @@ pnpm build
 ### 任务 6：补齐离线数据、上传同步与旧本地配置回收
 
 **文件：**
+
 - 修改：`src/lib/offline-resume-manager.ts`
 - 修改：`src/lib/resume-sync-service.ts`
 - 修改：`src/lib/supabase/resume/form.ts`
@@ -419,6 +425,7 @@ pnpm build
 ### 任务 7：手工 QA 与收尾
 
 **文件：**
+
 - 验证：`src/pages/resume/editor/components/toolbar/ResumeConfigToolbar.tsx`
 - 验证：`src/pages/resume/editor/components/collaboration/CollaborationUISync.tsx`
 - 验证：`src/pages/history/components/shared/history-resume-preview.tsx`

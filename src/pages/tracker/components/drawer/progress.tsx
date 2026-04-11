@@ -31,7 +31,6 @@ export default function DrawerProgress({
   const isRejected = currentStatus === 'rejected'
   const hasRejection = isRejected || stageDetails.some(s => s.status === '已拒绝')
   const canGoBack = !isRejected && currentIndex > 0
-  const canGoForward = !isRejected && currentIndex < APPLICATION_STATUS_ORDER.length - 1
   const nextAction = getTrackerNextAction(selectedJob)
   const progressHint = getTrackerProgressHint(selectedJob)
   const viewingLabel = viewingStage ? APPLICATION_STATUS_CONFIG[viewingStage].label : null

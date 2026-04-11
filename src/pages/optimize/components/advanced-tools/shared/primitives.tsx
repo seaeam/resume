@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { TOOL_TONE_CLASS_MAP } from './const'
 
+export type { ToolTone } from './types'
+
 export function ToolPanelCard({
   children,
   className,

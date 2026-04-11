@@ -183,7 +183,12 @@ const useResumeListStore = create<ResumeListState>()((set, get) => ({
 
   addResume: (resume) => {
     set(state => ({
-      resumes: [resume, ...state.resumes],
+      resumes: state.resumes.some(item => item.resume_id === resume.resume_id)
+        ? state.resumes
+        : [resume, ...state.resumes],
+      offlineResumes: resume.isOffline && !state.offlineResumes.some(item => item.resume_id === resume.resume_id)
+        ? [resume, ...state.offlineResumes]
+        : state.offlineResumes,
     }))
   },
 
@@ -202,6 +207,7 @@ const useResumeListStore = create<ResumeListState>()((set, get) => ({
           const resume: ResumeItem = {
             resume_id: payload.new.resume_id,
             created_at: payload.new.created_at,
+            updated_at: payload.new.updated_at,
             type: payload.new.type,
             display_name: payload.new.display_name,
             description: payload.new.description,
@@ -219,7 +225,12 @@ const useResumeListStore = create<ResumeListState>()((set, get) => ({
           set(state => ({
             resumes: state.resumes.map(r =>
               r.resume_id === payload.new.resume_id
-                ? { ...r, display_name: payload.new.display_name, description: payload.new.description }
+                ? {
+                    ...r,
+                    display_name: payload.new.display_name,
+                    description: payload.new.description,
+                    updated_at: payload.new.updated_at,
+                  }
                 : r,
             ),
           }))
@@ -227,10 +238,12 @@ const useResumeListStore = create<ResumeListState>()((set, get) => ({
         }
         case 'DELETE': {
           const deletedResumeId = payload.old.resume_id
-          const { _localDeletingIds } = get()
+          const { _localDeletingIds, resumes } = get()
+          const existsLocally = resumes.some(resume => resume.resume_id === deletedResumeId)
 
-          // 是本地删除，清除标记，不显示远程删除提示
-          if (_localDeletingIds.has(deletedResumeId)) {
+          // 当前页主动删除时，可能先本地移除了列表项，再收到实时 DELETE。
+          // 这类情况不应再展示“已同步删除”提示，但其他页面仍需提示。
+          if (_localDeletingIds.has(deletedResumeId) || !existsLocally) {
             set((state) => {
               const newSet = new Set(state._localDeletingIds)
               newSet.delete(deletedResumeId)

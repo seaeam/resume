@@ -1,3 +1,4 @@
+import type { AtsEvaluationResult } from '../../types'
 import confetti from 'canvas-confetti'
 import { Loader2, RefreshCcw, Search, Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -93,14 +94,13 @@ function Header() {
       setAnalysisState({ status: 'received' })
       updateLog('result', '已收到结果')
 
-      const result = parseLlmJsonObject<Record<string, unknown>>(finalContent)
+      const result = parseLlmJsonObject<Partial<Omit<AtsEvaluationResult, 'id' | 'user_id' | 'created_at' | 'resume_id'>>>(finalContent)
 
       // 保存结果
       setAnalysisState({ status: 'saving' })
       updateLog('save', '正在保存分析报告...')
 
-      const { id, user_id, created_at, resume_id: _resumeId, ...restResult } = result
-      const payload = { ...restResult, resume_id: currentResumeId }
+      const payload = { ...result, resume_id: currentResumeId }
 
       const existingAts = atsConfigs?.find(a => a.resume_id === currentResumeId)
 

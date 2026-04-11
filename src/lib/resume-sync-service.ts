@@ -7,6 +7,7 @@
  * @Description: 简历同步服务,处理登录后本地简历与云端的合并
  */
 
+import type { ResumeType } from '@/lib/schema'
 import { toast } from 'sonner'
 import { getAllOfflineResumes, migrateOfflineResumesToCloud } from './offline-resume-manager'
 import { uploadOfflineResumeToCloud } from './supabase/resume/form'
@@ -45,7 +46,7 @@ export async function syncOfflineResumesToCloud(selectedIds?: string[]) {
         display_name: resume.display_name,
         description: resume.description,
       },
-      resume.type,
+      resume.type as ResumeType,
     )
 
     return onlineResume.resume_id

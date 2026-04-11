@@ -2,7 +2,7 @@ import type { DocHandle } from '@automerge/automerge-repo'
 import type { StoreApi } from 'zustand'
 import type { FormDataMap } from './const'
 import type { AutomergeResumeDocument } from '@/lib/automerge'
-import type { ORDERType, PersistedResumeSnapshot, ResumeAppearancePatch, ResumeType, VisibilityItemsType } from '@/lib/schema'
+import type { ORDERType, PersistedResumeSnapshot, ResumeAppearancePatch, ResumeTemplateBinding, ResumeType, VisibilityItemsType } from '@/lib/schema'
 import type { ResumeSnapshot } from '@/lib/supabase/resume/history'
 import dayjs from 'dayjs'
 import { create } from 'zustand'
@@ -31,6 +31,7 @@ interface ResumeState extends FormDataMap {
   order: ORDERType[]
   visibility: Record<VisibilityItemsType, boolean>
   type: ResumeType
+  templateBinding?: ResumeTemplateBinding
 
   isSyncing: boolean
   lastSyncTime: number | null
@@ -49,6 +50,7 @@ interface ResumeState extends FormDataMap {
 
   toggleVisibility: (id: VisibilityItemsType) => void
   changeType: (type: ResumeType) => void
+  setTemplateBinding: (binding?: ResumeTemplateBinding) => void
   getVisibility: (id: VisibilityItemsType) => boolean
   setVisibility: (id: VisibilityItemsType, isHidden: boolean) => void
   updateActiveTabId: (newActiveTab: ORDERType) => void
@@ -157,6 +159,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
   hobbies: DEFAULT_HOBBIES,
   visibility: DEFAULT_VISIBILITY,
   type: 'default',
+  templateBinding: undefined,
 
   isSyncing: false,
   lastSyncTime: null,
@@ -252,6 +255,17 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     )
   },
 
+  setTemplateBinding: (templateBinding) => {
+    applyResumeChange(
+      set,
+      get,
+      { templateBinding },
+      (doc) => {
+        doc.templateBinding = templateBinding
+      },
+    )
+  },
+
   toggleVisibility: (id) => {
     const nextValue = !get().visibility[id]
     applyResumeChange(
@@ -265,7 +279,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
     )
   },
 
-  getVisibility: id => get().visibility[id],
+  getVisibility: id => get().visibility[id] !== true,
 
   setVisibility: (id, isHidden) => {
     applyResumeChange(
@@ -498,6 +512,7 @@ const useResumeStore = create<ResumeState>()((set, get) => ({
       ),
       order: DEFAULT_ORDER,
       visibility: DEFAULT_VISIBILITY,
+      templateBinding: undefined,
     }
 
     applyResumeChange(
@@ -582,12 +597,24 @@ function buildResumeConfigPayload(
     ? mapSourceToPersistedSnapshot(source)
     : getPersistedSnapshot(state)
 
+  const snapshot = shouldPersistAppearance(state, source)
+    ? mergeSnapshotAppearance(baseSnapshot, useResumeConfigStore.getState())
+    : baseSnapshot
+
+  const { templateBinding, ...payload } = snapshot
+
   if (shouldPersistAppearance(state, source)) {
-    return mergeSnapshotAppearance(baseSnapshot, useResumeConfigStore.getState())
+    return {
+      ...payload,
+      template_binding: templateBinding,
+    }
   }
 
-  const { spacing, font, theme, ...payload } = baseSnapshot
-  return payload
+  const { spacing, font, theme, ...payloadWithoutAppearance } = payload
+  return {
+    ...payloadWithoutAppearance,
+    template_binding: templateBinding,
+  }
 }
 
 registerResumeConfigPersistence(appearance => useResumeStore.getState().updateAppearanceConfig(appearance))

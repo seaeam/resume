@@ -26,7 +26,7 @@ export default function DrawerHeaderInfo({ onEdit }: DrawerHeaderInfoProps) {
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
           <Sparkles className="size-3.5" />
-          当前建议：
+          下一步
           {nextAction.label}
         </div>
         <Badge className={cn('rounded-full border-0 px-2.5 py-1 text-xs font-medium', statusConfig.bgColor, statusConfig.color)}>
@@ -35,8 +35,7 @@ export default function DrawerHeaderInfo({ onEdit }: DrawerHeaderInfoProps) {
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-muted/40 px-4 py-3">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground/80">跟进提示</p>
-        <p className="mt-2 text-sm font-medium leading-6 text-foreground">{progressHint}</p>
+        <p className="text-sm font-medium leading-6 text-foreground">{progressHint}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
@@ -51,16 +50,16 @@ export default function DrawerHeaderInfo({ onEdit }: DrawerHeaderInfoProps) {
           <p className="text-xs text-muted-foreground">投递简历</p>
           <p className="mt-1 inline-flex items-center gap-1.5 font-medium">
             <FileText className="size-4 text-muted-foreground" />
-            {metaSummary.hasResume ? '已绑定简历' : '尚未绑定简历'}
+            {metaSummary.hasResume ? '已绑定' : '未绑定'}
           </p>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3">
           <p className="text-xs text-muted-foreground">薪资信息</p>
-          <p className="mt-1 font-medium">{job.salary || '暂未填写'}</p>
+          <p className="mt-1 font-medium">{job.salary || '未填'}</p>
         </div>
         <div className="rounded-2xl border border-border/60 bg-card/70 px-4 py-3">
           <p className="text-xs text-muted-foreground">职位链接</p>
-          <p className="mt-1 font-medium">{job.job_url ? '已保存 JD 链接' : '暂未填写 JD 链接'}</p>
+          <p className="mt-1 font-medium">{job.job_url ? '已保存' : '未填'}</p>
         </div>
       </div>
 

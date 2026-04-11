@@ -19,7 +19,7 @@ function resolveScrollTarget(
     return target
   }
 
-  return target.current
+  return 'current' in target ? target.current : null
 }
 
 /**

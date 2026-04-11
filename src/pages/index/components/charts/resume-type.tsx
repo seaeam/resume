@@ -23,12 +23,14 @@ function ResumeType({ stats, resumes }: ResumeTypeProps) {
       typeCount[type] = (typeCount[type] || 0) + 1
     })
 
-    return Object.entries(typeCount).map(([type, count]) => ({
-      type,
-      name: TYPE_LABELS[type] || type,
-      value: count,
-      fill: `var(--color-${type})`,
-    }))
+    return (Object.entries(typeCount) as Array<[ResumeTemplateType, number | undefined]>)
+      .filter(([, count]) => count !== undefined)
+      .map(([type, count]) => ({
+        type,
+        name: TYPE_LABELS[type] || type,
+        value: count,
+        fill: `var(--color-${type})`,
+      }))
   }, [resumes])
 
   return (

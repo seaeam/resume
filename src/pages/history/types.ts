@@ -1,5 +1,6 @@
 import type { ResumeType } from '@/lib/schema'
 import type { ResumeHistoryVersionRecord, ResumeSnapshot } from '@/lib/supabase/resume/history'
+
 export type { RestoreStrategy } from '@/lib/supabase/resume/history'
 
 export type HistorySelection = number | 'current' | null

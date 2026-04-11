@@ -1,16 +1,12 @@
 import type { ApplicationStatus } from '../../types'
-import { cn } from '@/lib/utils'
-import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
+import { Badge } from '@/components/ui/badge'
+import { TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { APPLICATION_STATUS_CONFIG } from '../../const'
 import useTrackerStore from '../../store'
-
-const ALL_FILTER_STATUSES: (ApplicationStatus | null)[] = [
-  null,
-  ...APPLICATION_STATUS_ORDER,
-  'rejected',
-]
+import { ALL_FILTER_STATUSES } from './const'
 
 export default function StatusFilter() {
-  const { jobs, filterStatus, setFilterStatus } = useTrackerStore()
+  const { jobs } = useTrackerStore()
 
   const getCount = (status: ApplicationStatus | null) => {
     if (status === null)
@@ -19,35 +15,23 @@ export default function StatusFilter() {
   }
 
   return (
-    <div className="scrollbar-gutter-stable flex items-center gap-2 overflow-x-auto rounded-2xl border border-border/60 bg-card/60 p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {ALL_FILTER_STATUSES.map((status) => {
-        const isActive = filterStatus === status
-        const label = status === null ? '全部' : APPLICATION_STATUS_CONFIG[status].label
-        const count = getCount(status)
+    <div className="overflow-x-auto">
+      <TabsList className="w-max">
+        {ALL_FILTER_STATUSES.map((status) => {
+          const value = status ?? 'all'
+          const label = status === null ? '全部' : APPLICATION_STATUS_CONFIG[status].label
+          const count = getCount(status)
 
-        return (
-          <button
-            key={status ?? 'all'}
-            type="button"
-            onClick={() => setFilterStatus(status)}
-            className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors shrink-0 whitespace-nowrap',
-              isActive
-                ? 'bg-foreground text-background shadow-sm'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-            )}
-          >
-            {label}
-            <span className={cn(
-              'rounded-full px-1.5 py-0.5 text-[11px]',
-              isActive ? 'opacity-80' : 'opacity-60',
-            )}
-            >
-              {count}
-            </span>
-          </button>
-        )
-      })}
+          return (
+            <TabsTrigger key={value} value={value} className="flex-none gap-2">
+              <span>{label}</span>
+              <Badge variant="secondary" className="pointer-events-none">
+                {count}
+              </Badge>
+            </TabsTrigger>
+          )
+        })}
+      </TabsList>
     </div>
   )
 }

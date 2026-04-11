@@ -38,6 +38,7 @@
 ### 任务 1：抽取共享只读缩放预览
 
 **文件：**
+
 - 新建：`src/components/resume/scaled-readonly-preview.tsx`
 - 修改：`src/pages/history/components/shared/history-resume-preview.tsx`
 
@@ -96,6 +97,7 @@ pnpm build
 ### 任务 2：替换 tracker 中依赖全局 store 的预览链路
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/drawer/document.tsx`
 - 修改：`src/pages/tracker/utils.ts`
 - 可选修改：`src/pages/tracker/components/drawer/types.ts`
@@ -155,6 +157,7 @@ pnpm build
 ### 任务 3：布局与行为回归验证
 
 **文件：**
+
 - 验证：`src/pages/history/components/shared/history-resume-preview.tsx`
 - 验证：`src/pages/tracker/components/drawer/document.tsx`
 - 验证：`src/components/resume/scaled-readonly-preview.tsx`

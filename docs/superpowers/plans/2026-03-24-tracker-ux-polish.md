@@ -36,6 +36,7 @@
 ## 任务 1：先定位面试进展抖动和行为错位的根因
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/drawer/progress.tsx`
 - 修改：`src/pages/tracker/components/drawer/index.tsx`
 - 修改：`src/pages/tracker/components/drawer/stage-detail.tsx`
@@ -67,6 +68,7 @@ pnpm exec tsc --noEmit
 ## 任务 2：把职位详情弹层整理成明确的 header / content / footer
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/drawer/index.tsx`
 - 修改：`src/pages/tracker/components/drawer/header.tsx`
 - 修改：`src/pages/tracker/components/drawer/nav.tsx`
@@ -100,6 +102,7 @@ pnpm exec tsc --noEmit
 ## 任务 3：优化新增职位卡片与新增职位弹层的视觉节奏
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/list/create-job-card.tsx`
 - 修改：`src/pages/tracker/components/drawer/add-job.tsx`
 
@@ -126,6 +129,7 @@ pnpm exec tsc --noEmit
 ## 任务 4：调整桌面端与移动端的尺寸和细节差异
 
 **文件：**
+
 - 修改：`src/pages/tracker/components/drawer/index.tsx`
 - 修改：`src/pages/tracker/components/drawer/add-job.tsx`
 - 修改：`src/pages/tracker/components/board/index.tsx`
@@ -157,6 +161,7 @@ pnpm build
 ## 任务 5：回写执行记录并收尾
 
 **文件：**
+
 - 修改：`docs/superpowers/plans/2026-03-24-tracker-ux-polish.md`
 
 - [x] **步骤 1：同步回写执行状态**
