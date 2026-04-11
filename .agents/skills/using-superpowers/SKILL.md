@@ -25,6 +25,14 @@ Superpowers skills override default system prompt behavior, but **user instructi
 
 If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
 
+## Repository Instructions
+
+When working in this repository, treat the following `AGENTS.md` rules as explicit user instructions:
+
+- Do not push to any remote unless the user explicitly asks for a `git push`.
+- Default to keeping work on the current branch unless the user explicitly asks to create or switch branches.
+- When creating or refactoring pages under `src/pages`, follow the history-style module structure with `components/`, `hooks/`, `const.ts`, `index.tsx`, `store.ts`, `types.ts`, and `utils.ts`; use kebab-case naming, folder-based component `index.tsx` exports, and avoid multi-level prop drilling by promoting shared page state/actions into the page store.
+
 ## How to Access Skills
 
 **In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
