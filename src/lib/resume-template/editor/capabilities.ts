@@ -3,6 +3,7 @@ import type {
   TemplateFamilyEditorCapabilities,
   TemplateManifest,
   TemplateSection,
+  TemplateSkeleton,
 } from '../schema'
 import { DEFAULT_TEMPLATE_FAMILY_ID } from '../defaults'
 import { templateFamilies } from '../registry/families'
@@ -13,6 +14,8 @@ export interface ResolvedTemplateEditorCapabilities extends TemplateFamilyEditor
   lockedSectionIds: string[]
   allowedRegionsBySection: Record<string, TemplateSection['region'][]>
 }
+
+const MULTI_REGION_SKELETONS = new Set<TemplateSkeleton>(['sidebar-left', 'sidebar-right', 'stacked'])
 
 function getTemplateFamily(familyId: string) {
   return templateFamilies[familyId as keyof typeof templateFamilies]
@@ -25,6 +28,32 @@ function getResolvedManifest(manifest: TemplateManifest | ResolvedTemplateManife
   }
 
   return resolveTemplateManifest(manifest)
+}
+
+function buildAllowedRegionsBySection(
+  resolved: ResolvedTemplateManifest,
+  paletteSectionIds: string[],
+) {
+  const allowedRegionsBySection = Object.fromEntries(
+    Object.entries(resolved.rules.allowedRegions ?? {}).map(([key, regions]) => [key, [...regions]]),
+  )
+  const dynamicKeys = new Set<string>([
+    ...paletteSectionIds,
+    ...resolved.sections.flatMap(section => [section.sectionId, section.renderer]),
+  ])
+  const canUseSidebar = MULTI_REGION_SKELETONS.has(resolved.layout.skeleton)
+
+  for (const key of dynamicKeys) {
+    allowedRegionsBySection[key] = key === 'basics'
+      ? ['main']
+      : canUseSidebar
+        ? ['main', 'sidebar']
+        : ['main']
+  }
+
+  allowedRegionsBySection.basics = ['main']
+
+  return allowedRegionsBySection
 }
 
 export function getTemplateFamilyEditorCapabilities(familyId: string): TemplateFamilyEditorCapabilities {
@@ -54,13 +83,11 @@ export function getTemplateEditorCapabilities(
     ),
     requiredSectionIds: [...(resolved.rules.requiredSections ?? [])],
     lockedSectionIds: [...(resolved.rules.lockedSections ?? [])],
-    allowedRegionsBySection: Object.fromEntries(
-      Object.entries(resolved.rules.allowedRegions ?? {}).map(([key, regions]) => [key, [...regions]]),
-    ),
+    allowedRegionsBySection: buildAllowedRegionsBySection(resolved, family.editor.sectionPalette),
   }
 }
 
-function getAllowedRegionsBySectionId(
+export function getTemplateSectionAllowedRegions(
   manifest: TemplateManifest | ResolvedTemplateManifest,
   section: Pick<TemplateSection, 'sectionId' | 'renderer'>,
 ) {
@@ -91,7 +118,7 @@ export function canTemplateSectionMoveToRegion(
   section: Pick<TemplateSection, 'sectionId' | 'renderer'>,
   region: TemplateSection['region'],
 ) {
-  return getAllowedRegionsBySectionId(manifest, section).includes(region)
+  return getTemplateSectionAllowedRegions(manifest, section).includes(region)
 }
 
 export function canTemplateSectionDelete(

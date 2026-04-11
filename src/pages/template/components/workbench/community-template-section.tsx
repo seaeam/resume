@@ -70,7 +70,7 @@ export function CommunityTemplateSection() {
                   onClick: () => createResumeWithTemplate('community', template.id),
                 },
                 {
-                  label: '自定义模板',
+                  label: '自定义',
                   onClick: () => customizeCommunityTemplate(template.id),
                   variant: 'outline',
                 },

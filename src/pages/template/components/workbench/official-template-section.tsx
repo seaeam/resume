@@ -44,7 +44,7 @@ export function OfficialTemplateSection() {
                   onClick: () => createResumeWithTemplate('official', template.id),
                 },
                 {
-                  label: '自定义模板',
+                  label: '自定义',
                   onClick: () => customizeOfficialTemplate(template.id),
                   variant: 'outline',
                 },

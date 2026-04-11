@@ -25,6 +25,8 @@ The JSON above contains the project config and installed components. Use `npx sh
 2. **Compose, don't reinvent.** Settings page = Tabs + Card + form controls. Dashboard = Sidebar + Card + Chart + Table.
 3. **Use built-in variants before custom styles.** `variant="outline"`, `size="sm"`, etc.
 4. **Use semantic colors.** `bg-primary`, `text-muted-foreground` — never raw values like `bg-blue-500`.
+5. **Overlay management.** When closing dialogs, drawers, or similar overlays, do not clear the rendered content in the same tick as `open=false`; keep a render target until the exit animation finishes, then clean up.
+6. **Transient parent overlays.** When an overlay is launched from a transient parent like a dropdown or popover, decide the parent open-state explicitly; do not let the child overlay accidentally collapse context that should remain visible after close.
 
 ## Critical Rules
 

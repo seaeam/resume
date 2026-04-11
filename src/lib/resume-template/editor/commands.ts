@@ -3,6 +3,7 @@ import { cloneTemplateManifest, cloneTemplateSection, SUPPORTED_SECTION_RENDERER
 import {
   canTemplateSectionDelete,
   canTemplateSectionMoveToRegion,
+  getTemplateSectionAllowedRegions,
   getTemplateSectionVariants,
   isTemplateSectionLocked,
   isTemplateSectionRequired,
@@ -155,8 +156,7 @@ export function updateLayoutConfig(
   patch: Partial<TemplateManifest['layout']>,
 ) {
   const clonedManifest = cloneTemplateManifest(manifest)
-
-  return {
+  const nextManifest = {
     ...clonedManifest,
     layout: {
       ...clonedManifest.layout,
@@ -167,6 +167,20 @@ export function updateLayoutConfig(
       },
     },
   }
+
+  const normalizedSections = sortSections(nextManifest.sections).map((section) => {
+    if (canTemplateSectionMoveToRegion(nextManifest, section, section.region)) {
+      return cloneTemplateSection(section)
+    }
+
+    const [fallbackRegion = 'main'] = getTemplateSectionAllowedRegions(nextManifest, section)
+    return {
+      ...cloneTemplateSection(section),
+      region: fallbackRegion,
+    }
+  })
+
+  return updateManifestSections(nextManifest, normalizedSections)
 }
 
 export function updateTokenConfig(
