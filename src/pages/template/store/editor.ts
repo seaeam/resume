@@ -70,10 +70,14 @@ const useTemplateEditorStore = create<TemplateEditorState>()(set => ({
         ? nextManifest(state.manifestDraft)
         : nextManifest
 
+      const nextPublishIntent = resolvedManifest.meta.visibility !== state.manifestDraft.meta.visibility
+        ? resolvedManifest.meta.visibility
+        : state.publishIntent
+
       return {
         manifestDraft: cloneTemplateManifest(resolvedManifest),
         dirty: true,
-        publishIntent: resolvedManifest.meta.visibility,
+        publishIntent: nextPublishIntent,
       }
     }),
 

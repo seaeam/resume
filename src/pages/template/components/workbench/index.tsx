@@ -1,25 +1,46 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { TemplateWorkbenchTab } from '../../store'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TEMPLATE_CENTER_TAB_META } from '../../const'
 import { useTemplateWorkbenchStore } from '../../store'
 import { CommunityTemplateSection } from './community-template-section'
 import { OfficialTemplateSection } from './official-template-section'
 import { UserTemplateSection } from './user-template-section'
 
+const WORKBENCH_TAB_ORDER: TemplateWorkbenchTab[] = ['official', 'community', 'mine']
+
 function TemplateWorkbench() {
-  const { activeTab, setTab } = useTemplateWorkbenchStore()
+  const { activeTab, setTab, officialTemplates, communityTemplates, userTemplates } = useTemplateWorkbenchStore()
+  const tabCounts: Record<TemplateWorkbenchTab, number> = {
+    official: officialTemplates.length,
+    community: communityTemplates.length,
+    mine: userTemplates.length,
+  }
+  const tabItems = WORKBENCH_TAB_ORDER.map(key => ({
+    key,
+    count: tabCounts[key],
+    ...TEMPLATE_CENTER_TAB_META[key],
+  }))
 
   return (
     <Card>
-      <CardHeader className="space-y-2">
-        <CardTitle>简历模板</CardTitle>
-        <CardDescription>选择模板直接创建简历，或进入自定义后按需保存为我的模板。</CardDescription>
-      </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={value => setTab(value as 'official' | 'community' | 'mine')} className="gap-4">
-          <TabsList className="h-auto w-full justify-start gap-2 overflow-x-auto">
-            <TabsTrigger value="official">官方模板</TabsTrigger>
-            <TabsTrigger value="community">社区模板</TabsTrigger>
-            <TabsTrigger value="mine">我的模板</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={value => setTab(value as TemplateWorkbenchTab)} className="gap-5">
+          <TabsList>
+            {tabItems.map((tab) => {
+              const Icon = tab.icon
+
+              return (
+                <TabsTrigger key={tab.key} value={tab.key}>
+                  <div className="flex items-center gap-3">
+                    <Icon />
+                    <span className="truncate">{tab.label}</span>
+                    <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
+                  </div>
+                </TabsTrigger>
+              )
+            })}
           </TabsList>
 
           <TabsContent value="official">

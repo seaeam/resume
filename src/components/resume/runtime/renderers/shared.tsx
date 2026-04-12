@@ -104,7 +104,7 @@ export function RuntimeRichText({ html }: { html: string }) {
 
   return (
     <div
-      className="max-w-none break-words [&_blockquote]:m-0 [&_li]:my-0 [&_li>p]:m-0 [&_ol]:m-0 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:m-0 [&_ul]:m-0 [&_ul]:list-disc [&_ul]:pl-5"
+      className="max-w-none wrap-break-word [&_blockquote]:m-0 [&_li]:my-0 [&_li>p]:m-0 [&_ol]:m-0 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:m-0 [&_ul]:m-0 [&_ul]:list-disc [&_ul]:pl-5"
       style={{
         fontSize: font.contentSize,
         lineHeight: spacing.proseLineHeight,

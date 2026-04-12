@@ -6,7 +6,6 @@ import { create } from 'zustand'
 import { officialTemplateCatalog } from '@/lib/resume-template/registry/official-template-catalog'
 import { createResumeFromTemplate } from '@/lib/supabase/resume/form'
 import {
-  copyTemplateToUserLibrary,
   createUserTemplate,
   deleteUserTemplate as deleteUserTemplateApi,
   listPublishedCommunityTemplates,
@@ -16,6 +15,7 @@ import {
 import useResumeListStore from '@/pages/resume/store'
 import useCurrentResumeStore from '@/store/resume/current'
 import {
+  cloneUserTemplateRecord,
   createTemplateDraftFromOfficialTemplate,
   updateTemplateMeta,
   validateTemplateForPublish,
@@ -44,6 +44,7 @@ interface TemplateWorkbenchState {
   mode: TemplateWorkbenchMode
   source: TemplateWorkbenchSource
   selectedTemplateId: string | null
+  lastOpenedUserTemplateId: string | null
   officialTemplates: OfficialTemplateCatalogItem[]
   communityTemplates: TemplateRecord[]
   userTemplates: TemplateRecord[]
@@ -54,6 +55,7 @@ interface TemplateWorkbenchState {
   setNavigate: (navigate: NavigateFunction | null) => void
   loadTemplates: (options?: LoadTemplateOptions) => Promise<void>
   setTab: (tab: TemplateWorkbenchTab) => void
+  getRecommendedHeroSecondaryAction: () => { label: string, onClick: () => void }
   openLibrary: (tab?: TemplateWorkbenchTab) => void
   openOfficialTemplateEditor: (templateId: string) => void
   openUserTemplateEditor: (templateId: string) => void
@@ -81,6 +83,30 @@ function findUserTemplate(state: Pick<TemplateWorkbenchState, 'userTemplates' | 
   }
 
   return state.userTemplates.find(template => template.id === state.selectedTemplateId) ?? null
+}
+
+function findCommunityTemplate(state: Pick<TemplateWorkbenchState, 'communityTemplates' | 'selectedTemplateId'>) {
+  if (!state.selectedTemplateId) {
+    return null
+  }
+
+  return state.communityTemplates.find(template => template.id === state.selectedTemplateId) ?? null
+}
+
+function findLastOpenedUserTemplate(state: Pick<TemplateWorkbenchState, 'userTemplates' | 'lastOpenedUserTemplateId'>) {
+  if (!state.lastOpenedUserTemplateId) {
+    return null
+  }
+
+  return state.userTemplates.find(template => template.id === state.lastOpenedUserTemplateId) ?? null
+}
+
+function reconcileLastOpenedUserTemplateId(templates: TemplateRecord[], templateId: string | null) {
+  if (!templateId) {
+    return null
+  }
+
+  return templates.some(template => template.id === templateId) ? templateId : null
 }
 
 function upsertTemplate(templates: TemplateRecord[], template: TemplateRecord) {
@@ -170,6 +196,15 @@ function hydrateOfficialTemplateDraft(templateId: string) {
   })
 }
 
+function hydrateCommunityTemplateDraft(template: TemplateRecord) {
+  const clonedTemplate = cloneUserTemplateRecord(template)
+
+  useTemplateEditorStore.getState().hydrateDraft({
+    manifest: clonedTemplate.manifest,
+    publishIntent: clonedTemplate.meta.visibility,
+  })
+}
+
 function hydrateUserTemplateDraft(template: TemplateRecord) {
   useTemplateEditorStore.getState().hydrateDraft({
     templateId: template.id,
@@ -183,6 +218,7 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
   mode: 'library',
   source: null,
   selectedTemplateId: null,
+  lastOpenedUserTemplateId: null,
   officialTemplates: officialTemplateCatalog,
   communityTemplates: [],
   userTemplates: [],
@@ -209,6 +245,7 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
 
         return {
           communityTemplates: mergeCommunityTemplates(communityTemplates, nextUserTemplates),
+          lastOpenedUserTemplateId: reconcileLastOpenedUserTemplateId(userTemplates, state.lastOpenedUserTemplateId),
           userTemplates: nextUserTemplates,
         }
       })
@@ -226,6 +263,30 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
   },
 
   setTab: activeTab => set({ activeTab }),
+
+  getRecommendedHeroSecondaryAction: () => {
+    const state = get()
+    const lastOpenedTemplate = findLastOpenedUserTemplate(state)
+
+    if (lastOpenedTemplate) {
+      return {
+        label: '继续编辑最近模板',
+        onClick: () => get().openUserTemplateEditor(lastOpenedTemplate.id),
+      }
+    }
+
+    if (state.userTemplates.length > 0) {
+      return {
+        label: '查看我的模板',
+        onClick: () => get().setTab('mine'),
+      }
+    }
+
+    return {
+      label: '创建第一个模板',
+      onClick: () => get().setTab('official'),
+    }
+  },
 
   openLibrary: (tab) => {
     useTemplateEditorStore.getState().resetEditor()
@@ -259,6 +320,7 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
       mode: 'editor',
       source: 'user',
       selectedTemplateId: templateId,
+      lastOpenedUserTemplateId: templateId,
     })
   },
 
@@ -294,28 +356,19 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
   },
 
   customizeCommunityTemplate: async (templateId) => {
-    try {
-      const created = await copyTemplateToUserLibrary('community', templateId)
-      set((state) => {
-        const nextUserTemplates = upsertTemplate(state.userTemplates, created)
+    const template = get().communityTemplates.find(item => item.id === templateId)
 
-        return {
-          userTemplates: nextUserTemplates,
-          communityTemplates: mergeCommunityTemplates(state.communityTemplates, nextUserTemplates),
-        }
-      })
-      hydrateUserTemplateDraft(created)
-      set({
-        mode: 'editor',
-        source: 'user',
-        selectedTemplateId: created.id,
-      })
+    if (!template) {
+      toast.error('模板不存在或已被移除')
+      return
     }
-    catch (copyError) {
-      toast.error('复制模板失败', {
-        description: copyError instanceof Error ? copyError.message : '请稍后重试',
-      })
-    }
+
+    hydrateCommunityTemplateDraft(template)
+    set({
+      mode: 'editor',
+      source: 'community',
+      selectedTemplateId: templateId,
+    })
   },
 
   toggleUserTemplatePublish: async (templateId, nextVisibility) => {
@@ -364,6 +417,7 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
         return {
           userTemplates: nextUserTemplates,
           communityTemplates: mergeCommunityTemplates(state.communityTemplates.filter(template => template.id !== templateId), nextUserTemplates),
+          lastOpenedUserTemplateId: state.lastOpenedUserTemplateId === templateId ? null : state.lastOpenedUserTemplateId,
         }
       })
 
@@ -410,10 +464,13 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
     try {
       const state = get()
       const selectedOfficialTemplate = findOfficialTemplate(state)
+      const selectedCommunityTemplate = findCommunityTemplate(state)
       const selectedUserTemplate = findUserTemplate(state)
       const basedOnTemplateId = state.source === 'official'
         ? selectedOfficialTemplate?.id
-        : selectedUserTemplate?.id
+        : state.source === 'community'
+          ? selectedCommunityTemplate?.source.basedOnTemplateId ?? selectedCommunityTemplate?.id
+          : selectedUserTemplate?.id
 
       const savedTemplate = editorState.templateId
         ? await updateUserTemplate(editorState.templateId, {
@@ -454,6 +511,7 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
           mode: 'editor',
           source: 'user',
           selectedTemplateId: syncedTemplate.id,
+          lastOpenedUserTemplateId: syncedTemplate.id,
         }
       })
       toast.success(editorState.publishIntent === 'published' ? '模板已发布' : '模板已保存')
@@ -494,10 +552,15 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
     try {
       const state = get()
       const selectedOfficialTemplate = findOfficialTemplate(state)
+      const selectedCommunityTemplate = findCommunityTemplate(state)
       const selectedUserTemplate = findUserTemplate(state)
       const savedTemplate = await createUserTemplate({
         manifest: duplicatedManifest,
-        basedOnTemplateId: editorState.templateId ?? selectedOfficialTemplate?.id ?? selectedUserTemplate?.id,
+        basedOnTemplateId: editorState.templateId
+          ?? selectedOfficialTemplate?.id
+          ?? selectedCommunityTemplate?.source.basedOnTemplateId
+          ?? selectedCommunityTemplate?.id
+          ?? selectedUserTemplate?.id,
         name: duplicatedManifest.meta.name,
         description: duplicatedManifest.meta.description,
         visibility: 'private',
@@ -518,6 +581,7 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
           mode: 'editor',
           source: 'user',
           selectedTemplateId: savedTemplate.id,
+          lastOpenedUserTemplateId: savedTemplate.id,
         }
       })
       toast.success('已另存为新的个人模板')
@@ -537,6 +601,14 @@ const useTemplateWorkbenchStore = create<TemplateWorkbenchState>()((set, get) =>
       const selectedOfficialTemplate = findOfficialTemplate(state)
       if (selectedOfficialTemplate) {
         hydrateOfficialTemplateDraft(selectedOfficialTemplate.id)
+      }
+      return
+    }
+
+    if (state.source === 'community') {
+      const selectedCommunityTemplate = findCommunityTemplate(state)
+      if (selectedCommunityTemplate) {
+        hydrateCommunityTemplateDraft(selectedCommunityTemplate)
       }
       return
     }

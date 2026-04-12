@@ -3,6 +3,7 @@ import antfu from '@antfu/eslint-config'
 export default antfu({
   formatters: true,
   react: true,
+  markdown: false,
   ignores: ['node_modules', 'dist', 'build', 'coverage', 'src/components/ui/**', '**/tiptap-*/**', '.trae/**', '.vscode/**', 'skills/**', '.agents/**'],
   rules: {
     'react-hooks-extra/no-direct-set-state-in-use-effect': 'off',
