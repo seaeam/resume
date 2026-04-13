@@ -97,10 +97,31 @@
   @import './styles/_keyframe-animations.scss';
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
   }
   body {
     @apply bg-background text-foreground;
   }
+
+  *::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
   :root {
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
@@ -126,6 +147,8 @@
 
 :root {
   --radius: 0.65rem;
+  --scrollbar-thumb: rgb(0 0 0 / 0.12);
+  --scrollbar-thumb-hover: rgb(0 0 0 / 0.18);
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -160,6 +183,8 @@
 }
 
 .dark {
+  --scrollbar-thumb: rgb(255 255 255 / 0.18);
+  --scrollbar-thumb-hover: rgb(255 255 255 / 0.26);
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -191,39 +216,4 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.439 0 0);
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-@layer utilities {
-  .scrollbar-thin-subtle {
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklab, var(--border) 82%, transparent) transparent;
-  }
-
-  .scrollbar-thin-subtle::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .scrollbar-thin-subtle::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-thin-subtle::-webkit-scrollbar-thumb {
-    background: color-mix(in oklab, var(--border) 82%, transparent);
-    border-radius: 9999px;
-  }
-
-  .scrollbar-thin-subtle::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklab, var(--muted-foreground) 18%, var(--border));
-  }
-
-  .scrollbar-gutter-stable {
-    scrollbar-gutter: stable;
-  }
 }

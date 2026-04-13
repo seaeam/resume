@@ -1,11 +1,12 @@
 import type { TemplateRecord } from '@/lib/resume-template/schema'
-import { ArrowRight, Globe, LoaderCircle, Lock, SquarePen, Trash2 } from 'lucide-react'
+import { IconFolderCode } from '@tabler/icons-react'
+import { ArrowRight, Eye, Globe, LoaderCircle, Lock, Proportions, SquarePen, Trash2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Separator } from '@/components/ui/separator'
 import { formatRelativeTime } from '@/utils/date'
 import { TEMPLATE_CENTER_TAB_META } from '../../const'
@@ -107,7 +108,6 @@ export function UserTemplateSection() {
   const sectionHeader = (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-semibold tracking-tight">{sectionMeta.label}</h2>
         <Badge variant="secondary">{templates.length > 0 ? `${templates.length} 个模板` : '等待创建'}</Badge>
         {templates.length > 0
           ? (
@@ -131,19 +131,21 @@ export function UserTemplateSection() {
 
         <Empty>
           <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <IconFolderCode />
+            </EmptyMedia>
             <EmptyTitle>还没有我的模板</EmptyTitle>
-            <EmptyDescription>先从官方模板快速开始，或把社区模板复制到“我的模板”，再继续自定义、发布和复用。</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button type="button" onClick={() => setTab('official')}>
+            <EmptyContent className="flex-row justify-center">
+              <Button onClick={() => setTab('official')}>
+                <Eye />
                 查看官方模板
               </Button>
-              <Button type="button" variant="outline" onClick={() => setTab('community')}>
+              <Button variant="outline" onClick={() => setTab('community')}>
+                <Proportions />
                 浏览社区模板
               </Button>
-            </div>
-          </EmptyContent>
+            </EmptyContent>
+          </EmptyHeader>
         </Empty>
       </div>
     )
@@ -204,7 +206,7 @@ export function UserTemplateSection() {
                   {
                     label: '直接使用',
                     icon: ArrowRight,
-                    onClick: () => createResumeWithTemplate('user', template.id),
+                    onClick: async () => createResumeWithTemplate('user', template.id),
                     disabled: publishingId === template.id,
                   },
                   {
@@ -217,7 +219,7 @@ export function UserTemplateSection() {
                   {
                     label: template.meta.visibility === 'published' ? '取消发布' : '发布',
                     icon: template.meta.visibility === 'published' ? Lock : Globe,
-                    onClick: () => handleTogglePublish(
+                    onClick: async () => handleTogglePublish(
                       template.id,
                       template.meta.visibility === 'published' ? 'private' : 'published',
                     ),

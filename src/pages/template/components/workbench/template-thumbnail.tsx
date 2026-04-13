@@ -18,7 +18,7 @@ export function TemplateThumbnail({ manifest }: TemplateThumbnailProps) {
   return (
     <div className="relative aspect-210/297 overflow-hidden">
       <div
-        className="pointer-events-none absolute left-1/2 top-3 origin-top"
+        className="pointer-events-none absolute left-1/2 origin-top"
         style={{ transform: 'translateX(-50%) scale(0.38)' }}
       >
         <PagedResumeShell appearance={appearance}>

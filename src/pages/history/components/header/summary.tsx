@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatRelativeTime } from '@/utils/date'
 import useHistoryStore from '../../store'
 
-function SummaryMetric({ icon: Icon, label, value}: {
+function SummaryMetric({ icon: Icon, label, value }: {
   icon: typeof History
   label: string
   value: string

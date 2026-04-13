@@ -4,7 +4,7 @@ import { memo, useCallback, useLayoutEffect, useRef } from 'react'
 import { usePerfectCursor } from '@/hooks/use-perfect-cursor'
 import { cn } from '@/lib/utils'
 
-export const Cursor = memo(({ className, style, point, color, name}: {
+export const Cursor = memo(({ className, style, point, color, name }: {
   className?: string
   style?: React.CSSProperties
   point: { x: number, y: number }

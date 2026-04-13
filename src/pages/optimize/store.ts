@@ -125,7 +125,7 @@ const useAtsStore = create<AtsStore>()(
 
       try {
         set(() => ({ currentAtsConfig: { ...currentAtsConfig, fixChecklist: updatedFixCheckList } }))
-        await updateFixChecklist(updatedFixCheckList, currentAtsConfig?.id || '')
+        await updateFixChecklist(updatedFixCheckList, currentAtsConfig.id)
       }
       catch (error: any) {
         toast.error(error instanceof Error ? error.message : '操作失败')

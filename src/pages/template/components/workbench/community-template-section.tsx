@@ -1,7 +1,8 @@
+import { IconFolderCode } from '@tabler/icons-react'
 import { ArrowRight, SquarePen } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Separator } from '@/components/ui/separator'
 import { formatRelativeTime } from '@/utils/date'
 import { TEMPLATE_CENTER_TAB_META } from '../../const'
@@ -9,20 +10,13 @@ import { useTemplateWorkbenchStore } from '../../store'
 import { TemplateCard } from './template-card'
 import { TemplateThumbnail } from './template-thumbnail'
 
-function formatSkeletonLabel(skeleton: string) {
-  switch (skeleton) {
-    case 'single-column':
-      return '单栏'
-    case 'sidebar-left':
-      return '左侧栏'
-    case 'sidebar-right':
-      return '右侧栏'
-    case 'stacked':
-      return '分段式'
-    default:
-      return skeleton
-  }
+const SKELETON_LABELS: Record<string, string> = {
+  'single-column': '单栏',
+  'sidebar-left': '左侧栏',
+  'sidebar-right': '右侧栏',
+  'stacked': '分段式',
 }
+const formatSkeletonLabel = (skeleton: string) => SKELETON_LABELS[skeleton] ?? skeleton
 
 export function CommunityTemplateSection() {
   const { communityTemplates: templates, createResumeWithTemplate, customizeCommunityTemplate } = useTemplateWorkbenchStore()
@@ -33,7 +27,6 @@ export function CommunityTemplateSection() {
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold tracking-tight">{sectionMeta.label}</h2>
             <Badge variant="outline">保存后加入我的模板</Badge>
           </div>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{sectionMeta.description}</p>
@@ -43,10 +36,11 @@ export function CommunityTemplateSection() {
 
         <Empty>
           <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <IconFolderCode />
+            </EmptyMedia>
             <EmptyTitle>社区模板还没有公开内容</EmptyTitle>
-            <EmptyDescription>等用户发布模板后，这里会显示可复用的社区模板。后续自定义时，会先打开草稿，手动保存后再加入“我的模板”。</EmptyDescription>
           </EmptyHeader>
-          <EmptyContent />
         </Empty>
       </div>
     )
@@ -87,7 +81,7 @@ export function CommunityTemplateSection() {
               <TemplateCard
                 preview={<TemplateThumbnail manifest={template.manifest} />}
                 title={template.meta.name}
-                description={template.meta.description ?? '发布者暂未填写模板说明'}
+                description={template.meta.description ?? '暂未填写模板说明'}
                 meta={(
                   <div className="flex flex-col gap-2">
                     <span className="text-[11px] font-medium tracking-wide text-muted-foreground">
@@ -107,12 +101,13 @@ export function CommunityTemplateSection() {
                   {
                     label: '直接使用',
                     icon: ArrowRight,
-                    onClick: () => createResumeWithTemplate('community', template.id),
+
+                    onClick: async () => createResumeWithTemplate('community', template.id),
                   },
                   {
                     label: '自定义',
                     icon: SquarePen,
-                    onClick: () => customizeCommunityTemplate(template.id),
+                    onClick: async () => customizeCommunityTemplate(template.id),
                     variant: 'secondary',
                   },
                 ]}

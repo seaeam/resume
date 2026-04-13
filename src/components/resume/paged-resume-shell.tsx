@@ -6,7 +6,7 @@ import { useResumeStyles } from '@/hooks/use-resume-styles'
 const A4_HEIGHT_MM = 297
 const MM_TO_PX = 3.7795275591
 
-export default function PagedResumeShell({ children, ref, appearance}: PropsWithChildren<{ ref?: Ref<HTMLDivElement> | null, appearance?: Partial<ResumeAppearanceConfig> | null }>) {
+export default function PagedResumeShell({ children, ref, appearance }: PropsWithChildren<{ ref?: Ref<HTMLDivElement> | null, appearance?: Partial<ResumeAppearanceConfig> | null }>) {
   const { appearance: resolvedAppearance } = useResumeStyles(appearance)
   const spacingConfig = resolvedAppearance.spacing
   const fontConfig = resolvedAppearance.font

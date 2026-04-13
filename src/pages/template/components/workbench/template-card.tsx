@@ -140,13 +140,13 @@ export function TemplateCard({
   const canHover = useHoverCapability()
 
   return (
-    <div className="group flex h-full flex-col">
-      <div className="relative">
+    <div className="group flex flex-col">
+      <div className="relative max-h-80 md:max-h-90 lg:max-h-100 overflow-hidden border rounded-2xl">
         {preview}
         {canHover && hoverActions?.length
           ? (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/20 opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
-                <div className="pointer-events-auto flex flex-col items-center gap-3">
+                <div className="pointer-events-auto flex flex-col items-stretch gap-3">
                   {hoverActions.map(action => (
                     <ActionButton key={action.label} action={action} large />
                   ))}

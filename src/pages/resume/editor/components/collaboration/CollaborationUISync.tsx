@@ -77,7 +77,10 @@ export function CollaborationUISync({
 
   // 使用 ref 避免循环广播（防止接收远程动作后又广播出去）
   const isApplyingRemote = useRef(false)
+  const isAnimatingRemoteScroll = useRef(false)
   const suppressScrollSyncUntilRef = useRef(0)
+  const remoteScrollAnimationFrameRef = useRef<number | null>(null)
+  const remoteScrollTargetRef = useRef<{ target: ScrollTarget, position: number } | null>(null)
 
   const suppressScrollSync = useCallback((durationMs = 180) => {
     suppressScrollSyncUntilRef.current = Date.now() + durationMs
@@ -155,8 +158,71 @@ export function CollaborationUISync({
     return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
   }, [scrollContainerRef])
 
+  const setScrollPositionByTarget = useCallback((target: ScrollTarget, position: number) => {
+    if (target === 'preview') {
+      const previewElement = scrollContainerRef.current
+      if (previewElement) {
+        previewElement.scrollTop = position
+      }
+      return
+    }
+
+    window.scrollTo({
+      top: position,
+      left: window.scrollX,
+      behavior: 'auto',
+    })
+  }, [scrollContainerRef])
+
+  const cancelRemoteScrollAnimation = useCallback(() => {
+    if (remoteScrollAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(remoteScrollAnimationFrameRef.current)
+      remoteScrollAnimationFrameRef.current = null
+    }
+
+    remoteScrollTargetRef.current = null
+    isAnimatingRemoteScroll.current = false
+  }, [])
+
+  const stepRemoteScroll = useCallback(() => {
+    const nextTarget = remoteScrollTargetRef.current
+
+    if (!nextTarget) {
+      cancelRemoteScrollAnimation()
+      return
+    }
+
+    const currentPosition = getScrollPositionByTarget(nextTarget.target)
+    const delta = nextTarget.position - currentPosition
+
+    if (Math.abs(delta) <= 1) {
+      setScrollPositionByTarget(nextTarget.target, nextTarget.position)
+      cancelRemoteScrollAnimation()
+      return
+    }
+
+    const step = Math.sign(delta) * Math.min(Math.max(Math.abs(delta) * 0.24, 6), 120)
+    const nextPosition = Math.abs(step) >= Math.abs(delta)
+      ? nextTarget.position
+      : currentPosition + step
+
+    setScrollPositionByTarget(nextTarget.target, nextPosition)
+    remoteScrollAnimationFrameRef.current = requestAnimationFrame(stepRemoteScroll)
+  }, [cancelRemoteScrollAnimation, getScrollPositionByTarget, setScrollPositionByTarget])
+
+  const animateRemoteScrollTo = useCallback((target: ScrollTarget, position: number) => {
+    remoteScrollTargetRef.current = { target, position }
+    isAnimatingRemoteScroll.current = true
+
+    if (remoteScrollAnimationFrameRef.current !== null) {
+      return
+    }
+
+    remoteScrollAnimationFrameRef.current = requestAnimationFrame(stepRemoteScroll)
+  }, [stepRemoteScroll])
+
   const broadcastScroll = useThrottledCallback((target: ScrollTarget) => {
-    if (isApplyingRemote.current || shouldIgnoreScrollSync())
+    if (isApplyingRemote.current || isAnimatingRemoteScroll.current || shouldIgnoreScrollSync())
       return
 
     broadcastUIAction({
@@ -187,6 +253,20 @@ export function CollaborationUISync({
       broadcastScroll.cancel()
     }
   }, [scrollContainerRef, getScrollTarget, broadcastScroll])
+
+  useEffect(() => {
+    if (followMode) {
+      return
+    }
+
+    cancelRemoteScrollAnimation()
+  }, [followMode, cancelRemoteScrollAnimation])
+
+  useEffect(() => {
+    return () => {
+      cancelRemoteScrollAnimation()
+    }
+  }, [cancelRemoteScrollAnimation])
 
   // 应用远程 UI 动作
   const applyRemoteAction = useCallback((action: UIAction, userName: string) => {
@@ -220,18 +300,7 @@ export function CollaborationUISync({
 
       case 'scroll':
         suppressScrollSync()
-        if (action.target === 'preview' && scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTo({
-            top: action.position,
-            behavior: 'auto',
-          })
-        }
-        else {
-          window.scrollTo({
-            top: action.position,
-            behavior: 'auto',
-          })
-        }
+        animateRemoteScrollTo(action.target, action.position)
         break
     }
 
@@ -239,7 +308,7 @@ export function CollaborationUISync({
     requestAnimationFrame(() => {
       isApplyingRemote.current = false
     })
-  }, [setDrawerOpen, onUpdateActiveTabId, replaceConfig, scrollContainerRef, suppressScrollSync])
+  }, [animateRemoteScrollTo, setDrawerOpen, onUpdateActiveTabId, replaceConfig, suppressScrollSync])
 
   // 响应最新的远程 UI 动作
   useEffect(() => {

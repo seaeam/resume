@@ -160,8 +160,10 @@ export interface FindingsGroup {
   low: Finding[]
 }
 
+export type AtsRecordId = number
+
 export interface AtsEvaluationResult {
-  id: string
+  id: AtsRecordId
   todo_items: string[]
   created_at: string
   user_id: string
@@ -174,6 +176,33 @@ export interface AtsEvaluationResult {
   summary: Summary
   scores: Scores
   findings: FindingsGroup
+}
+
+export type AtsWritableFieldKey
+  = | 'todo_items'
+    | 'version'
+    | 'meta'
+    | 'readabilityIndex'
+    | 'fixChecklist'
+    | 'summary'
+    | 'scores'
+    | 'findings'
+
+export type AtsWritableFields = Pick<AtsEvaluationResult, AtsWritableFieldKey>
+
+export type AtsPersistPatch = Partial<AtsWritableFields> & {
+  resume_id?: AtsEvaluationResult['resume_id']
+}
+
+export type AtsCreatePayload = Partial<AtsWritableFields> & {
+  resume_id: AtsEvaluationResult['resume_id']
+}
+
+export type AtsLlmDraft = Partial<AtsWritableFields> & {
+  id?: unknown
+  created_at?: unknown
+  user_id?: unknown
+  resume_id?: string
 }
 
 // 分析状态类型

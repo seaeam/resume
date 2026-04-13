@@ -1,15 +1,11 @@
-import type { AtsEvaluationResult, Summary } from '../../../pages/optimize/types'
+import type { AtsCreatePayload, AtsEvaluationResult, AtsPersistPatch, AtsRecordId, Summary } from '../../../pages/optimize/types'
 import type { FixChecklistItem } from '@/pages/optimize/types'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
-
-export type CreateAtsConfigInput
-  = Pick<AtsEvaluationResult, 'resume_id'>
-    & Partial<Omit<AtsEvaluationResult, 'id' | 'user_id' | 'created_at' | 'resume_id'>>
-    & { created_at?: string }
+import { sanitizeAtsPersistInput } from './ats-payload'
 
 export interface AtsSummaryRecord {
-  id: string
+  id: AtsRecordId
   resume_id: string
   created_at: string
   todo_items: string[]
@@ -55,16 +51,18 @@ export async function listAtsSummaries() {
   return (data ?? []) as AtsSummaryRecord[]
 }
 
-export async function updateAtsConfig(id: string, payload: Record<string, any>) {
+export async function updateAtsConfig(id: AtsRecordId, payload: AtsPersistPatch) {
   const user = await getCurrentUser()
 
   if (!user) {
     throw new Error('用户未登录')
   }
 
+  const safePayload = sanitizeAtsPersistInput(payload)
+
   const { error } = await supabase
     .from('ats')
-    .update(payload)
+    .update(safePayload)
     .eq('user_id', user.id)
     .eq('id', id)
 
@@ -73,17 +71,23 @@ export async function updateAtsConfig(id: string, payload: Record<string, any>) 
   }
 }
 
-export async function createAtsConfig(payload: CreateAtsConfigInput) {
+export async function createAtsConfig(payload: AtsCreatePayload) {
   const user = await getCurrentUser()
 
   if (!user) {
     throw new Error('用户未登录')
   }
 
+  const safePayload = sanitizeAtsPersistInput(payload)
+
+  if (!safePayload.resume_id) {
+    throw new Error('缺少 resume_id，无法保存 ATS 报告')
+  }
+
   const { data, error } = await supabase
     .from('ats')
     .insert({
-      ...payload,
+      ...safePayload,
       user_id: user.id,
     })
     .select()
@@ -96,7 +100,7 @@ export async function createAtsConfig(payload: CreateAtsConfigInput) {
   return data as AtsEvaluationResult
 }
 
-export async function updateFixChecklist(fixChecklist: FixChecklistItem[], id: string) {
+export async function updateFixChecklist(fixChecklist: FixChecklistItem[], id: AtsRecordId) {
   const user = await getCurrentUser()
 
   if (!user) {

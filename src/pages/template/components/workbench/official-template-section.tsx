@@ -1,3 +1,4 @@
+import { ArrowRight, Pencil } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -14,7 +15,6 @@ export function OfficialTemplateSection() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold tracking-tight">{sectionMeta.label}</h2>
           <Badge variant="secondary">{`${templates.length} 个模板`}</Badge>
           <Badge variant="outline">可直接使用</Badge>
           <Badge variant="outline">支持自定义</Badge>
@@ -58,11 +58,13 @@ export function OfficialTemplateSection() {
                   {
                     label: '直接使用',
                     onClick: () => createResumeWithTemplate('official', template.id),
+                    icon: ArrowRight,
                   },
                   {
                     label: '自定义',
                     onClick: () => customizeOfficialTemplate(template.id),
                     variant: 'outline',
+                    icon: Pencil,
                   },
                 ]}
               />
