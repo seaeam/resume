@@ -33,6 +33,7 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'es2024',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -79,7 +80,7 @@ export default defineConfig({
           // Supabase
           'supabase': ['@supabase/supabase-js'],
           // 其他工具库
-          'utils': ['clsx', 'tailwind-merge', 'dayjs', 'zod', 'zustand', 'shiki'],
+          'utils': ['clsx', 'tailwind-merge', 'dayjs', 'zod', 'zustand'],
         },
       },
     },
@@ -116,7 +117,7 @@ export default defineConfig({
       '@radix-ui/react-use-controllable-state',
       'dayjs/plugin/customParseFormat',
       'openai/streaming',
-      'shiki',
+      'shiki/bundle/web',
       'dompurify',
       '@hugeicons/react',
       '@hugeicons/core-free-icons',

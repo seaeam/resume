@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import type { PropsWithChildren } from 'react'
 import type { ResolvedTemplateManifest } from '@/lib/resume-template/schema'
 import { createContext, use } from 'react'

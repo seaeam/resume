@@ -2,7 +2,6 @@ import type { ComponentProps, HTMLAttributes } from 'react'
 import type { BundledLanguage, ShikiTransformer } from 'shiki'
 import { CheckIcon, CopyIcon } from 'lucide-react'
 import { createContext, use, useEffect, useMemo, useState } from 'react'
-import { codeToHtml } from 'shiki'
 import { Button } from '@/components/ui/button'
 import { parseSanitizedHtml } from '@/lib/safe-html'
 import { cn } from '@/lib/utils'
@@ -51,6 +50,7 @@ export async function highlightCode(
     ? [lineNumberTransformer]
     : []
 
+  const { codeToHtml } = await import('shiki/bundle/web')
   return await Promise.all([
     codeToHtml(code, {
       lang: language,

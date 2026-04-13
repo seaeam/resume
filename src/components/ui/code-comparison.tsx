@@ -1,10 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  transformerNotationDiff,
-  transformerNotationFocus,
-} from '@shikijs/transformers'
 import { FileIcon } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { parseSanitizedHtml } from '@/lib/safe-html'
@@ -47,10 +43,12 @@ export function CodeComparison({
   useEffect(() => {
     async function highlightCode() {
       try {
-        const { codeToHtml } = await import('shiki')
-        const { transformerNotationHighlight } = await import(
-          '@shikijs/transformers'
-        )
+        const { codeToHtml } = await import('shiki/bundle/web')
+        const {
+          transformerNotationHighlight,
+          transformerNotationDiff,
+          transformerNotationFocus,
+        } = await import('@shikijs/transformers')
 
         const before = await codeToHtml(beforeCode, {
           lang: language,

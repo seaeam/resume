@@ -1,7 +1,7 @@
 "use client";
 
+import type { BundledLanguage } from "shiki";
 import { type FC, useEffect, useState } from "react";
-import { type BundledLanguage, codeToHtml } from "shiki";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Copy01Icon, Download01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { parseSanitizedHtml } from "@/lib/safe-html";
@@ -116,13 +116,16 @@ export const CodeBlock: FC<CodeBlockProps> = ({
 			return;
 		}
 
-		codeToHtml(children, {
-			lang: mappedLang,
-			themes: {
-				light: "github-light",
-				dark: "github-dark",
-			},
-		})
+		import("shiki/bundle/web")
+			.then(({ codeToHtml }) =>
+				codeToHtml(children, {
+					lang: mappedLang,
+					themes: {
+						light: "github-light",
+						dark: "github-dark",
+					},
+				}),
+			)
 			.then(setHighlightedHtml)
 			.catch(() => setHighlightedHtml(null));
 	}, [children, language]);
