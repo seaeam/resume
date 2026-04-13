@@ -4,7 +4,7 @@ export default antfu({
   formatters: true,
   react: true,
   markdown: false,
-  ignores: ['node_modules', 'dist', 'build', 'coverage', 'src/components/ui/**', '**/tiptap-*/**', '.trae/**', '.vscode/**', 'skills/**', '.agents/**'],
+  ignores: ['node_modules', 'dist', 'build', 'coverage', 'src/components/ui/**', 'src/components/animate-ui/**', '**/tiptap-*/**', '.trae/**', '.vscode/**', 'skills/**', '.agents/**'],
   rules: {
     'react/no-implicit-key': 'off',
     'react-hooks-extra/no-direct-set-state-in-use-effect': 'off',

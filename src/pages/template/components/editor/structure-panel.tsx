@@ -46,7 +46,7 @@ function SectionList({
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={cn(
-              'min-h-[120px] space-y-2 rounded-2xl border border-dashed p-3 transition-colors',
+              'min-h-30 space-y-2 rounded-2xl border border-dashed p-3 transition-colors',
               snapshot.isDraggingOver ? 'border-primary bg-primary/5' : 'border-border/70',
             )}
           >

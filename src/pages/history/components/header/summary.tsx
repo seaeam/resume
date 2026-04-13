@@ -29,7 +29,7 @@ export default function HistoryHeaderSummary() {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex min-w-0 items-start gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/[0.08] text-primary shadow-xs sm:size-14">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-primary/15 bg-primary/8 text-primary shadow-xs sm:size-14">
           <History className="size-5" />
         </div>
 
@@ -55,7 +55,7 @@ export default function HistoryHeaderSummary() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:min-w-[360px]">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:min-w-90">
         <SummaryMetric icon={History} label="已保存" value={`${versions.length} 条`} />
         <SummaryMetric icon={Flag} label="重点版本" value={`${milestoneCount} 个`} />
         <SummaryMetric

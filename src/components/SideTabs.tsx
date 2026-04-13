@@ -364,7 +364,6 @@ export function Tab({
       key={id}
       size={isMobile ? 'icon' : 'sm'}
       ref={(el) => {
-        // eslint-disable-next-line react-hooks/immutability
         btnRefs.current[id] = el
       }}
       variant={active === id ? 'default' : 'secondary'}

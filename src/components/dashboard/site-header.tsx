@@ -1,13 +1,14 @@
+import { StarIcon } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Link, useLocation } from 'react-router-dom'
 import { Fragment } from 'react/jsx-runtime'
+import { GithubStars, GithubStarsIcon, GithubStarsNumber, GithubStarsParticles } from '@/components/animate-ui/primitives/animate/github-stars'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs'
 import { ResumeConfigToolbar } from '@/pages/resume/editor/components/toolbar/ResumeConfigToolbar'
-import { ModeToggle } from '../mode-toggle'
+import { AnimatedThemeToggler } from '../ui/animated-theme-toggler'
 
 export function SiteHeader() {
   const crumbs = useBreadcrumbs()
@@ -48,17 +49,24 @@ export function SiteHeader() {
       </AnimatePresence>
 
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" asChild size="sm" className="sm:flex">
-          <a
-            href="https://github.com/506-FETL/granular-resume"
-            rel="noopener noreferrer"
-            target="_blank"
-            className="dark:text-foreground"
-          >
-            GitHub
-          </a>
-        </Button>
-        <ModeToggle />
+        <GithubStars
+          className="flex gap-2 items-center"
+          username="506-FETL"
+          repo="resume"
+        >
+          <div className="p-1 bg-muted flex items-center gap-1">
+            <GithubStarsNumber className="text-muted-foreground font-medium" />
+            <GithubStarsParticles>
+              <GithubStarsIcon
+                icon={StarIcon}
+                className="fill-neutral-300 stroke-neutral-300 dark:fill-neutral-700 dark:stroke-neutral-700"
+                activeClassName="text-muted-foreground"
+                size={18}
+              />
+            </GithubStarsParticles>
+          </div>
+        </GithubStars>
+        <AnimatedThemeToggler />
       </div>
     </div>
   )

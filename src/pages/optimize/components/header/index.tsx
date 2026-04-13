@@ -254,7 +254,7 @@ function Header() {
                   if (stepConfig.id === 'thinking') {
                     return (
                       <AutoScrollContainer
-                        className="max-h-[300px] bg-muted p-3 rounded-md mt-2 overflow-x-auto"
+                        className="max-h-75 bg-muted p-3 rounded-md mt-2 overflow-x-auto"
                         dependency={stepContent}
                         enabled={isActive}
                       >
@@ -269,7 +269,7 @@ function Header() {
                   if (stepConfig.id === 'result') {
                     return (
                       <AutoScrollContainer
-                        className="max-h-[300px] bg-muted p-3 rounded-md mt-2"
+                        className="max-h-75 bg-muted p-3 rounded-md mt-2"
                         dependency={stepContent}
                         enabled={isActive}
                       >
@@ -283,7 +283,7 @@ function Header() {
                   // 默认渲染
                   return (
                     <AutoScrollContainer
-                      className="max-h-[300px] bg-muted p-3 rounded-md mt-2"
+                      className="max-h-75 bg-muted p-3 rounded-md mt-2"
                       dependency={stepContent}
                       enabled={isActive}
                     >
