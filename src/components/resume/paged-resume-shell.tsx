@@ -53,11 +53,15 @@ export default function PagedResumeShell({ children, ref, appearance }: PropsWit
   ])
 
   return (
-    <div className="flex flex-col gap-4" ref={ref}>
+    <div className="flex flex-col gap-4 print:gap-0" ref={ref}>
       {Array.from({ length: pageCount }).map((_, pageIndex) => (
-        <div key={`page-${pageIndex + 1}`}>
+        <div
+          key={`page-${pageIndex + 1}`}
+          className="print:break-inside-avoid"
+          style={pageIndex < pageCount - 1 ? { breakAfter: 'page' } : undefined}
+        >
           <div
-            className="mx-auto overflow-hidden rounded-md border bg-white shadow-md"
+            className="mx-auto overflow-hidden rounded-md border bg-white shadow-md print:border-0 print:shadow-none print:rounded-none"
             style={{
               width: '210mm',
               height: '297mm',

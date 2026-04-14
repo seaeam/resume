@@ -36,6 +36,12 @@ function Editor() {
   const handlePrint = useReactToPrint({
     contentRef: resumeRef,
     documentTitle: resumeName ? `${resumeName}-简历` : '我的简历',
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 0;
+      }
+    `,
   })
 
   useEffect(() => {
