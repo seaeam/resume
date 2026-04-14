@@ -1,5 +1,5 @@
-import { IconHelp, IconSettings } from '@tabler/icons-react'
-import { FileUser, FolderKanban, History, HomeIcon, LayoutTemplate, PencilRuler } from 'lucide-react'
+import { IconSettings } from '@tabler/icons-react'
+import { Axe, FileUser, FolderKanban, History, HomeIcon, LayoutTemplate, PencilRuler } from 'lucide-react'
 
 export const Data = {
   modules: [
@@ -41,9 +41,9 @@ export const Data = {
       icon: IconSettings,
     },
     {
-      title: '帮助',
-      url: '/help',
-      icon: IconHelp,
+      title: '更新日志',
+      url: '/changelog',
+      icon: Axe,
     },
   ],
 }

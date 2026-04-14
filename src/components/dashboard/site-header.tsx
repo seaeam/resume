@@ -50,11 +50,10 @@ export function SiteHeader() {
 
       <div className="ml-auto flex items-center gap-2">
         <GithubStars
-          className="flex gap-2 items-center"
           username="506-FETL"
           repo="resume"
         >
-          <div className="p-1 bg-muted flex items-center gap-1">
+          <div className="p-1 bg-muted flex items-center gap-1 rounded">
             <GithubStarsNumber className="text-muted-foreground font-medium" />
             <GithubStarsParticles>
               <GithubStarsIcon

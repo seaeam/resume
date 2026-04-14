@@ -5,22 +5,10 @@ import { toast } from 'sonner'
 import { create } from 'zustand'
 import { officialTemplateCatalog } from '@/lib/resume-template/registry/official-template-catalog'
 import { createResumeFromTemplate } from '@/lib/supabase/resume/form'
-import {
-  createUserTemplate,
-  deleteUserTemplate as deleteUserTemplateApi,
-  listPublishedCommunityTemplates,
-  listUserTemplates,
-  updateUserTemplate,
-} from '@/lib/supabase/template'
+import { createUserTemplate, deleteUserTemplate as deleteUserTemplateApi, listPublishedCommunityTemplates, listUserTemplates, updateUserTemplate } from '@/lib/supabase/template'
 import useResumeListStore from '@/pages/resume/store'
 import useCurrentResumeStore from '@/store/resume/current'
-import {
-  cloneUserTemplateRecord,
-  createTemplateDraftFromOfficialTemplate,
-  updateTemplateMeta,
-  validateTemplateForPublish,
-  validateTemplateForSave,
-} from '../utils'
+import { cloneUserTemplateRecord, createTemplateDraftFromOfficialTemplate, updateTemplateMeta, validateTemplateForPublish, validateTemplateForSave } from '../utils'
 import useTemplateEditorStore from './editor'
 
 export type TemplateWorkbenchMode = 'library' | 'editor'

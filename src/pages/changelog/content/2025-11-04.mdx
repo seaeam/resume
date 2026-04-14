@@ -1,0 +1,30 @@
+---
+title: "写完就能用：PDF 导出与账号系统"
+date: "2025-11-04"
+tags: ["Export", "Auth", "PDF"]
+version: "0.3"
+---
+
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+简历写得再好看，导出来一坨就白搭了。这个版本终于补上了最关键的一环——高保真 PDF 导出。
+
+- **PDF 导出** — 点击导出，浏览器直接生成 PDF，预览里长什么样，导出来就是什么样。支持 A4 精确分页，不会把一段经历从中间截断
+- **智能分页** — 渲染引擎会自动计算每个模块的高度，在合适的位置断页，保证每一页都干净整洁
+- **Modern 模板** — 除了 Basic，现在多了一套更现代的视觉风格可选
+- **编辑器配置工具栏** — 字体、间距、主题色，不用去设置页，编辑器里直接调
+
+<Accordion type="multiple" className="w-full not-prose">
+  <AccordionItem value="item-1">
+    <AccordionTrigger>导出背后的故事</AccordionTrigger>
+    <AccordionContent className="flex flex-col gap-4 text-balance">
+      <ul className="list-disc space-y-2 pl-4">
+        <li>
+          用的是 react-to-print —— 把渲染好的简历 DOM 原封不动地复制到一个隐藏的 iframe 里，然后调用浏览器原生的打印功能，样式零损失
+        </li>
+        <li>分页逻辑是自研的，不是简单地按固定高度切，而是会识别模块边界，避免"半句话被截到下一页"的尴尬</li>
+        <li>LightRays 背景效果让编辑界面更有氛围感，虽然纯装饰，但写简历的心情确实好了不少</li>
+      </ul>
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>

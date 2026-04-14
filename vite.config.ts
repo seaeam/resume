@@ -1,6 +1,9 @@
 import path from 'node:path'
+import mdx from '@mdx-js/rollup'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 import { defineConfig } from 'vite'
 import Pages from 'vite-plugin-pages'
 import topLevelAwait from 'vite-plugin-top-level-await'
@@ -10,7 +13,8 @@ export default defineConfig({
   plugins: [
     wasm(),
     topLevelAwait(),
-    react(),
+    { enforce: 'pre', ...mdx({ remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter] }) },
+    react({ include: /\.(jsx|js|mdx|md|tsx|ts)$/ }),
     tailwindcss(),
     Pages({
       exclude: [
@@ -23,6 +27,7 @@ export default defineConfig({
         '**/data/*',
         '**/info/*',
         '**/*.ts',
+        '**/content/*',
       ],
       importMode: 'async',
     }),
