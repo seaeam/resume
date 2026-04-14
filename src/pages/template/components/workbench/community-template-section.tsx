@@ -50,7 +50,6 @@ export function CommunityTemplateSection() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold tracking-tight">{sectionMeta.label}</h2>
           <Badge variant="outline">保存后加入我的模板</Badge>
         </div>
         <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{sectionMeta.description}</p>
@@ -58,7 +57,7 @@ export function CommunityTemplateSection() {
 
       <Separator />
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
         <AnimatePresence mode="popLayout">
           {templates.map((template, index) => (
             <motion.div
