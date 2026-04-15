@@ -1,5 +1,5 @@
 ---
-title: "模板系统上线：换个皮肤，换种人生"
+title: "模板系统上线"
 date: "2026-04-12"
 tags: ["Template", "Workbench", "Editor"]
 version: "1.0"
@@ -10,22 +10,19 @@ import { Badge } from '@/components/ui/badge';
 
 <img src="https://bitxrpdtlohlnywgusfw.supabase.co/storage/v1/object/public/changelog/Template%20Center.png" alt="预览图" className="w-full" />
 
-<Badge className="mr-1">V 1.0</Badge>来了。这个版本的核心是**模板系统**——你终于可以像换手机壳一样换简历的"外观"了。官方的、社区的、自己做的，随便挑，一键换装，内容不变，颜值翻倍。
+<Badge className="mr-1">V 1.0</Badge>来了。这个版本的核心是**模板系统** —— 你可以更换换简历的"外观"了
 
-- **模板工作台** — 一个专门的页面来浏览和管理模板。
-- **可视化模板编辑器** — 不满意现有模板？自己动手调！拖拖拽拽就能自定义布局和样式
-- **模板一键绑定** — 每份简历可以绑定不同的模板。投技术岗用简约风，投设计岗换创意风，同一份内容不同的"穿搭"
-- **GitHub Stars 动画** — 网站头部新增 Star 计数器
+- **模板工作台** — 浏览和管理模板。
+- **可视化模板编辑器** — 不满意现有模板？拖拖拽拽就能自定义布局和样式
+- **模板一键绑定** — 每份简历可以使用不同的模板
 
 <Accordion type="multiple" className="w-full not-prose">
   <AccordionItem value="item-1">
     <AccordionTrigger>模板系统的设计思路</AccordionTrigger>
     <AccordionContent className="flex flex-col gap-4 text-balance">
       <ul className="list-disc space-y-2 pl-4">
-        <li>
-          模板和简历内容完全解耦——内容是内容，样式是样式。换模板不会丢内容，改内容不会破坏样式
-        </li>
-        <li>每个模板都有缩略图预览，用你自己的真实数据渲染，不是假数据截图</li>
+        <li>模板和简历内容完全解耦</li>
+        <li>每个模板都有缩略图预览</li>
         <li>模板编辑器提供工具栏：保存、恢复默认、调整可见性、未保存变更提醒</li>
         <li>移动端用操作抽屉替代右键菜单，长按模板卡片就能管理</li>
       </ul>
@@ -39,7 +36,6 @@ import { Badge } from '@/components/ui/badge';
           从 v0.1 的"能写简历"到现在的"好用的简历平台"，核心功能终于完整了：编辑、协作、导出、优化、求职跟踪、模板系统
         </li>
         <li>底层架构也经过多次重构趋于稳定——统一的渲染路径、规范的状态管理、完善的数据库设计</li>
-        <li>Shiki 语法高亮改为动态导入，首屏不再加载 600KB+ 的高亮包</li>
         <li>这不是终点，而是一个值得纪念的里程碑。更多功能已经在路上了 🚀</li>
       </ul>
     </AccordionContent>

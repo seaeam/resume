@@ -21,9 +21,8 @@ export function useResumeLoader() {
   const loadResumeData = useResumeStore(state => state.loadResumeData)
 
   const queryResumeId = searchParams.get('resumeId')
-  const collabSessionParam = searchParams.get('collabSession')
   const documentUrlParam = searchParams.get('docUrl')
-  const activeResumeId = resumeId ?? queryResumeId ?? undefined
+  const activeResumeId = queryResumeId ?? resumeId ?? undefined
 
   // 获取当前用户
   useEffect(() => {
@@ -49,14 +48,10 @@ export function useResumeLoader() {
 
   // 处理 URL 参数切换简历
   useEffect(() => {
-    if (queryResumeId && collabSessionParam) {
-      // 如果有协作会话参数，强制切换到链接中的简历
+    if (queryResumeId && queryResumeId !== resumeId) {
       setCurrentResume(queryResumeId, 'default')
     }
-    else if (!resumeId && queryResumeId) {
-      setCurrentResume(queryResumeId, 'default')
-    }
-  }, [resumeId, queryResumeId, collabSessionParam, setCurrentResume])
+  }, [resumeId, queryResumeId, setCurrentResume])
 
   // 加载简历数据
   useEffect(() => {

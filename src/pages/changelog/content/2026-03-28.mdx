@@ -1,5 +1,5 @@
 ---
-title: "你的简历，你做主：外观自定义全面开放"
+title: "自定义外观"
 date: "2026-03-28"
 tags: ["Config", "Export", "Appearance"]
 version: "0.9"
@@ -9,12 +9,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 <img src="https://bitxrpdtlohlnywgusfw.supabase.co/storage/v1/object/public/changelog/Appearance-toolbar.png" alt="预览图" className="w-full" />
 
-每个人对"好看"的定义都不一样。有人喜欢紧凑高效，有人喜欢留白呼吸。这个版本把简历的外观控制权完全交给了你——字体、间距、主题、配色，全部可调，而且云端保存，换个设备打开还是你的配置。
+这个版本把简历的外观控制权完全交给了你——字体、间距、主题、配色，全部可调。
 
-- **完整的外观配置体系** — 字体系列、行间距、模块间距、主题色、段落间距……该有的全有了，而且全部持久化到云端
-- **手机也能导出 PDF** — 不用非得回到电脑前，手机上也能直接导出，效果和桌面端一致
+- **完整的外观配置体系** — 字体系列、行间距、模块间距、主题色……该有的全有了
+- **手机也能导出 PDF** — 不用非得回到电脑前，手机上也能直接导出
 - **编辑器历史快捷入口** — 工具栏里集成了版本历史下拉菜单，一键回溯不用切页面
-- **导出体验大升级** — 异步导出不阻塞界面，打印预览更准确，弹窗被浏览器拦截的问题也修了
+- **导出体验大升级** — 异步导出不阻塞界面，打印预览更准确
 
 <Accordion type="multiple" className="w-full not-prose">
   <AccordionItem value="item-1">
@@ -36,10 +36,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
     <AccordionContent className="flex flex-col gap-4 text-balance">
       <ul className="list-disc space-y-2 pl-4">
         <li>
-          移动端浏览器的 window.print() 行为和桌面端完全不一样，最终方案是用独立打印窗口而不是 iframe
+          移动端浏览器的 `window.print()` 行为和桌面端完全不一样，最终方案是用独立打印窗口而不是 iframe
         </li>
         <li>Safari 和 Chrome 对弹窗的拦截策略不同，改用用户交互触发的同步窗口打开</li>
-        <li>A4 页面在不同 DPI 的屏幕上渲染尺寸不一致，用 CSS @page 规则统一了</li>
+        <li>A4 页面在不同 DPI 的屏幕上渲染尺寸不一致，用 `CSS @page` 规则统一</li>
       </ul>
     </AccordionContent>
   </AccordionItem>

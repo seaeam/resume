@@ -31,20 +31,20 @@ export function formatRelativeTime(dateString: string | Date | number | null | u
   }
 
   if (diffInMinutes < 60) {
-    return `${diffInMinutes}分钟前`
+    return `${diffInMinutes} 分钟前`
   }
 
   if (diffInHours < 24) {
-    return `${diffInHours}小时前`
+    return `${diffInHours} 小时前`
   }
 
   if (diffInDays < 7) {
-    return `${diffInDays}天前`
+    return `${diffInDays} 天前`
   }
 
   if (!includeTime) {
     if (diffInDays < 30) {
-      return `${Math.floor(diffInDays / 7)}周前`
+      return `${Math.floor(diffInDays / 7)} 周前`
     }
     return date.format('YYYY年M月D日')
   }

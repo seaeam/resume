@@ -14,7 +14,7 @@ export default function TimelineLoadingState() {
 
       {[0, 1, 2].map(index => (
         <div key={index} className="relative flex flex-col gap-3 border-l border-dashed border-border pl-6">
-          <span className="absolute -left-[9px] top-5 size-4 rounded-full border bg-background" />
+          <span className="absolute -left-2.25 top-5 size-4 rounded-full border bg-background" />
           <div className="rounded-2xl border border-border/60 bg-muted/15 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <Skeleton className="h-8 w-16 rounded-full" />

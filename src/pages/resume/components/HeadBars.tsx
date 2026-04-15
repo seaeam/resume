@@ -1,6 +1,5 @@
-import { CloudUpload, Wifi, WifiOff } from 'lucide-react'
+import { CloudUpload, Plane, Wifi } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Highlighter } from '@/components/ui/highlighter'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import useResumeListStore from '@/pages/resume/store'
@@ -21,12 +20,18 @@ function HeadBars() {
         <p className="text-muted-foreground mt-2">管理和编辑你的简历</p>
       </div>
       <div className={cn('mb-5', isMobile ? 'flex flex-col gap-3 items-end' : 'flex items-center gap-3')}>
-        <Highlighter action={isOnline ? 'highlight' : 'underline'} color={isOnline ? '#8599cb80' : '#e4e4e7'}>
-          <div className="flex gap-2 items-center text-sm font-medium">
-            {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-            <span>{isOnline ? '在线' : '离线'}</span>
-          </div>
-        </Highlighter>
+        <div className={cn(
+          'flex gap-2 items-center text-sm font-medium transition-colors duration-300',
+          isOnline ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground',
+        )}
+        >
+          {isOnline
+            ? <Wifi className="h-3.5 w-3.5 animate-pulse" />
+            : <Plane className="h-3.5 w-3.5 animate-bounce" />}
+          <span className="relative">
+            {isOnline ? '在线' : '离线'}
+          </span>
+        </div>
         <Button
           onClick={() => setShowSyncDialog(true)}
           variant="outline"

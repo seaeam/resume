@@ -34,7 +34,7 @@ export default function NotFound() {
         </Button>
       </EmptyContent>
       {!isMobile && <LightRays length="100vh" />}
-      <Globe className="top-4/5" />
+      <Globe className="top-3/4" />
     </Empty>
   )
 }

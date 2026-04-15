@@ -153,7 +153,7 @@ export default function HistoryDetailPanel({
                 )
               : (
                   <Card className={`${desktopPanelClassName} justify-center border-border/70 bg-background/95 py-0 shadow-none`}>
-                    <Empty className="m-6 border border-dashed bg-muted/15">
+                    <Empty>
                       <EmptyHeader>
                         <EmptyMedia variant="icon">
                           <History />

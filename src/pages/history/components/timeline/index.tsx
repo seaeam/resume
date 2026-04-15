@@ -29,7 +29,7 @@ export default function HistoryTimeline({
   const timelineCountLabel = versions.length === 0 ? '暂无版本记录' : `${versions.length} 条版本记录`
 
   return (
-    <Card className="flex min-h-0 flex-col gap-0 overflow-hidden border-border/70 bg-background/95 py-0 shadow-none max-h-[72dvh] md:max-h-[min(78vh,920px)] lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-[920px]">
+    <Card className="flex min-h-0 flex-col gap-0 overflow-hidden border-border/70 bg-background/95 py-0 shadow-none max-h-[72dvh] md:max-h-[min(78vh,920px)] lg:sticky lg:top-20 lg:h-[calc(100vh-7rem)] lg:max-h-230">
       <CardHeader className="gap-4 py-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{timelineCountLabel}</Badge>
@@ -100,7 +100,7 @@ export default function HistoryTimeline({
                             <Separator className="flex-1" />
                           </div>
 
-                          <div className="flex flex-col gap-3 border-l border-dashed border-border/80 pl-5">
+                          <div className="flex flex-col gap-3 border-l border-dashed border-border/80 pl-6">
                             {group.items.map((version, index) => (
                               <VersionCard
                                 key={version.id}
