@@ -47,11 +47,12 @@ src/pages/<page-name>/
 
 ## Component Organization
 
-- Prefer folder-based components over large standalone files.
+- **Every component must be a folder**, even if it only contains a single file. Do not leave loose `.tsx` component files directly under `components/`. Always wrap them in a named folder with `index.tsx` as the entry point.
 - Colocate private subcomponents, helper hooks, and related files inside the component folder.
 - Prefer default exports for page components and component-folder entry files.
 - Keep the public surface small: callers should usually import from the folder `index.tsx`, not deep internal files.
 - The `index.tsx` of a component folder must export a **single assembled component** (default export) that composes its child components internally. Do **not** use `index.tsx` as a barrel of re-exports (e.g. `export { Foo } from './foo'`). The page entry should only need to import one component per feature folder.
+- When moving a standalone file into a folder, preserve its original `@/` alias imports (e.g. `@/hooks/use-mobile`). Only convert sibling component imports to relative paths — never convert global alias imports to relative paths.
 
 ## Store vs Props
 
