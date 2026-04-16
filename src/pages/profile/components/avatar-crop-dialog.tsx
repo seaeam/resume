@@ -1,5 +1,6 @@
 import type { SyntheticEvent } from 'react'
 import type { PercentCrop } from 'react-image-crop'
+import type { AvatarCropShape, AvatarPercentCrop } from '../types'
 import { useEffect, useState } from 'react'
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop'
 import { Button } from '@/components/ui/button'
@@ -13,15 +14,6 @@ import {
 } from '@/components/ui/dialog'
 import { Spinner } from '@/components/ui/spinner'
 import 'react-image-crop/dist/ReactCrop.css'
-
-export type AvatarCropShape = 'square' | 'circle'
-
-export interface AvatarPercentCrop {
-  x: number
-  y: number
-  width: number
-  height: number
-}
 
 interface AvatarCropDialogProps {
   open: boolean

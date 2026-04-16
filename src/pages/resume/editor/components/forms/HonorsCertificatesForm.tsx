@@ -1,58 +1,34 @@
-import type { HonorsCertificatesFormType } from '@/lib/schema'
-import type { ShallowPartial } from '@/lib/utils'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Trash2, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useMemo, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { honorsCertificatesFormSchema, PRESET_CERTIFICATES } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
+import { useResumeFieldForm } from './hooks/use-resume-field-form'
 
 function HonorsCertificatesForm({ className }: { className?: string }) {
   const honorsCertificates = useResumeStore(state => state.honors_certificates)
-  const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
   const [customCertificateInput, setCustomCertificateInput] = useState('')
 
-  const form = useForm({
-    resolver: zodResolver(honorsCertificatesFormSchema),
-    defaultValues: {
-      description: honorsCertificates.description || '',
-      certificates: honorsCertificates.certificates || [],
-    },
-    mode: 'onChange',
-    reValidateMode: 'onChange',
-  })
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'certificates',
-  })
-
-  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
   const storeFormData = useMemo(() => ({
     description: honorsCertificates.description || '',
     certificates: honorsCertificates.certificates || [],
   }), [honorsCertificates.description, honorsCertificates.certificates])
-  const isResettingRef = useFormRemoteSync(form, storeFormData)
 
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      if (isResettingRef.current)
-        return
-      updateForm('honors_certificates', value as ShallowPartial<HonorsCertificatesFormType>)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, updateForm, isResettingRef])
+  const { form, fields, append, remove } = useResumeFieldForm({
+    fieldName: 'honors_certificates',
+    schema: honorsCertificatesFormSchema,
+    storeFormData,
+    arrayFieldName: 'certificates',
+  })
 
   // 检查预设证书是否已添加
   const isPresetCertificateAdded = (certificate: string) => {
@@ -66,7 +42,7 @@ function HonorsCertificatesForm({ className }: { className?: string }) {
       remove(existingIndex)
     }
     else {
-      append({ name: certificate })
+      append({ name: certificate } as any)
     }
   }
 
@@ -88,7 +64,7 @@ function HonorsCertificatesForm({ className }: { className?: string }) {
       return
     }
 
-    append({ name: trimmedValue })
+    append({ name: trimmedValue } as any)
     setCustomCertificateInput('')
   }
 

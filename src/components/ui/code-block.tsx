@@ -2,8 +2,7 @@
 
 import type { BundledLanguage } from "shiki";
 import { type FC, useEffect, useState } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Copy01Icon, Download01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Check, Copy, Download } from "lucide-react";
 import { parseSanitizedHtml } from "@/lib/safe-html";
 import { cn } from "@/lib/utils";
 
@@ -198,7 +197,7 @@ export const CodeBlock: FC<CodeBlockProps> = ({
 						)}
 						aria-label="Download code"
 					>
-						<HugeiconsIcon icon={Download01Icon} size={16} />
+						<Download size={16} />
 					</button>
 					<button
 						type="button"
@@ -211,13 +210,12 @@ export const CodeBlock: FC<CodeBlockProps> = ({
 						aria-label="Copy code"
 					>
 						{copied ? (
-							<HugeiconsIcon
-								icon={Tick02Icon}
+							<Check
 								size={16}
 								className="text-green-500"
 							/>
 						) : (
-							<HugeiconsIcon icon={Copy01Icon} size={16} />
+							<Copy size={16} />
 						)}
 					</button>
 				</div>

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { createExperienceSchema, durationField } from './shared'
 
 const experienceName = z.string().trim().default('')
 export type CampusExperienceName = z.infer<typeof experienceName>
@@ -6,26 +7,17 @@ export type CampusExperienceName = z.infer<typeof experienceName>
 const role = z.string().trim().default('')
 export type CampusRole = z.infer<typeof role>
 
-const duration = z.array(z.string().trim()).length(2).default(['', ''])
+const duration = durationField.default(['', ''])
 export type CampusDuration = z.infer<typeof duration>
 
 const campusInfo = z.string().trim().default('')
 export type CampusInfo = z.infer<typeof campusInfo>
 
-const campusExperienceItemSchema = z.object({
-  experienceName,
-  role,
-  duration,
-  campusInfo,
-})
-export type CampusExperienceItem = z.infer<typeof campusExperienceItemSchema>
+const campusExperienceFields = { experienceName, role, duration, campusInfo }
 
-// 校园经历列表
-const campusExperienceListSchema = z.array(campusExperienceItemSchema)
+export type CampusExperienceItem = z.infer<z.ZodObject<typeof campusExperienceFields>>
 
-export const campusExperienceFormSchema = z.object({
-  items: campusExperienceListSchema,
-})
+export const campusExperienceFormSchema = createExperienceSchema(campusExperienceFields)
 
 export type CampusExperienceFormType = z.infer<typeof campusExperienceFormSchema>
 

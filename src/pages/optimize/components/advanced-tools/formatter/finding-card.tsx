@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { severityConfig } from '../../../const'
+import { severityConfig } from '@/pages/optimize/const'
 import CustomEditor from '../../analysis/custom-editor'
 import { SuggestionCompareCard } from '../../analysis/custom-editor/renderer'
 

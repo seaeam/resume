@@ -192,20 +192,3 @@ export function useBodyRect(
     element: isClientSide() ? document.body : null,
   })
 }
-
-/**
- * 追踪某个 ref 元素的矩形信息。
- *
- * 这是 `useElementRect` 的便捷封装，调用方只需传入元素 ref，
- * 即可持续获得该元素的矩形变化结果。
- *
- * @param ref 需要观测的元素 ref
- * @param options 除 `element` 外的其余追踪配置
- * @returns ref 当前指向元素的矩形信息
- */
-export function useRefRect<T extends Element>(
-  ref: React.RefObject<T>,
-  options: Omit<ElementRectOptions, 'element'> = {},
-): RectState {
-  return useElementRect({ ...options, element: ref })
-}

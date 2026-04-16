@@ -1,11 +1,11 @@
 import type { User } from '@supabase/supabase-js'
-import { IconCalendar, IconMail, IconShield, IconUser } from '@tabler/icons-react'
+import { Calendar as CalendarIcon, Mail, Shield, User as UserIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { useCurrentUserName } from '@/hooks/use-current-user-name'
+import { useCurrentUserName } from '@/hooks/use-current-user'
 import { useDebounce } from '@/hooks/use-debounce'
 import supabase from '@/lib/supabase/client'
 import { updateProfile } from '@/lib/supabase/user'
@@ -146,11 +146,11 @@ export function ProfileInfoCard({ user: initialUser }: ProfileInfoCardProps) {
           <div className="space-y-1">
             <h3 className="text-2xl font-semibold">{currentName}</h3>
             <p className="text-muted-foreground flex items-center gap-2">
-              <IconMail className="h-4 w-4" />
+              <Mail className="h-4 w-4" />
               {email}
             </p>
             <Badge variant={user.email_confirmed_at ? 'outline' : 'destructive'} className="mt-2 gap-1">
-              <IconShield className="h-3 w-3" />
+              <Shield className="h-3 w-3" />
               {user.email_confirmed_at ? '邮箱已验证' : '邮箱未验证'}
             </Badge>
           </div>
@@ -162,7 +162,7 @@ export function ProfileInfoCard({ user: initialUser }: ProfileInfoCardProps) {
           <EditableField
             id="name"
             label="用户名"
-            icon={<IconUser className="h-4 w-4" />}
+            icon={<UserIcon className="h-4 w-4" />}
             value={fullName}
             isEditing={editingName}
             isSaving={savingName}
@@ -175,7 +175,7 @@ export function ProfileInfoCard({ user: initialUser }: ProfileInfoCardProps) {
           <EditableField
             id="email"
             label="邮箱地址"
-            icon={<IconMail className="h-4 w-4" />}
+            icon={<Mail className="h-4 w-4" />}
             type="email"
             value={email}
             isEditing={editingEmail}
@@ -189,14 +189,14 @@ export function ProfileInfoCard({ user: initialUser }: ProfileInfoCardProps) {
           <ReadonlyField
             id="created"
             label="注册时间"
-            icon={<IconCalendar className="h-4 w-4" />}
+            icon={<CalendarIcon className="h-4 w-4" />}
             value={formatRegistrationDate(user.created_at)}
           />
 
           <ReadonlyField
             id="updated"
             label="最后更新"
-            icon={<IconCalendar className="h-4 w-4" />}
+            icon={<CalendarIcon className="h-4 w-4" />}
             value={formatRegistrationDate(user.updated_at || user.created_at)}
           />
         </div>

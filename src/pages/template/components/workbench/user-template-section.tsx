@@ -1,6 +1,5 @@
 import type { TemplateRecord } from '@/lib/resume-template/schema'
-import { IconFolderCode } from '@tabler/icons-react'
-import { ArrowRight, Eye, Globe, LoaderCircle, Lock, Proportions, SquarePen, Trash2 } from 'lucide-react'
+import { ArrowRight, Eye, FolderCode, Globe, LoaderCircle, Lock, Proportions, SquarePen, Trash2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle } from '@/components/ui/alert-dialog'
@@ -10,7 +9,7 @@ import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/comp
 import { Separator } from '@/components/ui/separator'
 import { formatRelativeTime } from '@/utils/date'
 import { TEMPLATE_CENTER_TAB_META } from '../../const'
-import { useTemplateWorkbenchStore } from '../../store'
+import { useTemplateWorkbenchStore, useUserTemplatesStore } from '../../store'
 import { TemplateCard } from './template-card'
 import { TemplateThumbnail } from './template-thumbnail'
 
@@ -99,7 +98,8 @@ function DeleteTemplateButton({
 }
 
 export function UserTemplateSection() {
-  const { userTemplates: templates, createResumeWithTemplate, openUserTemplateEditor, toggleUserTemplatePublish, setTab } = useTemplateWorkbenchStore()
+  const { userTemplates: templates } = useUserTemplatesStore()
+  const { createResumeWithTemplate, openUserTemplateEditor, toggleUserTemplatePublish, setTab } = useTemplateWorkbenchStore()
   const [publishingId, setPublishingId] = useState<string | null>(null)
   const sectionMeta = TEMPLATE_CENTER_TAB_META.mine
   const publishedCount = templates.filter(template => template.meta.visibility === 'published').length
@@ -132,7 +132,7 @@ export function UserTemplateSection() {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <IconFolderCode />
+              <FolderCode />
             </EmptyMedia>
             <EmptyTitle>还没有我的模板</EmptyTitle>
             <EmptyContent className="flex-row justify-center">

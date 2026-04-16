@@ -1,4 +1,4 @@
-import type { AtsCreatePayload, AtsLlmDraft, AtsPersistPatch } from '../../../pages/optimize/types'
+import type { AtsCreatePayload, AtsLlmDraft, AtsPersistPatch } from '@/lib/schema/ats'
 
 export function sanitizeAtsPersistInput(input: AtsLlmDraft | AtsPersistPatch | AtsCreatePayload): AtsPersistPatch {
   const payload: AtsPersistPatch = {}

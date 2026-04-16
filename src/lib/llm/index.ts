@@ -2,7 +2,8 @@ import type { ChatCompletionCreateParamsBase } from 'openai/resources/chat/compl
 import type { ResumeSchema } from '../schema'
 import { throttle } from 'lodash'
 import { callLLM } from './call'
-import { createJobDescriptionAnalysisPrompt, optimize_prompt } from './prompt'
+import { createJobDescriptionAnalysisPrompt } from './prompts/job-description'
+import { optimize_prompt } from './prompts/optimize'
 
 interface StreamUpdate {
   content?: string

@@ -1,6 +1,6 @@
 import type { ChangeEvent } from 'react'
-import type { AvatarCropShape, AvatarPercentCrop } from './avatar-crop-dialog'
-import { IconCamera } from '@tabler/icons-react'
+import type { AvatarCropShape, AvatarPercentCrop } from '../types'
+import { Camera } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { CurrentUserAvatar } from '@/components/current-user-avatar'
@@ -119,7 +119,7 @@ export function ProfileAvatar() {
           className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full hover:cursor-pointer hover:shadow-md"
           title="更换头像"
         >
-          {uploading ? <Spinner className="h-4 w-4" /> : <IconCamera className="h-4 w-4" />}
+          {uploading ? <Spinner className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
         </Button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
       </div>

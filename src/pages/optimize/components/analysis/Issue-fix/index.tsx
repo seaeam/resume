@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react'
-import type { Severity } from '../../../types'
+import type { Severity } from '@/pages/optimize/types'
 import { Wand2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -12,9 +12,9 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { syncAutomergeDocument } from '@/lib/automerge'
 import { updateAtsConfig } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
+import { severityConfig } from '@/pages/optimize/const'
+import useAtsStore from '@/pages/optimize/store'
 import { startConfetti } from '@/utils'
-import { severityConfig } from '../../../const'
-import useAtsStore from '../../../store'
 import Content from './content'
 
 interface IssueFixProps {

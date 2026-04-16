@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { createExperienceSchema, durationField } from './shared'
 
 const projectName = z.string().trim()
 export type ProjectName = z.infer<typeof projectName>
@@ -6,25 +7,17 @@ export type ProjectName = z.infer<typeof projectName>
 const participantRole = z.string().trim()
 export type ParticipantRole = z.infer<typeof participantRole>
 
-const projectDuration = z.array(z.string().trim()).length(2)
+const projectDuration = durationField
 export type ProjectDuration = z.infer<typeof projectDuration>
 
 const projectInfo = z.string().trim()
 export type ProjectInfo = z.infer<typeof projectInfo>
 
-const projectExperienceItemSchema = z.object({
-  projectName,
-  participantRole,
-  projectDuration,
-  projectInfo,
-})
-export type ProjectExperienceItem = z.infer<typeof projectExperienceItemSchema>
+const projectExperienceFields = { projectName, participantRole, projectDuration, projectInfo }
 
-const projectExperienceListSchema = z.array(projectExperienceItemSchema)
+export type ProjectExperienceItem = z.infer<z.ZodObject<typeof projectExperienceFields>>
 
-export const projectExperienceFormSchema = z.object({
-  items: projectExperienceListSchema,
-})
+export const projectExperienceFormSchema = createExperienceSchema(projectExperienceFields)
 
 export type ProjectExperienceFormType = z.infer<typeof projectExperienceFormSchema>
 

@@ -1,6 +1,6 @@
 import type { AutomergeResumeDocument } from './schema'
 import type { PersistedResumeSnapshot } from '@/lib/schema'
-import type { Suggestion } from '@/pages/optimize/types'
+import type { Suggestion } from '@/lib/schema/ats'
 import { set, toPath } from 'lodash'
 import { toast } from 'sonner'
 import { getResumeById, updateResumeConfig } from '@/lib/supabase/resume'

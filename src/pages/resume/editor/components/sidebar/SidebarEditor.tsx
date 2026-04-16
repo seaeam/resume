@@ -1,6 +1,6 @@
 import type { VisibilityItemsType } from '@/lib/schema'
 import { DraggableList } from '@/components/DraggableList'
-import { SideTabs, SideTabsWrapper, Tab, ViewPort } from '@/components/SideTabs'
+import { SideTabs, SideTabsWrapper, Tab, ViewPort } from '@/components/ui/side-tabs'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ITEMS } from '../../const'

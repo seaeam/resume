@@ -1,6 +1,6 @@
 'use client'
 
-import { IconDotsVertical, IconLogin, IconLogout, IconUserCircle } from '@tabler/icons-react'
+import { CircleUser, EllipsisVertical, LogIn, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -47,7 +47,7 @@ export function NavUser() {
                 <span className="truncate font-medium">{user ? user.user_metadata.full_name : '未登陆'}</span>
                 <span className="text-muted-foreground truncate text-xs">{user ? user.email : 'resume'}</span>
               </div>
-              <IconDotsVertical className="ml-auto size-4" />
+              <EllipsisVertical className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -60,7 +60,7 @@ export function NavUser() {
               <>
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <IconUserCircle />
+                    <CircleUser />
                     账户
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
@@ -75,7 +75,7 @@ export function NavUser() {
               ? (
                   <DropdownMenuGroup>
                     <DropdownMenuItem onClick={handleSignOut}>
-                      <IconLogout />
+                      <LogOut />
                       登出
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
@@ -87,7 +87,7 @@ export function NavUser() {
                         navigate('/login')
                       }}
                     >
-                      <IconLogin />
+                      <LogIn />
                       登录
                     </DropdownMenuItem>
                   </DropdownMenuGroup>

@@ -1,5 +1,4 @@
-import { IconSettings } from '@tabler/icons-react'
-import { Axe, FileUser, FolderKanban, History, HomeIcon, LayoutTemplate, PencilRuler } from 'lucide-react'
+import { Axe, FileUser, FolderKanban, History, HomeIcon, LayoutTemplate, PencilRuler, Settings } from 'lucide-react'
 
 export const Data = {
   modules: [
@@ -38,7 +37,7 @@ export const Data = {
     {
       title: '设置',
       url: '/settings',
-      icon: IconSettings,
+      icon: Settings,
     },
     {
       title: '更新日志',

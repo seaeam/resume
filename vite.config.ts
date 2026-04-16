@@ -81,7 +81,7 @@ export default defineConfig({
           // 动画
           'motion': ['motion'],
           // 图标库
-          'icons': ['@tabler/icons-react', 'lucide-react'],
+          'icons': ['lucide-react'],
           // Supabase
           'supabase': ['@supabase/supabase-js'],
           // 其他工具库
@@ -124,8 +124,6 @@ export default defineConfig({
       'openai/streaming',
       'shiki/bundle/web',
       'dompurify',
-      '@hugeicons/react',
-      '@hugeicons/core-free-icons',
     ],
   },
 })

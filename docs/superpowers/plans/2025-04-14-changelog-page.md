@@ -12,23 +12,24 @@
 
 ## 文件清单
 
-| 操作 | 文件路径 | 职责 |
-|------|---------|------|
-| 修改 | `package.json` | 添加 MDX 和 typography 依赖 |
-| 修改 | `vite.config.ts` | 注册 MDX 插件（`enforce: 'pre'`）、更新 react include、Pages exclude |
-| 修改 | `src/index.css` | 添加 `@plugin "@tailwindcss/typography"` |
-| 新建 | `src/mdx.d.ts` | `.mdx` 模块的 TypeScript 声明 |
-| 新建 | `src/pages/changelog/types.ts` | `ChangelogFrontmatter` 和 `ChangelogEntry` 类型 |
-| 新建 | `src/pages/changelog/utils.ts` | MDX 内容加载、排序、日期格式化工具 |
-| 新建 | `src/pages/changelog/components/changelog-entry/index.tsx` | 单个时间轴条目组件 |
-| 新建 | `src/pages/changelog/index.tsx` | Changelog 页面主组件 |
-| 新建 | `src/pages/changelog/content/2025-04-14.mdx` | 示例 MDX 更新日志 |
+| 操作 | 文件路径                                                   | 职责                                                                 |
+| ---- | ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| 修改 | `package.json`                                             | 添加 MDX 和 typography 依赖                                          |
+| 修改 | `vite.config.ts`                                           | 注册 MDX 插件（`enforce: 'pre'`）、更新 react include、Pages exclude |
+| 修改 | `src/index.css`                                            | 添加 `@plugin "@tailwindcss/typography"`                             |
+| 新建 | `src/mdx.d.ts`                                             | `.mdx` 模块的 TypeScript 声明                                        |
+| 新建 | `src/pages/changelog/types.ts`                             | `ChangelogFrontmatter` 和 `ChangelogEntry` 类型                      |
+| 新建 | `src/pages/changelog/utils.ts`                             | MDX 内容加载、排序、日期格式化工具                                   |
+| 新建 | `src/pages/changelog/components/changelog-entry/index.tsx` | 单个时间轴条目组件                                                   |
+| 新建 | `src/pages/changelog/index.tsx`                            | Changelog 页面主组件                                                 |
+| 新建 | `src/pages/changelog/content/2025-04-14.mdx`               | 示例 MDX 更新日志                                                    |
 
 ---
 
 ## 任务 1：安装依赖
 
 **文件：**
+
 - 修改：`package.json`
 
 - [ ] **步骤 1：安装生产依赖**
@@ -48,6 +49,7 @@ pnpm add -D @types/mdx
 ```bash
 ls node_modules/@mdx-js/rollup/index.js && ls node_modules/@tailwindcss/typography/package.json && echo "OK"
 ```
+
 预期：输出 `OK`
 
 ---
@@ -55,6 +57,7 @@ ls node_modules/@mdx-js/rollup/index.js && ls node_modules/@tailwindcss/typograp
 ## 任务 2：配置 Vite MDX 插件
 
 **文件：**
+
 - 修改：`vite.config.ts`
 
 - [ ] **步骤 1：添加 MDX 相关 import**
@@ -109,6 +112,7 @@ Pages({
 ```bash
 pnpm run build
 ```
+
 预期：构建成功，无错误
 
 ---
@@ -116,6 +120,7 @@ pnpm run build
 ## 任务 3：配置 CSS 和 TypeScript 声明
 
 **文件：**
+
 - 修改：`src/index.css`
 - 新建：`src/mdx.d.ts`
 
@@ -128,6 +133,7 @@ pnpm run build
 ```
 
 最终顺序：
+
 ```css
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -154,6 +160,7 @@ declare module '*.mdx' {
 ```bash
 pnpm run build
 ```
+
 预期：构建成功
 
 ---
@@ -161,6 +168,7 @@ pnpm run build
 ## 任务 4：创建类型定义和工具函数
 
 **文件：**
+
 - 新建：`src/pages/changelog/types.ts`
 - 新建：`src/pages/changelog/utils.ts`
 
@@ -221,6 +229,7 @@ export function formatDate(dateStr: string): string {
 ```bash
 pnpm exec tsc --noEmit --pretty 2>&1 | head -20
 ```
+
 预期：无与 changelog 相关的类型错误（可能有其他预存错误，忽略之）
 
 ---
@@ -228,6 +237,7 @@ pnpm exec tsc --noEmit --pretty 2>&1 | head -20
 ## 任务 5：创建 ChangelogEntry 时间轴条目组件
 
 **文件：**
+
 - 新建：`src/pages/changelog/components/changelog-entry/index.tsx`
 
 - [ ] **步骤 1：创建组件目录**
@@ -310,6 +320,7 @@ export function ChangelogEntry({ entry, isLast }: ChangelogEntryProps) {
 ```bash
 pnpm exec eslint src/pages/changelog/components/changelog-entry/index.tsx
 ```
+
 预期：无错误
 
 ---
@@ -317,6 +328,7 @@ pnpm exec eslint src/pages/changelog/components/changelog-entry/index.tsx
 ## 任务 6：创建 Changelog 页面主组件
 
 **文件：**
+
 - 新建：`src/pages/changelog/index.tsx`
 
 - [ ] **步骤 1：实现页面组件**
@@ -356,6 +368,7 @@ export default function ChangelogPage() {
 ```bash
 pnpm exec eslint src/pages/changelog/index.tsx
 ```
+
 预期：无错误
 
 ---
@@ -363,6 +376,7 @@ pnpm exec eslint src/pages/changelog/index.tsx
 ## 任务 7：创建示例 MDX 内容并验证全流程
 
 **文件：**
+
 - 新建：`src/pages/changelog/content/2025-04-14.mdx`
 
 - [ ] **步骤 1：创建 content 目录**
@@ -404,6 +418,7 @@ version: "2.1"
 ```bash
 pnpm run build
 ```
+
 预期：构建成功，无错误
 
 - [ ] **步骤 4：ESLint 全量检查**
@@ -411,6 +426,7 @@ pnpm run build
 ```bash
 pnpm exec eslint src/pages/changelog/
 ```
+
 预期：无错误
 
 - [ ] **步骤 5：启动开发服务器手动验证**
@@ -418,7 +434,9 @@ pnpm exec eslint src/pages/changelog/
 ```bash
 pnpm dev
 ```
+
 在浏览器中访问 `/changelog`，确认：
+
 - 页面标题和副标题正确渲染
 - 时间轴布局在桌面端呈现左右分栏
 - 日期、版本、标签正确显示

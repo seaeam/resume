@@ -1,58 +1,34 @@
-import type { HobbiesFormType } from '@/lib/schema'
-import type { ShallowPartial } from '@/lib/utils'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Trash2, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useMemo, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { hobbiesFormSchema, PRESET_HOBBIES } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
+import { useResumeFieldForm } from './hooks/use-resume-field-form'
 
 function HobbiesForm({ className }: { className?: string }) {
   const hobbies = useResumeStore(state => state.hobbies)
-  const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
   const [customHobbyInput, setCustomHobbyInput] = useState('')
 
-  const form = useForm({
-    resolver: zodResolver(hobbiesFormSchema),
-    defaultValues: {
-      description: hobbies.description || '',
-      hobbies: hobbies.hobbies || [],
-    },
-    mode: 'onChange',
-    reValidateMode: 'onChange',
-  })
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'hobbies',
-  })
-
-  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
   const storeFormData = useMemo(() => ({
     description: hobbies.description || '',
     hobbies: hobbies.hobbies || [],
   }), [hobbies.description, hobbies.hobbies])
-  const isResettingRef = useFormRemoteSync(form, storeFormData)
 
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      if (isResettingRef.current)
-        return
-      updateForm('hobbies', value as ShallowPartial<HobbiesFormType>)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, updateForm, isResettingRef])
+  const { form, fields, append, remove } = useResumeFieldForm({
+    fieldName: 'hobbies',
+    schema: hobbiesFormSchema,
+    storeFormData,
+    arrayFieldName: 'hobbies',
+  })
 
   // 检查预设爱好是否已添加
   const isPresetHobbyAdded = (hobby: string) => {
@@ -66,7 +42,7 @@ function HobbiesForm({ className }: { className?: string }) {
       remove(existingIndex)
     }
     else {
-      append({ name: hobby })
+      append({ name: hobby } as any)
     }
   }
 
@@ -88,7 +64,7 @@ function HobbiesForm({ className }: { className?: string }) {
       return
     }
 
-    append({ name: trimmedValue })
+    append({ name: trimmedValue } as any)
     setCustomHobbyInput('')
   }
 

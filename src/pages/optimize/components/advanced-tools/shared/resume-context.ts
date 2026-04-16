@@ -1,6 +1,6 @@
-import type { AtsEvaluationResult } from '../../../types'
 import type { ResumeToolContext } from './types'
-import { fetchResumeDataForAnalysis } from '../../../utils'
+import type { AtsEvaluationResult } from '@/pages/optimize/types'
+import { fetchResumeDataForAnalysis } from '@/pages/optimize/utils'
 
 interface LoadResumeContextOptions {
   atsConfig: AtsEvaluationResult | null

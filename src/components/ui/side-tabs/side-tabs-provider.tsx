@@ -1,12 +1,9 @@
 'use client'
 
-import type { Dispatch, PropsWithChildren, ReactNode, RefObject, SetStateAction } from 'react'
-import { Slot } from '@radix-ui/react-slot'
-import { AnimatePresence, motion } from 'motion/react'
-import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
+import { motion } from 'motion/react'
+import type { Dispatch, PropsWithChildren, RefObject, SetStateAction } from 'react'
+import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 interface Props {
   defaultId: string
@@ -31,7 +28,7 @@ interface BoxState {
   totalHeight: number
 }
 
-interface SideTabsContextValue {
+export interface SideTabsContextValue {
   active: string
   setActive: Dispatch<SetStateAction<string>>
   box: BoxState
@@ -46,14 +43,9 @@ interface SideTabsContextValue {
   recomputeGeometry: () => void
 }
 
-function callAll(...fns: Array<(() => void) | undefined>) {
-  return () => {
-    fns.forEach(fn => fn && fn())
-  }
-}
+export const SideTabsContext = createContext<SideTabsContextValue | null>(null)
 
-const SideTabsContext = createContext<SideTabsContextValue | null>(null)
-function useSideTabsContext() {
+export function useSideTabsContext() {
   const context = use(SideTabsContext)
   if (!context) {
     throw new Error('SideTabs components must be used within a SideTabsWrapper')
@@ -61,7 +53,7 @@ function useSideTabsContext() {
   return context
 }
 
-export function SideTabsWrapper({
+export function SideTabsProvider({
   defaultId,
   className,
   gapPx = 6,
@@ -71,6 +63,7 @@ export function SideTabsWrapper({
   orientation = 'vertical',
   radius = 12,
   controlDown = 12,
+  children,
   ...props
 }: PropsWithChildren<Props>) {
   const [active, setActive] = useState<string>(defaultId)
@@ -316,151 +309,9 @@ export function SideTabsWrapper({
           restDelta: 0.001,
         }}
         {...props}
-      />
+      >
+        {children}
+      </motion.div>
     </SideTabsContext>
-  )
-}
-
-export function SideTabs({
-  orientation = 'vertical',
-  className,
-  ...props
-}: PropsWithChildren<{ orientation?: 'horizontal' | 'vertical', className?: string }>) {
-  const { tabsRef } = useSideTabsContext()
-
-  return (
-    <div
-      ref={tabsRef}
-      className={cn(
-        'flex gap-3',
-        orientation === 'horizontal' ? 'flex-col pr-4' : 'flex-row overflow-x-auto pb-4',
-        className,
-      )}
-      style={orientation === 'vertical' ? { scrollbarWidth: 'thin' } : undefined}
-      {...props}
-    />
-  )
-}
-
-export function Tab({
-  asChild = false,
-  onClick,
-  id,
-  className,
-  ...props
-}: PropsWithChildren<{
-  asChild?: boolean
-  onClick?: () => void
-  id: string
-  className?: string
-  disabled?: boolean
-}>) {
-  const { setActive, recomputeGeometry, active, btnRefs } = useSideTabsContext()
-  const isMobile = useIsMobile()
-  const Comp = asChild ? Slot : Button
-
-  return (
-    <Comp
-      key={id}
-      size={isMobile ? 'icon' : 'sm'}
-      ref={(el) => {
-        btnRefs.current[id] = el
-      }}
-      variant={active === id ? 'default' : 'secondary'}
-      className={cn('justify-center transition-all duration-200 ease-in-out shrink-0', className)}
-      onClick={callAll(() => {
-        setActive(id)
-        requestAnimationFrame(recomputeGeometry)
-      }, onClick)}
-      {...props}
-    />
-  )
-}
-
-export function ViewPort({
-  fill = 'transparent',
-  stroke = 'gray',
-  strokeWidth = 1,
-  items,
-  className,
-}: {
-  fill?: string
-  stroke?: string
-  strokeWidth?: number
-  items: { id: string, content: ReactNode }[]
-  className?: string
-}) {
-  const { box, outlineD, contentRef, active, padding } = useSideTabsContext()
-  const activeItem = useMemo(() => items.find(item => item.id === active), [items, active])
-  return (
-    <>
-      <svg
-        className="absolute inset-0 block z-1"
-        width="100%"
-        height="100%"
-        style={{ overflow: 'visible', pointerEvents: 'none', zIndex: -1 }}
-      >
-        <defs>
-          <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.12" />
-          </filter>
-        </defs>
-
-        {outlineD && (
-          <motion.path
-            d={outlineD}
-            initial={false}
-            animate={{ d: outlineD }}
-            transition={{ type: 'spring', stiffness: 240, damping: 20 }}
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            vectorEffect="non-scaling-stroke"
-            shapeRendering="geometricPrecision"
-          />
-        )}
-      </svg>
-      <svg
-        className="absolute inset-0 block z-1"
-        width="100%"
-        height="100%"
-        style={{ overflow: 'visible', pointerEvents: 'none' }}
-      >
-        {/* 内容：被闭合路径“包裹”的区域（与盒几何一致） */}
-        <foreignObject x={box.x} y={box.y} width={Math.max(box.w, 0)} height={Math.max(box.h, 0)}>
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              padding: `${padding}px`,
-              boxSizing: 'border-box',
-              pointerEvents: 'auto', // 允许交互
-            }}
-          >
-            <div ref={contentRef}>
-              <AnimatePresence mode="wait">
-                {activeItem && (
-                  <motion.div
-                    key={activeItem.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{
-                      duration: 0.2,
-                      ease: [0.25, 0.1, 0.25, 1.0],
-                    }}
-                    className={cn('p-6', className)}
-                  >
-                    {activeItem.content}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        </foreignObject>
-      </svg>
-    </>
   )
 }

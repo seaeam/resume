@@ -1,10 +1,7 @@
-import type { DisplayType, ProficiencyLevel, SkillSpecialtyFormType } from '@/lib/schema/resume/form/skillSpecialty'
-import type { ShallowPartial } from '@/lib/utils'
-import { zodResolver } from '@hookform/resolvers/zod'
+import type { DisplayType, ProficiencyLevel } from '@/lib/schema/resume/form/skillSpecialty'
 import { Plus, Trash2, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useMemo, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import { Button } from '@/components/ui/button'
@@ -13,11 +10,11 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { PRESET_SKILLS, PROFICIENCY_PERCENTAGE_MAP, skillSpecialtyFormSchema } from '@/lib/schema/resume/form/skillSpecialty'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
+import { useResumeFieldForm } from './hooks/use-resume-field-form'
 
 const proficiencyLevels: ProficiencyLevel[] = ['一般', '良好', '熟练', '擅长', '精通']
 const displayTypes: { value: DisplayType, label: string }[] = [
@@ -27,40 +24,20 @@ const displayTypes: { value: DisplayType, label: string }[] = [
 
 function SkillSpecialtyForm({ className }: { className?: string }) {
   const skillSpecialty = useResumeStore(state => state.skill_specialty)
-  const updateForm = useResumeStore(state => state.updateForm)
   const isMobile = useIsMobile()
   const [customSkillInput, setCustomSkillInput] = useState('')
 
-  const form = useForm({
-    resolver: zodResolver(skillSpecialtyFormSchema),
-    defaultValues: {
-      description: skillSpecialty.description || '',
-      skills: skillSpecialty.skills || [],
-    },
-    mode: 'onChange',
-    reValidateMode: 'onChange',
-  })
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'skills',
-  })
-
-  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
   const storeFormData = useMemo(() => ({
     description: skillSpecialty.description || '',
     skills: skillSpecialty.skills || [],
   }), [skillSpecialty.description, skillSpecialty.skills])
-  const isResettingRef = useFormRemoteSync(form, storeFormData)
 
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      if (isResettingRef.current)
-        return
-      updateForm('skill_specialty', value as ShallowPartial<SkillSpecialtyFormType>)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, updateForm, isResettingRef])
+  const { form, fields, append, remove } = useResumeFieldForm({
+    fieldName: 'skill_specialty',
+    schema: skillSpecialtyFormSchema,
+    storeFormData,
+    arrayFieldName: 'skills',
+  })
 
   // 检查预设技能是否已添加
   const isPresetSkillAdded = (skillLabel: string) => {
@@ -78,7 +55,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
         label: skillLabel,
         proficiencyLevel: '熟练',
         displayType: 'percentage',
-      })
+      } as any)
     }
   }
 
@@ -104,7 +81,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
       label: trimmedLabel,
       proficiencyLevel: '熟练',
       displayType: 'percentage',
-    })
+    } as any)
     setCustomSkillInput('')
   }
 
