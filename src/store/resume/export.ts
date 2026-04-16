@@ -5,7 +5,7 @@ import { create } from 'zustand'
 import { getFontFamilyCSS, themeColorMap } from '@/lib/schema'
 import useResumeConfigStore from './config'
 import useResumeStore from './form'
-import { createResumeDocHtml } from './utils'
+import { createResumeDocHtml } from './helpers'
 
 interface ResumeExportState {
   resumeRef: RefObject<HTMLDivElement | null> | null

@@ -11,10 +11,7 @@ import HistoryResumePreview from '@/pages/history/components/shared/history-resu
 import { SOURCE_META } from '@/pages/history/const'
 import { getVersionTitle } from '@/pages/history/utils'
 import { formatDateTime } from '@/utils/date'
-import {
-  HISTORY_VERSION_PREVIEW_EXIT_DURATION,
-  syncHistoryVersionPreviewState,
-} from './history-version-preview-state'
+import { HISTORY_VERSION_PREVIEW_EXIT_DURATION, syncHistoryVersionPreviewState } from './history-version-preview-state'
 
 function HistoryVersionPreviewDialog({
   previewTarget,

@@ -1,16 +1,16 @@
 import type { FormDataMap } from './const'
-import type { DocumentSlice } from './document'
-import type { SyncSlice } from './sync'
+import type { DocumentSlice } from './slices/document'
+import type { SyncSlice } from './slices/sync'
 import type { ORDERType, PersistedResumeSnapshot, ResumeAppearancePatch, ResumeTemplateBinding, ResumeType, VisibilityItemsType } from '@/lib/schema'
 import type { ResumeSnapshot } from '@/lib/supabase/resume/history'
 import { create } from 'zustand'
 import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE } from '@/lib/schema'
 import useResumeConfigStore, { registerResumeConfigPersistence } from './config'
 import { FORM_DATA_KEYS, FORM_FIELD_DEFAULTS } from './const'
-import { createDocumentSlice } from './document'
-import { createSyncSlice } from './sync'
-import { applyResumeChange, ensureSection, getPersistedSnapshot } from './sync-service'
-import { applyPatch, mapSourceToPersistedSnapshot, sanitizeDeep } from './utils'
+import { applyPatch, mapSourceToPersistedSnapshot, sanitizeDeep } from './helpers'
+import { applyResumeChange, ensureSection, getPersistedSnapshot } from './helpers/sync-service'
+import { createDocumentSlice } from './slices/document'
+import { createSyncSlice } from './slices/sync'
 
 interface FormSlice extends FormDataMap {
   activeTabId: ORDERType
