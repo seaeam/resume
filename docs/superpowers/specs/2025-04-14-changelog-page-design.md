@@ -6,13 +6,13 @@ Replicate the [magicuidesign/changelog-template](https://github.com/magicuidesig
 
 ## Technical Decisions
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| MDX integration | `@mdx-js/rollup` + remark plugins | Official, well-maintained, direct Vite/Rollup compatibility |
-| Content loading | `import.meta.glob` | Built into Vite, eager-loads MDX modules at build time |
-| Frontmatter | `remark-frontmatter` + `remark-mdx-frontmatter` | Extracts YAML frontmatter as named `frontmatter` export |
-| Prose styling | `@tailwindcss/typography` | Standard `prose` classes for MDX-rendered HTML |
-| Header | Not included | Project has its own navigation; only the timeline content area is needed |
+| Decision        | Choice                                          | Rationale                                                                |
+| --------------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| MDX integration | `@mdx-js/rollup` + remark plugins               | Official, well-maintained, direct Vite/Rollup compatibility              |
+| Content loading | `import.meta.glob`                              | Built into Vite, eager-loads MDX modules at build time                   |
+| Frontmatter     | `remark-frontmatter` + `remark-mdx-frontmatter` | Extracts YAML frontmatter as named `frontmatter` export                  |
+| Prose styling   | `@tailwindcss/typography`                       | Standard `prose` classes for MDX-rendered HTML                           |
+| Header          | Not included                                    | Project has its own navigation; only the timeline content area is needed |
 
 ## File Structure
 
@@ -165,15 +165,15 @@ max-w-5xl mx-auto px-6 lg:px-10 pt-10 pb-20
 
 ### Styling Details
 
-| Element | Classes |
-|---|---|
-| Date text | `text-sm text-muted-foreground font-medium` |
-| Version badge | `text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium` |
-| Title | `text-xl font-semibold` |
-| Tag badge | `text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground` |
-| Timeline dot | `size-3 rounded-full bg-primary` |
-| Timeline line | `w-px bg-border` |
-| Entry separator | `pb-16` (spacing between entries) |
+| Element         | Classes                                                                     |
+| --------------- | --------------------------------------------------------------------------- |
+| Date text       | `text-sm text-muted-foreground font-medium`                                 |
+| Version badge   | `text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium` |
+| Title           | `text-xl font-semibold`                                                     |
+| Tag badge       | `text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground`           |
+| Timeline dot    | `size-3 rounded-full bg-primary`                                            |
+| Timeline line   | `w-px bg-border`                                                            |
+| Entry separator | `pb-16` (spacing between entries)                                           |
 
 ## TypeScript Types
 
@@ -194,12 +194,14 @@ interface ChangelogEntry {
 ## Dependencies to Install
 
 **Production:**
+
 - `@mdx-js/rollup` — MDX Rollup plugin
 - `remark-frontmatter` — Parse YAML frontmatter in MDX
 - `remark-mdx-frontmatter` — Export frontmatter as named export
 - `@tailwindcss/typography` — Prose styling for MDX content
 
 **Dev:**
+
 - `@types/mdx` — TypeScript declarations for `.mdx` modules
 
 > Note: `@mdx-js/react` is NOT needed — MDX components are rendered directly via `import.meta.glob`, no `MDXProvider` required.

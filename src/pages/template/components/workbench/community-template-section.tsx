@@ -1,12 +1,11 @@
-import { IconFolderCode } from '@tabler/icons-react'
-import { ArrowRight, SquarePen } from 'lucide-react'
+import { ArrowRight, FolderCode, SquarePen } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Separator } from '@/components/ui/separator'
 import { formatRelativeTime } from '@/utils/date'
 import { TEMPLATE_CENTER_TAB_META } from '../../const'
-import { useTemplateWorkbenchStore } from '../../store'
+import { useCommunityTemplatesStore, useTemplateWorkbenchStore } from '../../store'
 import { TemplateCard } from './template-card'
 import { TemplateThumbnail } from './template-thumbnail'
 
@@ -19,7 +18,8 @@ const SKELETON_LABELS: Record<string, string> = {
 const formatSkeletonLabel = (skeleton: string) => SKELETON_LABELS[skeleton] ?? skeleton
 
 export function CommunityTemplateSection() {
-  const { communityTemplates: templates, createResumeWithTemplate, customizeCommunityTemplate } = useTemplateWorkbenchStore()
+  const { communityTemplates: templates } = useCommunityTemplatesStore()
+  const { createResumeWithTemplate, customizeCommunityTemplate } = useTemplateWorkbenchStore()
   const sectionMeta = TEMPLATE_CENTER_TAB_META.community
 
   if (templates.length === 0) {
@@ -37,7 +37,7 @@ export function CommunityTemplateSection() {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <IconFolderCode />
+              <FolderCode />
             </EmptyMedia>
             <EmptyTitle>社区模板还没有公开内容</EmptyTitle>
           </EmptyHeader>

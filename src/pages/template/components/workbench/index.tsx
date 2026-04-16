@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TEMPLATE_CENTER_TAB_META } from '../../const'
-import { useTemplateWorkbenchStore } from '../../store'
+import { useCommunityTemplatesStore, useOfficialTemplatesStore, useTemplateWorkbenchStore, useUserTemplatesStore } from '../../store'
 import { CommunityTemplateSection } from './community-template-section'
 import { OfficialTemplateSection } from './official-template-section'
 import { UserTemplateSection } from './user-template-section'
@@ -11,7 +11,10 @@ import { UserTemplateSection } from './user-template-section'
 const WORKBENCH_TAB_ORDER: TemplateWorkbenchTab[] = ['official', 'community', 'mine']
 
 function TemplateWorkbench() {
-  const { activeTab, setTab, officialTemplates, communityTemplates, userTemplates } = useTemplateWorkbenchStore()
+  const { activeTab, setTab } = useTemplateWorkbenchStore()
+  const { officialTemplates } = useOfficialTemplatesStore()
+  const { communityTemplates } = useCommunityTemplatesStore()
+  const { userTemplates } = useUserTemplatesStore()
   const tabCounts: Record<TemplateWorkbenchTab, number> = {
     official: officialTemplates.length,
     community: communityTemplates.length,

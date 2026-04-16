@@ -53,16 +53,6 @@ export function formatRelativeTime(dateString: string | Date | number | null | u
 }
 
 /**
- * 格式化相对时间 (包含时分)
- * @deprecated 使用 formatRelativeTime(date, true) 代替
- * @param dateString - 日期字符串或Date对象
- * @returns 格式化后的相对时间字符串，如果超过7天则显示具体时间
- */
-export function formatRelativeDateTime(dateString: string | Date | number): string {
-  return formatRelativeTime(dateString, true)
-}
-
-/**
  * 格式化日期
  * @param dateString - 日期字符串或Date对象
  * @param template - 格式化模板，默认为 'YYYY年M月D日'

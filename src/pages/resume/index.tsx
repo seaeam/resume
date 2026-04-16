@@ -3,10 +3,10 @@ import { useEffect } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import useResumeListStore from '@/pages/resume/store'
-import { CreateResumeCard } from './components/CreateResumeCard'
-import HeadBars from './components/HeadBars'
-import { ResumeCard } from './components/ResumeCard'
-import { SyncResumesDialog } from './components/SyncResumesDialog'
+import CreateResumeCard from './components/create-resume-card'
+import HeadBars from './components/head-bars'
+import ResumeCard from './components/resume-card'
+import SyncResumesDialog from './components/sync-resumes-dialog'
 
 export default function ResumePage() {
   const { resumes, loading, isOnline, syncingIds, loadResumes, setupRealtimeSubscription } = useResumeListStore()

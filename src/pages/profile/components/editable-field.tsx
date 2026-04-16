@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { IconCheck, IconEdit, IconX } from '@tabler/icons-react'
+import { Check, Pencil, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -50,16 +50,16 @@ export function EditableField({
         {!isEditing
           ? (
               <Button variant="outline" size="icon" onClick={onEdit} aria-label={`编辑${label}`}>
-                <IconEdit />
+                <Pencil />
               </Button>
             )
           : (
               <>
                 <Button variant="outline" size="icon" onClick={onSave} disabled={isSaving} aria-label={`保存${label}`}>
-                  {isSaving ? <Spinner /> : <IconCheck />}
+                  {isSaving ? <Spinner /> : <Check />}
                 </Button>
                 <Button variant="outline" size="icon" onClick={onCancel} disabled={isSaving} aria-label={`取消编辑${label}`}>
-                  <IconX />
+                  <X />
                 </Button>
               </>
             )}

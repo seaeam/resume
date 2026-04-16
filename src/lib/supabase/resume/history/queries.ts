@@ -1,0 +1,209 @@
+import type {
+  CreateResumeHistoryVersionInput,
+  ResumeHistoryOptionRecord,
+  ResumeHistoryResumeRecord,
+  ResumeHistoryVersionRow,
+  ResumeHistoryVersionSummaryRecord,
+  UpdateResumeHistoryVersionInput,
+} from './types'
+import supabase from '../../client'
+import { getCurrentUser } from '../../user'
+import { getResumeById } from '../form'
+
+const VERSION_SELECTOR = `
+  id,
+  created_at,
+  updated_at,
+  user_id,
+  resume_id,
+  version_no,
+  version_name,
+  description,
+  milestone_name,
+  source_type,
+  tags,
+  snapshot,
+  content_hash,
+  base_updated_at
+`
+
+const RESUME_SELECTOR = `
+  resume_id,
+  updated_at,
+  display_name,
+  description,
+  type,
+  basics,
+  job_intent,
+  application_info,
+  edu_background,
+  work_experience,
+  internship_experience,
+  campus_experience,
+  project_experience,
+  skill_specialty,
+  honors_certificates,
+  self_evaluation,
+  hobbies,
+  order,
+  visibility,
+  spacing,
+  font,
+  theme
+`
+
+const RESUME_OPTION_SELECTOR = `
+  resume_id,
+  updated_at,
+  display_name,
+  description,
+  type
+`
+
+const VERSION_SUMMARY_SELECTOR = `
+  resume_id,
+  version_no,
+  created_at,
+  source_type,
+  milestone_name
+`
+
+export async function getResumeHistoryResume(resumeId: string) {
+  return getResumeById<ResumeHistoryResumeRecord>(resumeId, RESUME_SELECTOR)
+}
+
+export async function listResumeHistoryOptions() {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { data, error } = await supabase
+    .from('resume_config')
+    .select(RESUME_OPTION_SELECTOR)
+    .eq('user_id', user.id)
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as ResumeHistoryOptionRecord[]
+}
+
+export async function listResumeHistoryVersions(resumeId: string) {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { data, error } = await supabase
+    .from('resume_config_versions')
+    .select(VERSION_SELECTOR)
+    .eq('resume_id', resumeId)
+    .eq('user_id', user.id)
+    .order('version_no', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as ResumeHistoryVersionRow[]
+}
+
+export async function listResumeHistoryVersionSummaries() {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { data, error } = await supabase
+    .from('resume_config_versions')
+    .select(VERSION_SUMMARY_SELECTOR)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as ResumeHistoryVersionSummaryRecord[]
+}
+
+export async function createResumeHistoryVersion(input: CreateResumeHistoryVersionInput) {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { data, error } = await supabase
+    .from('resume_config_versions')
+    .insert({
+      resume_id: input.resume_id,
+      version_name: input.version_name ?? null,
+      description: input.description ?? null,
+      milestone_name: input.milestone_name ?? null,
+      source_type: input.source_type ?? 'manual',
+      tags: input.tags ?? [],
+      snapshot: input.snapshot,
+      content_hash: input.content_hash ?? null,
+      base_updated_at: input.base_updated_at ?? null,
+    })
+    .select(VERSION_SELECTOR)
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as ResumeHistoryVersionRow
+}
+
+export async function updateResumeHistoryVersion(id: number, input: UpdateResumeHistoryVersionInput) {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { data, error } = await supabase
+    .from('resume_config_versions')
+    .update({
+      version_name: input.version_name ?? null,
+      description: input.description ?? null,
+      milestone_name: input.milestone_name ?? null,
+      tags: input.tags ?? [],
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select(VERSION_SELECTOR)
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as ResumeHistoryVersionRow
+}
+
+export async function deleteResumeHistoryVersion(id: number) {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    throw new Error('用户未登陆')
+  }
+
+  const { error } = await supabase
+    .from('resume_config_versions')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    throw error
+  }
+}

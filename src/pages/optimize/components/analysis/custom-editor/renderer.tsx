@@ -1,13 +1,13 @@
 import type { ComponentType } from 'react'
-import type { SuggestionKind, ValueType } from '../../../types'
 import type { SkillItem } from '@/lib/schema/resume/form/skillSpecialty'
+import type { SuggestionKind, ValueType } from '@/pages/optimize/types'
 import { ArrowRight, Calendar, Check, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { parseSanitizedHtml } from '@/lib/safe-html'
 import { cn } from '@/lib/utils'
-import { KIND_LABEL_MAP, PROFICIENCY_MAP } from '../../../const'
-import { detectValueType, getFieldLabel, isEmptyValue, renderValue } from '../../../utils'
+import { KIND_LABEL_MAP, PROFICIENCY_MAP } from '@/pages/optimize/const'
+import { detectValueType, getFieldLabel, isEmptyValue, renderValue } from '@/pages/optimize/utils'
 
 // 空值
 function EmptyValue() {

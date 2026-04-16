@@ -1,5 +1,5 @@
-import type { AtsEvaluationResult } from '../../../types'
 import type { ResumeSchema } from '@/lib/schema'
+import type { AtsEvaluationResult } from '@/pages/optimize/types'
 
 export type AdvancedToolKey = 'job-description' | 'formatter' | 'ats-preview' | 'benchmark'
 

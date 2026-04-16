@@ -1,1 +1,1 @@
-export type { TemplateWorkbenchMode, TemplateWorkbenchSource, TemplateWorkbenchTab } from './store/workbench'
+export type { TemplateWorkbenchMode, TemplateWorkbenchSource, TemplateWorkbenchTab } from './store'

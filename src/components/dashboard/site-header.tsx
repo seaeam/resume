@@ -7,7 +7,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbS
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs'
-import { ResumeConfigToolbar } from '@/pages/resume/editor/components/toolbar/ResumeConfigToolbar'
+import ResumeConfigToolbar from '@/pages/resume/editor/components/toolbar'
 import { AnimatedThemeToggler } from '../ui/animated-theme-toggler'
 
 export function SiteHeader() {

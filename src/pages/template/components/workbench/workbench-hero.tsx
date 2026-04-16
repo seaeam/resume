@@ -1,13 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TEMPLATE_CENTER_SUMMARY_ITEMS } from '../../const'
-import { useTemplateWorkbenchStore } from '../../store'
+import { useCommunityTemplatesStore, useOfficialTemplatesStore, useUserTemplatesStore } from '../../store'
 
 export default function WorkbenchHero() {
-  const {
-    officialTemplates,
-    communityTemplates,
-    userTemplates,
-  } = useTemplateWorkbenchStore()
+  const { officialTemplates } = useOfficialTemplatesStore()
+  const { communityTemplates } = useCommunityTemplatesStore()
+  const { userTemplates } = useUserTemplatesStore()
 
   const summaryCounts = {
     official: officialTemplates.length,

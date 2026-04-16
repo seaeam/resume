@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UpdatePasswordDialog } from '@/components/update-password-dialog'
 import { getCurrentUser } from '@/lib/supabase/user'
-import { formatRelativeDateTime } from '@/utils/date'
+import { formatRelativeTime } from '@/utils/date'
 import { SessionInfo } from './session-info'
 
 interface AccountSettingsCardProps {
@@ -60,7 +60,7 @@ export function AccountSettingsCard({ user }: AccountSettingsCardProps) {
 
         <Separator />
 
-        {sessionInfo ? <SessionInfo {...sessionInfo} formatDate={formatRelativeDateTime} /> : <LoadingSkeleton />}
+        {sessionInfo ? <SessionInfo {...sessionInfo} formatDate={d => formatRelativeTime(d, true)} /> : <LoadingSkeleton />}
       </CardContent>
     </Card>
   )

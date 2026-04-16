@@ -3,12 +3,13 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { TEMPLATE_CENTER_TAB_META } from '../../const'
-import { useTemplateWorkbenchStore } from '../../store'
+import { useOfficialTemplatesStore, useTemplateWorkbenchStore } from '../../store'
 import { TemplateCard } from './template-card'
 import { TemplateThumbnail } from './template-thumbnail'
 
 export function OfficialTemplateSection() {
-  const { officialTemplates: templates, createResumeWithTemplate, customizeOfficialTemplate } = useTemplateWorkbenchStore()
+  const { officialTemplates: templates } = useOfficialTemplatesStore()
+  const { createResumeWithTemplate, customizeOfficialTemplate } = useTemplateWorkbenchStore()
   const sectionMeta = TEMPLATE_CENTER_TAB_META.official
 
   return (

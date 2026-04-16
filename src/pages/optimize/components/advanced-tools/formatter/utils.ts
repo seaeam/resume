@@ -1,8 +1,8 @@
-import type { Finding, FindingsGroup, Suggestion } from '../../../types'
 import type { BatchOptimizationItem, BatchOptimizationResult } from './types'
 import type { ResumeSchema } from '@/lib/schema'
+import type { Finding, FindingsGroup, Suggestion } from '@/pages/optimize/types'
 import { toPath } from 'lodash'
-import { setLeaf } from '../../../utils'
+import { setLeaf } from '@/pages/optimize/utils'
 import { SEVERITY_ORDER } from './const'
 
 function buildLocationText(finding: Finding) {

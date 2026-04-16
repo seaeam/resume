@@ -1,8 +1,7 @@
-import type { AtsCreatePayload, AtsEvaluationResult, AtsPersistPatch, AtsRecordId, Summary } from '../../../pages/optimize/types'
-import type { FixChecklistItem } from '@/pages/optimize/types'
+import type { AtsCreatePayload, AtsEvaluationResult, AtsPersistPatch, AtsRecordId, FixChecklistItem, Summary } from '@/lib/schema/ats'
 import supabase from '../client'
 import { getCurrentUser } from '../user'
-import { sanitizeAtsPersistInput } from './ats-payload'
+import { sanitizeAtsPersistInput } from './utils'
 
 export interface AtsSummaryRecord {
   id: AtsRecordId

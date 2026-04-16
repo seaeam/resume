@@ -1,4 +1,4 @@
-import type { Suggestion } from '../../../types'
+import type { Suggestion } from '@/pages/optimize/types'
 import { Edit3, RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'

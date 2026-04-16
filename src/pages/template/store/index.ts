@@ -1,3 +1,6 @@
+export { default as useCommunityTemplatesStore } from './community-templates'
 export { default as useTemplateEditorStore } from './editor'
+export { default as useOfficialTemplatesStore } from './official-templates'
+export * from './shared'
+export { default as useUserTemplatesStore } from './user-templates'
 export { default as useTemplateWorkbenchStore } from './workbench'
-export type { TemplateWorkbenchMode, TemplateWorkbenchSource, TemplateWorkbenchTab } from './workbench'

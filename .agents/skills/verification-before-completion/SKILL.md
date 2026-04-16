@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs; in this repository, completion verification must include running npx tsc --noEmit and confirming the output before making any success claims
 ---
 
 # Verification Before Completion
@@ -26,7 +26,8 @@ If you haven't run the verification command in this message, you cannot claim it
 ```
 BEFORE claiming any status or expressing satisfaction:
 
-1. IDENTIFY: What command proves this claim?
+1. IDENTIFY: What command(s) prove this claim?
+   - In this repository, ALWAYS include: npx tsc --noEmit
 2. RUN: Execute the FULL command (fresh, complete)
 3. READ: Full output, check exit code, count failures
 4. VERIFY: Does output confirm the claim?
@@ -43,6 +44,7 @@ Skip any step = lying, not verifying
 |-------|----------|----------------|
 | Tests pass | Test command output: 0 failures | Previous run, "should pass" |
 | Linter clean | Linter output: 0 errors | Partial check, extrapolation |
+| No type errors | `npx tsc --noEmit`: exit 0, 0 errors | Tests pass, lint clean |
 | Build succeeds | Build command: exit 0 | Linter passing, logs look good |
 | Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
 | Regression test works | Red-green cycle verified | Test passes once |
@@ -68,6 +70,8 @@ Skip any step = lying, not verifying
 | "I'm confident" | Confidence ≠ evidence |
 | "Just this once" | No exceptions |
 | "Linter passed" | Linter ≠ compiler |
+| "Tests passed" | Tests ≠ compiler |
+| "This task only changed docs/skills" | Repository completion check still includes `npx tsc --noEmit` |
 | "Agent said success" | Verify independently |
 | "I'm tired" | Exhaustion ≠ excuse |
 | "Partial check is enough" | Partial proves nothing |
@@ -91,6 +95,12 @@ Skip any step = lying, not verifying
 ```
 ✅ [Run build] [See: exit 0] "Build passes"
 ❌ "Linter passed" (linter doesn't check compilation)
+```
+
+**TypeScript:**
+```
+✅ [Run npx tsc --noEmit] [See: exit 0] "Typecheck passes"
+❌ "Tests/lint passed so types should be fine"
 ```
 
 **Requirements:**
@@ -120,6 +130,7 @@ From 24 failure memories:
 - ANY variation of success/completion claims
 - ANY expression of satisfaction
 - ANY positive statement about work state
+- ANY task completion in this repository without first running `npx tsc --noEmit`
 - Committing, PR creation, task completion
 - Moving to next task
 - Delegating to agents
@@ -134,6 +145,6 @@ From 24 failure memories:
 
 **No shortcuts for verification.**
 
-Run the command. Read the output. THEN claim the result.
+Run the command. Read the output. In this repository, run `npx tsc --noEmit`. THEN claim the result.
 
 This is non-negotiable.

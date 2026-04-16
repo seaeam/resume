@@ -2,8 +2,7 @@
 
 import { User } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useCurrentUserImage } from '@/hooks/use-current-user-image'
-import { useCurrentUserName } from '@/hooks/use-current-user-name'
+import { useCurrentUserImage, useCurrentUserName } from '@/hooks/use-current-user'
 
 export function CurrentUserAvatar({ className }: { className?: string }) {
   const profileImage = useCurrentUserImage()

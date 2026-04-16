@@ -1,4 +1,4 @@
-import type { Severity, Suggestion } from '../../../types'
+import type { Severity, Suggestion } from '@/pages/optimize/types'
 import { AlertTriangle, BadgeQuestionMark, Code2, Edit3, FileDiff, Lightbulb, ListOrdered } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Badge } from '@/components/ui/badge'
