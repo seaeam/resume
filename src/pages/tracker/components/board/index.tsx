@@ -7,14 +7,14 @@ import { updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
 import { APPLICATION_STATUS_CONFIG, BOARD_COLUMNS } from '../../const'
 import useTrackerStore from '../../store'
-import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
+import { autoCompleteStages, filterJobs, getTrackerErrorMessage } from '../../utils'
 import { ColumnCard } from './column-card'
 
 const EDGE_THRESHOLD = 120
 const SCROLL_SPEED = 80
 
 export default function BoardView() {
-  const { jobs, filterStatus, syncJob, restoreJobsSnapshot } = useTrackerStore()
+  const { jobs, filterStatus, searchKeyword, syncJob, restoreJobsSnapshot } = useTrackerStore()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const columnRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const isDraggingRef = useRef(false)
@@ -45,33 +45,11 @@ export default function BoardView() {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
+  // 搜索结果在每一列内独立过滤（不按 filterStatus 隐藏列，保留所有列以便拖拽改状态）
+  const filteredJobs = filterJobs(jobs, null, searchKeyword)
   const getJobsByStatus = (status: ApplicationStatus) =>
-    jobs.filter(job => job.status === status)
+    filteredJobs.filter(job => job.status === status)
 
-  const scrollToColumnCenter = useCallback((status: string) => {
-    const container = scrollContainerRef.current
-    const columnEl = columnRefs.current.get(status)
-    if (!container || !columnEl)
-      return
-
-    const containerWidth = container.clientWidth
-    const columnLeft = columnEl.offsetLeft - container.offsetLeft
-    const columnWidth = columnEl.offsetWidth
-    const targetScroll = columnLeft - (containerWidth - columnWidth) / 2
-
-    container.scrollTo({ left: Math.max(0, targetScroll), behavior: 'smooth' })
-  }, [])
-
-  // filterStatus 变化时滚动到对应列并居中
-  useEffect(() => {
-    if (filterStatus && BOARD_COLUMNS.some(c => c.status === filterStatus)) {
-      requestAnimationFrame(() => {
-        scrollToColumnCenter(filterStatus)
-      })
-    }
-  }, [filterStatus, scrollToColumnCenter])
-
-  // 拖拽结束后滚动到目标列（靠近可见即可）
   const scrollToColumn = useCallback((status: string) => {
     const container = scrollContainerRef.current
     const columnEl = columnRefs.current.get(status)
@@ -80,12 +58,20 @@ export default function BoardView() {
 
     const containerRect = container.getBoundingClientRect()
     const columnRect = columnEl.getBoundingClientRect()
-
     if (columnRect.left < containerRect.left || columnRect.right > containerRect.right) {
       const scrollLeft = columnEl.offsetLeft - container.offsetLeft - 16
       container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
     }
   }, [])
+
+  // filterStatus 变化时滚动到对应列（仅当横向滚动时才生效）
+  useEffect(() => {
+    if (filterStatus && BOARD_COLUMNS.some(c => c.status === filterStatus)) {
+      requestAnimationFrame(() => {
+        scrollToColumn(filterStatus)
+      })
+    }
+  }, [filterStatus, scrollToColumn])
 
   const handleDragStart = () => {
     isDraggingRef.current = true
@@ -102,7 +88,7 @@ export default function BoardView() {
     const previousState = useTrackerStore.getState()
     const currentJob = previousState.jobs.find(job => job.id === draggableId)
 
-    if (!currentJob)
+    if (!currentJob || currentJob.status === newStatus)
       return
 
     const updatedStageDetails = autoCompleteStages(currentJob.status, newStatus, currentJob.stage_details, true)
@@ -113,13 +99,10 @@ export default function BoardView() {
     updateCompany(draggableId, optimisticJob)
       .then((savedJob) => {
         syncJob(savedJob)
-
-        if (newStatus === 'offer') {
+        if (newStatus === 'offer')
           toast.success('Offer🎉')
-        }
-        else if (newStatus === 'rejected') {
+        else if (newStatus === 'rejected')
           toast.error('终止流程')
-        }
       })
       .catch((error) => {
         restoreJobsSnapshot({
@@ -128,10 +111,6 @@ export default function BoardView() {
         })
         toast.error('更新状态失败', { description: getTrackerErrorMessage(error) })
       })
-
-    requestAnimationFrame(() => {
-      scrollToColumn(newStatus)
-    })
   }
 
   const isColumnHighlighted = (status: ApplicationStatus) =>
@@ -139,90 +118,82 @@ export default function BoardView() {
 
   return (
     <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="space-y-4">
-        <div
-          ref={scrollContainerRef}
-          className="w-full min-w-0 max-w-full overflow-x-auto"
-        >
-          <div className="flex w-max gap-4 px-1 pb-4 min-h-[500px]">
-            {BOARD_COLUMNS.map((column) => {
-              const columnJobs = getJobsByStatus(column.status)
-              const highlighted = isColumnHighlighted(column.status)
-              return (
-                <div
-                  key={column.status}
-                  ref={(el) => {
-                    if (el)
-                      columnRefs.current.set(column.status, el)
-                  }}
-                  className="flex w-[320px] min-w-[320px] shrink-0 flex-col"
+      <div
+        ref={scrollContainerRef}
+        className="w-full min-w-0 overflow-x-auto"
+      >
+        <div className="flex gap-3 pb-2 xl:gap-4 [&>*]:w-[280px] [&>*]:shrink-0 xl:[&>*]:w-auto xl:[&>*]:flex-1 xl:[&>*]:basis-0">
+          {BOARD_COLUMNS.map((column) => {
+            const columnJobs = getJobsByStatus(column.status)
+            const highlighted = isColumnHighlighted(column.status)
+            const config = APPLICATION_STATUS_CONFIG[column.status]
+            return (
+              <div
+                key={column.status}
+                ref={(el) => {
+                  if (el)
+                    columnRefs.current.set(column.status, el)
+                }}
+                className="flex min-w-0 flex-col"
+              >
+                <div className={cn(
+                  'flex items-center justify-between gap-2 rounded-t-lg border border-b-0 bg-muted/40 px-3 py-2',
+                  highlighted && 'border-primary/50 bg-primary/10',
+                )}
                 >
-                  <div className={cn(
-                    'mb-3 rounded-2xl border border-border/60 bg-card/80 px-4 py-3 shadow-sm',
-                    highlighted && 'border-primary/60 bg-primary/5',
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={cn('size-2 shrink-0 rounded-full', config.bgColor)} />
+                    <h3 className="truncate text-sm font-semibold">{column.label}</h3>
+                  </div>
+                  <span className={cn(
+                    'inline-flex min-w-6 items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-medium',
+                    highlighted ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground',
                   )}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="font-semibold">{column.label}</h3>
-                      </div>
-                      <span className={cn(
-                        'inline-flex min-w-8 items-center justify-center rounded-full px-2 py-1 text-xs font-medium',
-                        highlighted
-                          ? 'bg-primary text-primary-foreground'
-                          : APPLICATION_STATUS_CONFIG[column.status].bgColor,
-                        !highlighted && APPLICATION_STATUS_CONFIG[column.status].color,
-                      )}
-                      >
-                        {columnJobs.length}
-                      </span>
-                    </div>
-                  </div>
-
-                  <Droppable droppableId={column.status}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={cn(
-                          'flex-1 flex flex-col gap-3 rounded-2xl border border-border/60 p-3 transition-all duration-300',
-                          snapshot.isDraggingOver
-                            ? 'bg-primary/10 ring-2 ring-primary/20'
-                            : highlighted
-                              ? 'ring-2 ring-primary/40 bg-primary/5'
-                              : 'bg-muted/30',
-                        )}
-                      >
-                        {columnJobs.length > 0
-                          ? (
-                              columnJobs.map((job, index) => (
-                                <Draggable key={job.id} draggableId={job.id} index={index}>
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className={snapshot.isDragging ? 'opacity-80 rotate-2 scale-105' : ''}
-                                    >
-                                      <ColumnCard job={job} />
-                                    </div>
-                                  )}
-                                </Draggable>
-                              ))
-                            )
-                          : (
-                              <div className="flex min-h-[180px] flex-1 items-center justify-center rounded-xl border border-dashed border-border/70 bg-background/80 px-4 text-center text-sm text-muted-foreground">
-                                暂无职位
-                              </div>
-                            )}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
+                    {columnJobs.length}
+                  </span>
                 </div>
-              )
-            })}
-          </div>
+
+                <Droppable droppableId={column.status}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={cn(
+                        'flex min-h-[400px] flex-1 flex-col gap-2 rounded-b-lg border bg-muted/20 p-2 transition-colors',
+                        snapshot.isDraggingOver && 'bg-primary/5 ring-1 ring-primary/30',
+                        highlighted && !snapshot.isDraggingOver && 'border-primary/50 bg-primary/5',
+                      )}
+                    >
+                      {columnJobs.length > 0
+                        ? (
+                            columnJobs.map((job, index) => (
+                              <Draggable key={job.id} draggableId={job.id} index={index}>
+                                {(dragProvided, dragSnapshot) => (
+                                  <div
+                                    ref={dragProvided.innerRef}
+                                    {...dragProvided.draggableProps}
+                                    {...dragProvided.dragHandleProps}
+                                    className={dragSnapshot.isDragging ? 'opacity-90 shadow-lg' : ''}
+                                  >
+                                    <ColumnCard job={job} />
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))
+                          )
+                        : (
+                            <div className="flex min-h-[120px] flex-1 items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground">
+                              拖拽职位至此
+                            </div>
+                          )}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            )
+          })}
         </div>
       </div>
     </DragDropContext>

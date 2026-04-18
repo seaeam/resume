@@ -1,32 +1,36 @@
 import type { ApplicationStatus, DrawerTab } from '../../types'
-import { BriefcaseBusiness, ExternalLink, MapPin, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { ArrowLeft, BriefcaseBusiness, MoreHorizontal, Pencil, Trash2, X, XCircle } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { updateCompany } from '@/lib/supabase/resume'
+import { deleteCompany, updateCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
-import { APPLICATION_STATUS_CONFIG } from '../../const'
+import { APPLICATION_STATUS_CONFIG, APPLICATION_STATUS_ORDER } from '../../const'
 import useTrackerStore from '../../store'
 import { autoCompleteStages, getTrackerErrorMessage } from '../../utils'
 import DrawerDocument from './document'
 import DrawerEditForm from './edit-form'
-import DrawerHeaderInfo from './header'
-import DrawerProgress from './progress'
+import DrawerMetaBar from './meta-bar'
+import ProgressTimeline from './progress-timeline'
 import DrawerStageDetail from './stage-detail'
 
+type ConfirmKind = 'reject' | 'delete' | null
+
 export default function JobDrawer() {
-  const { selectedJob, drawerOpen, closeJobDrawer, syncJob, restoreJobsSnapshot } = useTrackerStore()
+  const { selectedJob, drawerOpen, closeJobDrawer, syncJob, restoreJobsSnapshot, removeJobs } = useTrackerStore()
   const isMobile = useIsMobile()
-  const stageDetailRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState<DrawerTab>('information')
   const [isEditing, setIsEditing] = useState(false)
   const [viewingStage, setViewingStage] = useState<ApplicationStatus | null>(null)
+  const [confirmKind, setConfirmKind] = useState<ConfirmKind>(null)
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -37,16 +41,7 @@ export default function JobDrawer() {
     }
   }
 
-  const handleSaved = () => {
-    setIsEditing(false)
-  }
-
-  const focusCurrentStage = () => {
-    setViewingStage(null)
-    requestAnimationFrame(() => {
-      stageDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }
+  const handleSaved = () => setIsEditing(false)
 
   const handleProgressChange = (newStatus: ApplicationStatus) => {
     if (!selectedJob)
@@ -63,9 +58,7 @@ export default function JobDrawer() {
     syncJob(optimisticJob)
 
     updateCompany(selectedJob.id, optimisticJob)
-      .then((savedJob) => {
-        syncJob(savedJob)
-      })
+      .then(syncJob)
       .catch((error) => {
         restoreJobsSnapshot({
           jobs: previousState.jobs,
@@ -77,171 +70,226 @@ export default function JobDrawer() {
     setViewingStage(null)
   }
 
+  const handleStepBack = () => {
+    if (!selectedJob)
+      return
+    const idx = APPLICATION_STATUS_ORDER.indexOf(selectedJob.status)
+    if (idx > 0)
+      handleProgressChange(APPLICATION_STATUS_ORDER[idx - 1])
+  }
+
+  const handleReject = () => {
+    if (!selectedJob || selectedJob.status === 'rejected')
+      return
+    handleProgressChange('rejected')
+    setConfirmKind(null)
+  }
+
+  const handleDelete = async () => {
+    if (!selectedJob)
+      return
+    setConfirmKind(null)
+    try {
+      await deleteCompany(selectedJob.id)
+      removeJobs([selectedJob.id])
+      toast.success('已删除该职位')
+    }
+    catch (error) {
+      toast.error('删除失败', { description: getTrackerErrorMessage(error) })
+    }
+  }
+
   if (!selectedJob)
     return null
 
   const statusConfig = APPLICATION_STATUS_CONFIG[selectedJob.status]
   const displayStage = viewingStage || selectedJob.status
-  const description = [
-    selectedJob.location,
-    selectedJob.salary,
-  ].filter(Boolean).join(' · ')
+  const isViewingHistory = viewingStage !== null && viewingStage !== selectedJob.status
+  const canStepBack = APPLICATION_STATUS_ORDER.indexOf(selectedJob.status) > 0 && selectedJob.status !== 'rejected'
 
-  const dialogHeaderContent = (
-    <div className="flex items-start justify-between gap-4">
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          {selectedJob.company_logo
-            ? <img src={selectedJob.company_logo} alt={selectedJob.company} className="size-7 object-contain" />
-            : <BriefcaseBusiness className="size-5" />}
+  const titleBlock = (
+    <div className="flex items-start gap-3">
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        {selectedJob.company_logo
+          ? <img src={selectedJob.company_logo} alt={selectedJob.company} className="size-7 object-contain" />
+          : <BriefcaseBusiness className="size-5" />}
+      </div>
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex items-center gap-2 text-xs">
+          <Badge className={cn('rounded-full border-0 px-2 py-0.5 text-[11px] font-medium', statusConfig.bgColor, statusConfig.color)}>
+            {statusConfig.label}
+          </Badge>
+          <span className="truncate text-muted-foreground">{selectedJob.company}</span>
         </div>
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className={cn('rounded-full border-0 px-2.5 py-1 text-xs font-medium', statusConfig.bgColor, statusConfig.color)}>
-              {statusConfig.label}
-            </Badge>
-            <span className="text-xs text-muted-foreground">{selectedJob.company}</span>
-          </div>
-          <div className="space-y-1">
-            <DialogTitle className="line-clamp-1 text-xl tracking-tight">{selectedJob.position}</DialogTitle>
-            <DialogDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-3.5" />
-                {description}
-              </span>
-            </DialogDescription>
-          </div>
+        <SheetTitle className="line-clamp-1 text-lg leading-tight tracking-tight">{selectedJob.position}</SheetTitle>
+      </div>
+    </div>
+  )
+
+  const toolbar = !isEditing && (
+    <div className="flex items-center gap-1">
+      <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setIsEditing(true)}>
+        <Pencil className="size-3.5" />
+        编辑信息
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon-sm" aria-label="更多操作">
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem disabled={!canStepBack} onClick={handleStepBack}>
+            <ArrowLeft className="size-4" />
+            回退到上一阶段
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={selectedJob.status === 'rejected'}
+            onClick={() => setConfirmKind('reject')}
+            className="text-destructive focus:text-destructive"
+          >
+            <XCircle className="size-4" />
+            终止该流程
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setConfirmKind('delete')} className="text-destructive focus:text-destructive">
+            <Trash2 className="size-4" />
+            删除该记录
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+
+  const headerContent = (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        {titleBlock}
+        <div className="flex shrink-0 items-center gap-1">
+          {toolbar}
+          {isMobile && (
+            <Button variant="ghost" size="icon-sm" aria-label="关闭" onClick={() => handleOpenChange(false)}>
+              <X />
+            </Button>
+          )}
         </div>
       </div>
-
-      <Button variant="ghost" size="icon-sm" aria-label="关闭详情" onClick={() => handleOpenChange(false)}>
-        <X />
-      </Button>
+      <DrawerMetaBar />
     </div>
   )
 
-  const footerActions = (
-    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-      {activeTab === 'information' && selectedJob.job_url && (
-        <Button variant="outline" asChild>
-          <a href={selectedJob.job_url} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="size-4" />
-            打开 JD
-          </a>
-        </Button>
-      )}
-      <Button variant="outline" onClick={() => handleOpenChange(false)}>
-        关闭
-      </Button>
-    </div>
-  )
-
-  const drawerBody = (
+  const body = (
     <div className="scrollbar-gutter-stable scrollbar-thin-subtle min-h-0 flex-1 overflow-y-auto overscroll-contain">
-      <div className="px-4 py-4 pb-6 sm:px-6 sm:py-5 sm:pb-6 lg:px-8 lg:py-6">
-        <Tabs
-          value={activeTab}
-          className="min-h-0"
-          onValueChange={value => setActiveTab(value as DrawerTab)}
-        >
-          <TabsList className="w-full">
-            <TabsTrigger value="information" className="flex-1">
-              跟进详情
-            </TabsTrigger>
-            <TabsTrigger value="document" className="flex-1">
-              投递简历
-            </TabsTrigger>
-          </TabsList>
+      <div className="px-5 py-5 lg:px-6">
+        {isEditing
+          ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">编辑职位信息</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+                    <ArrowLeft className="size-4" />
+                    返回
+                  </Button>
+                </div>
+                <DrawerEditForm onSaved={handleSaved} onCancel={() => setIsEditing(false)} />
+              </div>
+            )
+          : (
+              <Tabs value={activeTab} onValueChange={v => setActiveTab(v as DrawerTab)}>
+                <TabsList>
+                  <TabsTrigger value="information" className="flex-1">跟进流程</TabsTrigger>
+                  <TabsTrigger value="document" className="flex-1">投递简历</TabsTrigger>
+                </TabsList>
 
-          <TabsContent value="information" className="mt-5">
-            {isEditing
-              ? (
-                  <DrawerEditForm
-                    onSaved={handleSaved}
-                    onCancel={() => setIsEditing(false)}
+                <TabsContent value="information" className="mt-5 space-y-6">
+                  <ProgressTimeline
+                    viewingStage={viewingStage}
+                    onStageClick={stage => setViewingStage(stage === selectedJob.status ? null : stage)}
                   />
-                )
-              : (
-                  <div className="space-y-5">
-                    <DrawerHeaderInfo onEdit={() => setIsEditing(true)} />
-                    <DrawerProgress
-                      viewingStage={viewingStage}
-                      onStageClick={(stage) => {
-                        setViewingStage(stage === selectedJob.status ? null : stage)
-                      }}
-                      onStatusChange={handleProgressChange}
-                      onFocusCurrentStage={focusCurrentStage}
-                    />
-                    {selectedJob.status !== 'rejected' && (
-                      <div ref={stageDetailRef}>
-                        <DrawerStageDetail
-                          displayStage={displayStage}
-                          isViewingHistory={viewingStage !== null && viewingStage !== selectedJob.status}
-                          onSaved={() => setViewingStage(null)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-          </TabsContent>
+                  {selectedJob.status !== 'rejected' && (
+                    <>
+                      <Separator />
+                      <DrawerStageDetail
+                        displayStage={displayStage}
+                        isViewingHistory={isViewingHistory}
+                        onSaved={() => setViewingStage(null)}
+                      />
+                    </>
+                  )}
+                </TabsContent>
 
-          <TabsContent value="document" className="mt-5">
-            <DrawerDocument />
-          </TabsContent>
-        </Tabs>
+                <TabsContent value="document" className="mt-5">
+                  <DrawerDocument />
+                </TabsContent>
+              </Tabs>
+            )}
       </div>
     </div>
+  )
+
+  const confirmDialog = (
+    <AlertDialog open={confirmKind !== null} onOpenChange={open => !open && setConfirmKind(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {confirmKind === 'delete' ? '确认删除该记录？' : '确认终止该流程？'}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {confirmKind === 'delete'
+              ? `「${selectedJob.company} - ${selectedJob.position}」将被永久删除，无法恢复。`
+              : '该操作会把状态标记为「终止流程」，可在「已终止」筛选下查看。'}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>取消</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => {
+              if (confirmKind === 'delete')
+                handleDelete()
+              else if (confirmKind === 'reject')
+                handleReject()
+            }}
+          >
+            {confirmKind === 'delete' ? '删除' : '终止'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 
   if (isMobile) {
     return (
-      <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
-        <DrawerContent className="flex h-[94dvh] max-h-[94dvh] flex-col overflow-hidden rounded-t-[28px] p-0">
-          <DrawerHeader className="shrink-0 px-4 py-4 text-left">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className={cn('rounded-full border-0 px-2.5 py-1 text-xs font-medium', statusConfig.bgColor, statusConfig.color)}>
-                    {statusConfig.label}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">{selectedJob.company}</span>
-                </div>
-                <DrawerTitle className="line-clamp-2 text-xl">{selectedJob.position}</DrawerTitle>
-                <DrawerDescription>{description}</DrawerDescription>
-              </div>
-
-              <Button variant="ghost" size="icon-sm" aria-label="关闭详情" onClick={() => handleOpenChange(false)}>
-                <X />
-              </Button>
-            </div>
-          </DrawerHeader>
-          <Separator />
-          {drawerBody}
-          <Separator />
-          <DrawerFooter className="shrink-0 flex flex-col gap-3 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur supports-backdrop-filter:bg-background/80">
-            {footerActions}
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      <>
+        <Drawer open={drawerOpen} onOpenChange={handleOpenChange}>
+          <DrawerContent className="flex h-[94dvh] max-h-[94dvh] flex-col overflow-hidden rounded-t-[28px] p-0">
+            <DrawerHeader className="shrink-0 px-4 py-4 text-left">
+              {headerContent}
+              <DrawerTitle className="sr-only">{selectedJob.position}</DrawerTitle>
+              <DrawerDescription className="sr-only">{selectedJob.company}</DrawerDescription>
+            </DrawerHeader>
+            <Separator />
+            {body}
+          </DrawerContent>
+        </Drawer>
+        {confirmDialog}
+      </>
     )
   }
 
   return (
-    <Dialog open={drawerOpen} onOpenChange={handleOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className="flex h-[min(90vh,920px)] w-[calc(84vw)] min-w-0 max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden border-border/70 bg-background/95 p-0 shadow-xl backdrop-blur sm:max-w-[min(1180px,calc(100vw-2rem))] lg:max-w-[min(1320px,84vw)]"
-      >
-        <DialogHeader className="shrink-0 px-5 py-4 sm:px-6 sm:py-5 lg:px-8">
-          {dialogHeaderContent}
-        </DialogHeader>
-        <Separator />
-        {drawerBody}
-        <Separator />
-        <DialogFooter className="shrink-0 flex-col gap-3 bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          {footerActions}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Sheet open={drawerOpen} onOpenChange={handleOpenChange}>
+        <SheetContent side="right" className="flex  flex-col gap-0 overflow-hidden p-0 sm:max-w-xl md:max-w-2xl lg:max-w-4xl">
+          <SheetHeader className="shrink-0 px-5 py-4 pr-12 lg:px-6 lg:pr-14">
+            {headerContent}
+            <SheetDescription className="sr-only">{selectedJob.company}</SheetDescription>
+          </SheetHeader>
+          <Separator />
+          {body}
+        </SheetContent>
+      </Sheet>
+      {confirmDialog}
+    </>
   )
 }

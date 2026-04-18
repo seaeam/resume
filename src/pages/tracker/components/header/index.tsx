@@ -1,21 +1,32 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { CheckSquare, Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { deleteCompany } from '@/lib/supabase/resume'
 import { cn } from '@/lib/utils'
-import { TRACKER_BATCH_TOOLBAR_LABEL, TRACKER_PRIMARY_ACTION_TEXT } from '../../const'
+import { TRACKER_PRIMARY_ACTION_TEXT } from '../../const'
 import useTrackerStore from '../../store'
-import { getTrackerErrorMessage } from '../../utils'
+import { filterJobs, getTrackerErrorMessage } from '../../utils'
 import { ViewToggle } from './view-toggle'
 
 export default function TrackerHeader() {
-  const { jobs, loading, isSelectMode, selectedIds, selectAll, enterSelectMode, exitSelectMode, removeJobs, openAddDrawer, filterStatus } = useTrackerStore()
+  const {
+    jobs,
+    loading,
+    isSelectMode,
+    selectedIds,
+    selectAll,
+    enterSelectMode,
+    exitSelectMode,
+    removeJobs,
+    openAddDrawer,
+    filterStatus,
+    searchKeyword,
+    setSearchKeyword,
+  } = useTrackerStore()
   const jobCount = jobs.length
-  const selectableCount = filterStatus
-    ? jobs.filter(job => job.status === filterStatus).length
-    : jobCount
+  const selectableCount = filterJobs(jobs, filterStatus, searchKeyword).length
   const selectedCount = selectedIds.size
 
   const handleDeleteSelectedJobs = async () => {
@@ -37,88 +48,92 @@ export default function TrackerHeader() {
   }
 
   return (
-    <>
-      <header className="flex flex-col gap-4 rounded-3xl border border-border/70 bg-card/80 p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-2">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">你的求职跟进</h1>
-              {loading
-                ? <Skeleton className="mt-2 h-5 w-48" />
-                : (
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      共
-                      {' '}
-                      <span className="font-semibold text-foreground">{jobCount}</span>
-                      {' '}
-                      个职位
-                    </p>
-                  )}
-            </div>
-          </div>
+    <header className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-xl font-semibold tracking-tight md:text-2xl">求职跟进</h1>
+          {loading
+            ? <Skeleton className="h-4 w-16" />
+            : (
+                <span className="text-sm text-muted-foreground">
+                  共
+                  <span className="mx-1 font-semibold text-foreground">{jobCount}</span>
+                  个职位
+                </span>
+              )}
+        </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={openAddDrawer}>
-              <Plus />
-              {TRACKER_PRIMARY_ACTION_TEXT}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 lg:w-72 lg:flex-none">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={searchKeyword}
+              placeholder="搜索公司 / 岗位 / 城市"
+              className="pl-8"
+              onChange={e => setSearchKeyword(e.target.value)}
+            />
+          </div>
+          <ViewToggle />
+          <Button
+            variant={isSelectMode ? 'secondary' : 'outline'}
+            size="icon"
+            aria-label={isSelectMode ? '退出批量管理' : '批量管理'}
+            title={isSelectMode ? '退出批量管理' : '批量管理'}
+            onClick={isSelectMode ? exitSelectMode : enterSelectMode}
+          >
+            <CheckSquare />
+          </Button>
+          <Button onClick={openAddDrawer}>
+            <Plus />
+            {TRACKER_PRIMARY_ACTION_TEXT}
+          </Button>
+        </div>
+      </div>
+
+      {isSelectMode && (
+        <div className={cn(
+          'flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-sm',
+          selectedCount > 0 && 'border-primary/40 bg-primary/5',
+        )}
+        >
+          <span className="font-medium">
+            已选
+            <span className="mx-1 text-primary">{selectedCount}</span>
+            /
+            {' '}
+            {selectableCount}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7"
+            onClick={selectAll}
+          >
+            {selectedCount === selectableCount && selectableCount > 0 ? '取消全选' : '全选当前筛选'}
+          </Button>
+          {selectedCount > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="ml-auto h-7"
+              onClick={() => handleDeleteSelectedJobs()}
+            >
+              <Trash2 />
+              删除选中
             </Button>
-          </div>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('h-7', selectedCount > 0 ? '' : 'ml-auto')}
+            onClick={exitSelectMode}
+          >
+            <X />
+            退出
+          </Button>
         </div>
-
-        <div className="flex flex-col gap-3 border-t border-border/60 pt-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
-              {TRACKER_BATCH_TOOLBAR_LABEL}
-            </span>
-            {isSelectMode
-              ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn(
-                        'gap-2 rounded-xl',
-                        selectedCount > 0 && 'border-primary bg-primary/10 text-primary',
-                      )}
-                      onClick={selectAll}
-                    >
-                      <Checkbox
-                        checked={selectedCount === selectableCount && selectableCount > 0}
-                        className="size-4"
-                      />
-                      已选
-                      {' '}
-                      {selectedCount}
-                      {' '}
-                      个职位
-                    </Button>
-                    {selectedCount > 0 && (
-                      <Button variant="destructive" size="sm" className="gap-2 rounded-xl" onClick={() => handleDeleteSelectedJobs()}>
-                        <Trash2 className="size-4" />
-                        删除
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="sm" className="rounded-xl" onClick={exitSelectMode}>
-                      退出批量管理
-                    </Button>
-                  </>
-                )
-              : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 rounded-xl"
-                    onClick={enterSelectMode}
-                  >
-                    管理职位
-                  </Button>
-                )}
-          </div>
-          <div className="shrink-0 self-start lg:self-auto">
-            <ViewToggle />
-          </div>
-        </div>
-      </header>
-    </>
+      )}
+    </header>
   )
 }

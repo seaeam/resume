@@ -210,3 +210,19 @@ export function getTrackerLoadErrorMeta(error: unknown) {
 export function getTrackerErrorMessage(error: unknown, fallback = '未知错误') {
   return error instanceof Error ? error.message : fallback
 }
+
+export function filterJobs(
+  jobs: JobApplication[],
+  filterStatus: ApplicationStatus | null,
+  keyword: string,
+): JobApplication[] {
+  const trimmed = keyword.trim().toLowerCase()
+  return jobs.filter((job) => {
+    if (filterStatus && job.status !== filterStatus)
+      return false
+    if (!trimmed)
+      return true
+    return [job.company, job.position, job.location, job.salary ?? '']
+      .some(field => field.toLowerCase().includes(trimmed))
+  })
+}

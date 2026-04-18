@@ -1,5 +1,6 @@
 import type { ApplicationStatus, JobApplication, ViewMode } from './types'
 import { create } from 'zustand'
+import { filterJobs } from './utils'
 
 interface TrackerJobsSnapshot {
   jobs: JobApplication[]
@@ -20,6 +21,7 @@ interface TrackerStore {
 
   // 筛选
   filterStatus: ApplicationStatus | null
+  searchKeyword: string
 
   // Drawer
   selectedJob: JobApplication | null
@@ -29,6 +31,7 @@ interface TrackerStore {
   // 共享状态操作
   setViewMode: (mode: ViewMode) => void
   setFilterStatus: (status: ApplicationStatus | null) => void
+  setSearchKeyword: (keyword: string) => void
   enterSelectMode: () => void
   exitSelectMode: () => void
   toggleSelect: (id: string) => void
@@ -57,6 +60,7 @@ const useTrackerStore = create<TrackerStore>()(set => ({
 
   // 筛选
   filterStatus: null,
+  searchKeyword: '',
 
   // Drawer
   selectedJob: null,
@@ -66,6 +70,7 @@ const useTrackerStore = create<TrackerStore>()(set => ({
   // 共享状态操作
   setViewMode: mode => set({ viewMode: mode }),
   setFilterStatus: status => set({ filterStatus: status }),
+  setSearchKeyword: keyword => set({ searchKeyword: keyword }),
   enterSelectMode: () => set({ isSelectMode: true, selectedIds: new Set() }),
   exitSelectMode: () => set({ isSelectMode: false, selectedIds: new Set() }),
   toggleSelect: (id) => {
@@ -82,9 +87,7 @@ const useTrackerStore = create<TrackerStore>()(set => ({
   },
   selectAll: () => {
     set((state) => {
-      const selectableJobs = state.filterStatus
-        ? state.jobs.filter(job => job.status === state.filterStatus)
-        : state.jobs
+      const selectableJobs = filterJobs(state.jobs, state.filterStatus, state.searchKeyword)
 
       return {
         selectedIds: state.selectedIds.size === selectableJobs.length

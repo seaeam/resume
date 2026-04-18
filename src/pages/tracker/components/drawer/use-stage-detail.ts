@@ -209,6 +209,69 @@ export function useStageDetail({ displayStage }: UseStageDetailProps) {
     }
   }
 
+  const canCompleteStage = (() => {
+    if (!job)
+      return false
+    if (currentStatus === '已完成' || currentStatus === '已拒绝')
+      return false
+    if (isInterviewStatus) {
+      const savedSubStages = job.interview_sub_stages || []
+      return savedSubStages.length > 0 && savedSubStages.every(s => s.status === '已完成')
+    }
+    const detail = localDetails.find(s => s.stage === displayStage)
+    return Boolean(detail?.start_date)
+  })()
+
+  const markCurrentStageComplete = async () => {
+    if (!job || !canCompleteStage)
+      return
+
+    const nextDetails = (() => {
+      const existing = localDetails.find(s => s.stage === displayStage)
+      if (existing) {
+        return localDetails.map(s => s.stage === displayStage ? { ...s, status: '已完成' as const } : s)
+      }
+      return [...localDetails, { stage: displayStage, status: '已完成' as const, start_date: null, notes: '' }]
+    })()
+
+    let payload: Partial<typeof job>
+    if (displayStage === job.status) {
+      const currentIdx = APPLICATION_STATUS_ORDER.indexOf(job.status)
+      const nextStatus = APPLICATION_STATUS_ORDER[currentIdx + 1]
+      if (nextStatus) {
+        const hasNext = nextDetails.find(s => s.stage === nextStatus)
+        const finalDetails = hasNext
+          ? nextDetails
+          : [...nextDetails, { stage: nextStatus, status: '待处理' as const, start_date: null, notes: '' }]
+        payload = {
+          status: nextStatus,
+          stage_details: finalDetails,
+          interview_sub_stages: localSubStages,
+        }
+      }
+      else {
+        payload = { stage_details: nextDetails, interview_sub_stages: localSubStages }
+      }
+    }
+    else {
+      payload = { stage_details: nextDetails, interview_sub_stages: localSubStages }
+    }
+
+    setSaving(true)
+    try {
+      const savedJob = await updateCompany(job.id, payload)
+      syncJob(savedJob)
+      setIsDirty(false)
+    }
+    catch (error) {
+      console.error('Failed to complete stage:', error)
+      toast.error('保存失败', { description: getTrackerErrorMessage(error) })
+    }
+    finally {
+      setSaving(false)
+    }
+  }
+
   const handleCancel = () => {
     setLocalDetails(job?.stage_details || [])
     setLocalSubStages(job?.interview_sub_stages || [])
@@ -242,5 +305,7 @@ export function useStageDetail({ displayStage }: UseStageDetailProps) {
     toggleSubStage,
     handleSave,
     handleCancel,
+    canCompleteStage,
+    markCurrentStageComplete,
   }
 }

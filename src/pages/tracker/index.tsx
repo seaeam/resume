@@ -1,8 +1,6 @@
-import type { ApplicationStatus } from './types'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { getCompanies } from '@/lib/supabase/resume'
 import BoardView from './components/board/index'
 import JobDrawer from './components/drawer'
@@ -10,15 +8,13 @@ import AddJobDrawer from './components/drawer/add-job'
 import TrackerHeader from './components/header'
 import ListView from './components/list'
 import StatusFilter from './components/status-filter'
-import { ALL_FILTER_STATUSES } from './components/status-filter/const'
 import useTrackerStore from './store'
 import { getTrackerLoadErrorMeta } from './utils'
 
 const TRACKER_SKELETON_KEYS = ['tracker-skeleton-1', 'tracker-skeleton-2', 'tracker-skeleton-3'] as const
 
 function Tracker() {
-  const { viewMode, loading, filterStatus, setFilterStatus } = useTrackerStore()
-  const activeFilterValue = filterStatus ?? 'all'
+  const { viewMode, loading } = useTrackerStore()
 
   useEffect(() => {
     const currentState = useTrackerStore.getState()
@@ -45,9 +41,9 @@ function Tracker() {
   const renderMainContent = () => {
     if (loading) {
       return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           {TRACKER_SKELETON_KEYS.map(key => (
-            <Skeleton key={key} className="h-20 w-full rounded-xl" />
+            <Skeleton key={key} className="h-16 w-full rounded-lg" />
           ))}
         </div>
       )
@@ -58,32 +54,13 @@ function Tracker() {
 
   return (
     <>
-      <Tabs
-        value={activeFilterValue}
-        className="w-full"
-        onValueChange={(value) => {
-          if (!value)
-            return
-          setFilterStatus(value === 'all' ? null : value as ApplicationStatus)
-        }}
-      >
-        <div className="flex flex-col gap-6 p-4 md:p-8 w-full max-w-7xl mx-auto">
-          <TrackerHeader />
-
-          <StatusFilter />
-
-          <main className="w-full overflow-hidden">
-            {ALL_FILTER_STATUSES.map((status) => {
-              const value = status ?? 'all'
-              return (
-                <TabsContent key={value} value={value} className="mt-0">
-                  {renderMainContent()}
-                </TabsContent>
-              )
-            })}
-          </main>
-        </div>
-      </Tabs>
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 py-4 md:px-6 md:py-5 lg:px-10 lg:py-6">
+        <TrackerHeader />
+        <StatusFilter />
+        <main className="w-full min-w-0">
+          {renderMainContent()}
+        </main>
+      </div>
 
       <JobDrawer />
       <AddJobDrawer />
