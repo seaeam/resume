@@ -24,7 +24,7 @@ function Editor() {
   const isMobile = useIsMobile()
   const [open, setOpen] = useState(false)
   const { theme } = useTheme()
-  const { loading, currentUser, activeResumeId } = useResumeLoader()
+  const { loading, currentUser } = useResumeLoader()
 
   const resumeRef = useRef<HTMLDivElement | null>(null)
   const previewScrollRef = useRef<HTMLDivElement | null>(null)
@@ -78,11 +78,7 @@ function Editor() {
   }
 
   return (
-    <CollaborationPanelProvider
-      currentUser={currentUser}
-      activeResumeId={activeResumeId}
-      userDisplayName={userDisplayName}
-    >
+    <CollaborationPanelProvider>
 
       {roomName && currentUser && (
         <RealtimeCursors roomName={roomName} username={userDisplayName || `用户-${currentUser.id.slice(0, 6)}`} />

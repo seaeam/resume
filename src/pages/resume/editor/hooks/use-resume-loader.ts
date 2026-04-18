@@ -10,16 +10,18 @@ import { getCurrentUser } from '@/lib/supabase/user'
 import useResumeConfigStore from '@/store/resume/config'
 import useCurrentResumeStore from '@/store/resume/current'
 import useResumeStore from '@/store/resume/form'
+import useUserStore from '@/store/user'
 import { getErrorMessage } from '@/utils'
 
 export function useResumeLoader() {
   const [loading, setLoading] = useState(true)
-  const [currentUser, setCurrentUserState] = useState<SupabaseUser>(null)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const { resumeId, setCurrentResume } = useCurrentResumeStore()
   const loadResumeData = useResumeStore(state => state.loadResumeData)
+  const currentUser = useUserStore(state => state.currentUser)
+  const setCurrentUser = useUserStore(state => state.setCurrentUser)
 
   const queryResumeId = searchParams.get('resumeId')
   const documentUrlParam = searchParams.get('docUrl')
@@ -28,16 +30,15 @@ export function useResumeLoader() {
   // 获取当前用户
   useEffect(() => {
     let mounted = true
-    getCurrentUser().then((user) => {
-      if (mounted) {
-        setCurrentUserState(user)
-      }
+    getCurrentUser().then((user: SupabaseUser) => {
+      if (mounted)
+        setCurrentUser(user)
     })
 
     return () => {
       mounted = false
     }
-  }, [])
+  }, [setCurrentUser])
 
   // 清理函数
   useEffect(() => {

@@ -1,6 +1,6 @@
 import type { ResumePreviewData } from './components/drawer/types'
 import type { ApplicationStatus, JobApplication, StageDetail } from './types'
-import type { TemplateResumeDataInput } from '@/pages/template/context/resume-data-context'
+import type { TemplateResumeDataInput } from '@/components/resume/runtime/context/resume-data-context'
 import { DEFAULT_APPLICATION_INFO, DEFAULT_BASICS, DEFAULT_CAMPUS_EXPERIENCE, DEFAULT_EDU_BACKGROUND, DEFAULT_HOBBIES, DEFAULT_HONORS_CERTIFICATES, DEFAULT_INTERNSHIP_EXPERIENCE, DEFAULT_JOB_INTENT, DEFAULT_ORDER, DEFAULT_PROJECT_EXPERIENCE, DEFAULT_SELF_EVALUATION, DEFAULT_SKILL_SPECIALTY, DEFAULT_VISIBILITY, DEFAULT_WORK_EXPERIENCE, migrateOrder, migrateVisibility, normalizeResumeType, resolveResumeTemplateBinding } from '@/lib/schema'
 import { APPLICATION_STATUS_ORDER, TRACKER_NEXT_ACTION_LABELS } from './const'
 

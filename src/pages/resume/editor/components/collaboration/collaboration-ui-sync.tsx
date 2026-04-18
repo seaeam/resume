@@ -17,11 +17,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRealtimeCollabUI } from '@/hooks/use-realtime-collab-ui'
-import { useThrottledCallback } from '@/hooks/use-throttled-callback'
 import { useCollaborationUIStore } from '@/lib/collaboration'
 import useResumeConfigStore from '@/store/resume/config'
-
-type ScrollTarget = 'window' | 'preview'
+import { useConfigBroadcast } from './hooks/use-config-broadcast'
+import { useScrollSync } from './hooks/use-scroll-sync'
+import { useTabDrawerBroadcast } from './hooks/use-tab-drawer-broadcast'
 
 interface CollaborationUISyncProps {
   /** Supabase channel room name */
@@ -49,7 +49,6 @@ export function CollaborationUISync({
   onUpdateActiveTabId,
   scrollContainerRef,
 }: CollaborationUISyncProps) {
-  // 从 config store 读取工具栏配置
   const spacing = useResumeConfigStore(s => s.spacing)
   const font = useResumeConfigStore(s => s.font)
   const theme = useResumeConfigStore(s => s.theme)
@@ -57,12 +56,24 @@ export function CollaborationUISync({
 
   const config = useMemo(() => ({ spacing, font, theme }), [spacing, font, theme])
 
-  const getScrollPosition = useCallback(() => {
-    const previewScrollTop = scrollContainerRef.current?.scrollTop ?? 0
-    const windowScrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+  const isApplyingRemote = useRef(false)
+  const broadcastUIActionRef = useRef<(action: UIAction) => void>(() => {})
+  const stableBroadcast = useCallback((action: UIAction) => {
+    broadcastUIActionRef.current(action)
+  }, [])
 
-    return previewScrollTop > 0 ? previewScrollTop : windowScrollTop
-  }, [scrollContainerRef])
+  const { followMode, setFollowMode, latestRemoteAction, clearLatestRemoteAction, remoteUIStates } = useCollaborationUIStore()
+
+  const {
+    suppressScrollSync,
+    animateRemoteScrollTo,
+    getScrollPosition,
+  } = useScrollSync({
+    scrollContainerRef,
+    isApplyingRemote,
+    followMode,
+    broadcastUIAction: stableBroadcast,
+  })
 
   const { broadcastUIAction } = useRealtimeCollabUI({
     roomName,
@@ -73,202 +84,23 @@ export function CollaborationUISync({
     getScrollPosition,
   })
 
-  const { followMode, setFollowMode, latestRemoteAction, clearLatestRemoteAction, remoteUIStates } = useCollaborationUIStore()
+  broadcastUIActionRef.current = broadcastUIAction
 
-  // 使用 ref 避免循环广播（防止接收远程动作后又广播出去）
-  const isApplyingRemote = useRef(false)
-  const isAnimatingRemoteScroll = useRef(false)
-  const suppressScrollSyncUntilRef = useRef(0)
-  const remoteScrollAnimationFrameRef = useRef<number | null>(null)
-  const remoteScrollTargetRef = useRef<{ target: ScrollTarget, position: number } | null>(null)
+  useTabDrawerBroadcast({
+    drawerOpen,
+    activeTabId,
+    isApplyingRemote,
+    broadcastUIAction,
+  })
 
-  const suppressScrollSync = useCallback((durationMs = 180) => {
-    suppressScrollSyncUntilRef.current = Date.now() + durationMs
-  }, [])
+  useConfigBroadcast({
+    spacing,
+    font,
+    theme,
+    isApplyingRemote,
+    broadcastUIAction,
+  })
 
-  const shouldIgnoreScrollSync = useCallback(() => {
-    return Date.now() < suppressScrollSyncUntilRef.current
-  }, [])
-
-  // 当本地抽屉状态变化时广播
-  const prevDrawerOpen = useRef(drawerOpen)
-  useEffect(() => {
-    if (prevDrawerOpen.current !== drawerOpen) {
-      prevDrawerOpen.current = drawerOpen
-      if (!isApplyingRemote.current) {
-        broadcastUIAction({ kind: 'drawer-toggle', open: drawerOpen })
-      }
-    }
-  }, [drawerOpen, broadcastUIAction])
-
-  // 当本地 tab 切换时广播
-  const prevActiveTab = useRef(activeTabId)
-  useEffect(() => {
-    if (prevActiveTab.current !== activeTabId) {
-      prevActiveTab.current = activeTabId
-      if (!isApplyingRemote.current) {
-        broadcastUIAction({ kind: 'tab-switch', tabId: activeTabId })
-      }
-    }
-  }, [activeTabId, broadcastUIAction])
-
-  // 当本地工具栏配置变化时广播
-  const prevSpacing = useRef(spacing)
-  const prevFont = useRef(font)
-  const prevTheme = useRef(theme)
-
-  useEffect(() => {
-    if (isApplyingRemote.current)
-      return
-    if (JSON.stringify(prevSpacing.current) !== JSON.stringify(spacing)) {
-      prevSpacing.current = spacing
-      broadcastUIAction({ kind: 'config-spacing', data: spacing })
-    }
-  }, [spacing, broadcastUIAction])
-
-  useEffect(() => {
-    if (isApplyingRemote.current)
-      return
-    if (JSON.stringify(prevFont.current) !== JSON.stringify(font)) {
-      prevFont.current = font
-      broadcastUIAction({ kind: 'config-font', data: font })
-    }
-  }, [font, broadcastUIAction])
-
-  useEffect(() => {
-    if (isApplyingRemote.current)
-      return
-    if (JSON.stringify(prevTheme.current) !== JSON.stringify(theme)) {
-      prevTheme.current = theme
-      broadcastUIAction({ kind: 'config-theme', data: theme })
-    }
-  }, [theme, broadcastUIAction])
-
-  const getScrollTarget = useCallback((): ScrollTarget => {
-    const previewElement = scrollContainerRef.current
-    if (previewElement && previewElement.scrollHeight > previewElement.clientHeight)
-      return 'preview'
-    return 'window'
-  }, [scrollContainerRef])
-
-  const getScrollPositionByTarget = useCallback((target: ScrollTarget) => {
-    if (target === 'preview')
-      return scrollContainerRef.current?.scrollTop ?? 0
-
-    return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
-  }, [scrollContainerRef])
-
-  const setScrollPositionByTarget = useCallback((target: ScrollTarget, position: number) => {
-    if (target === 'preview') {
-      const previewElement = scrollContainerRef.current
-      if (previewElement) {
-        previewElement.scrollTop = position
-      }
-      return
-    }
-
-    window.scrollTo({
-      top: position,
-      left: window.scrollX,
-      behavior: 'auto',
-    })
-  }, [scrollContainerRef])
-
-  const cancelRemoteScrollAnimation = useCallback(() => {
-    if (remoteScrollAnimationFrameRef.current !== null) {
-      cancelAnimationFrame(remoteScrollAnimationFrameRef.current)
-      remoteScrollAnimationFrameRef.current = null
-    }
-
-    remoteScrollTargetRef.current = null
-    isAnimatingRemoteScroll.current = false
-  }, [])
-
-  const stepRemoteScroll = useCallback(() => {
-    const nextTarget = remoteScrollTargetRef.current
-
-    if (!nextTarget) {
-      cancelRemoteScrollAnimation()
-      return
-    }
-
-    const currentPosition = getScrollPositionByTarget(nextTarget.target)
-    const delta = nextTarget.position - currentPosition
-
-    if (Math.abs(delta) <= 1) {
-      setScrollPositionByTarget(nextTarget.target, nextTarget.position)
-      cancelRemoteScrollAnimation()
-      return
-    }
-
-    const step = Math.sign(delta) * Math.min(Math.max(Math.abs(delta) * 0.24, 6), 120)
-    const nextPosition = Math.abs(step) >= Math.abs(delta)
-      ? nextTarget.position
-      : currentPosition + step
-
-    setScrollPositionByTarget(nextTarget.target, nextPosition)
-    remoteScrollAnimationFrameRef.current = requestAnimationFrame(stepRemoteScroll)
-  }, [cancelRemoteScrollAnimation, getScrollPositionByTarget, setScrollPositionByTarget])
-
-  const animateRemoteScrollTo = useCallback((target: ScrollTarget, position: number) => {
-    remoteScrollTargetRef.current = { target, position }
-    isAnimatingRemoteScroll.current = true
-
-    if (remoteScrollAnimationFrameRef.current !== null) {
-      return
-    }
-
-    remoteScrollAnimationFrameRef.current = requestAnimationFrame(stepRemoteScroll)
-  }, [stepRemoteScroll])
-
-  const broadcastScroll = useThrottledCallback((target: ScrollTarget) => {
-    if (isApplyingRemote.current || isAnimatingRemoteScroll.current || shouldIgnoreScrollSync())
-      return
-
-    broadcastUIAction({
-      kind: 'scroll',
-      position: getScrollPositionByTarget(target),
-      target,
-    })
-  }, 80, [broadcastUIAction, getScrollPositionByTarget, shouldIgnoreScrollSync])
-
-  useEffect(() => {
-    const previewElement = scrollContainerRef.current
-
-    const handleWindowScroll = () => {
-      if (getScrollTarget() === 'window')
-        broadcastScroll('window')
-    }
-
-    const handlePreviewScroll = () => {
-      broadcastScroll('preview')
-    }
-
-    window.addEventListener('scroll', handleWindowScroll, { passive: true })
-    previewElement?.addEventListener('scroll', handlePreviewScroll, { passive: true })
-
-    return () => {
-      window.removeEventListener('scroll', handleWindowScroll)
-      previewElement?.removeEventListener('scroll', handlePreviewScroll)
-      broadcastScroll.cancel()
-    }
-  }, [scrollContainerRef, getScrollTarget, broadcastScroll])
-
-  useEffect(() => {
-    if (followMode) {
-      return
-    }
-
-    cancelRemoteScrollAnimation()
-  }, [followMode, cancelRemoteScrollAnimation])
-
-  useEffect(() => {
-    return () => {
-      cancelRemoteScrollAnimation()
-    }
-  }, [cancelRemoteScrollAnimation])
-
-  // 应用远程 UI 动作
   const applyRemoteAction = useCallback((action: UIAction, userName: string) => {
     isApplyingRemote.current = true
 
@@ -304,13 +136,11 @@ export function CollaborationUISync({
         break
     }
 
-    // 延迟重置 flag，让 React 完成当前更新周期
     requestAnimationFrame(() => {
       isApplyingRemote.current = false
     })
   }, [animateRemoteScrollTo, setDrawerOpen, onUpdateActiveTabId, replaceConfig, suppressScrollSync])
 
-  // 响应最新的远程 UI 动作
   useEffect(() => {
     if (!latestRemoteAction || !followMode)
       return
@@ -319,14 +149,10 @@ export function CollaborationUISync({
     clearLatestRemoteAction()
   }, [latestRemoteAction, followMode, applyRemoteAction, clearLatestRemoteAction])
 
-  // 获取远程用户状态摘要
-  const remoteUsers = Object.values(remoteUIStates)
-  // 只显示最近更新过状态的用户（lastUpdate 基于 Date.now，放宽到显示所有有状态的用户）
-  const activeRemoteUsers = remoteUsers
+  const activeRemoteUsers = Object.values(remoteUIStates)
 
   return (
     <div className="flex items-center gap-2">
-      {/* 跟随模式开关 */}
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -354,7 +180,6 @@ export function CollaborationUISync({
         </TooltipContent>
       </Tooltip>
 
-      {/* 在线协作者状态指示 */}
       {activeRemoteUsers.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>

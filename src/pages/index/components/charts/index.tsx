@@ -1,16 +1,15 @@
-import type { Resume, ResumeStats } from '../../types'
+import { useShallow } from 'zustand/react/shallow'
+import useIndexStore, { selectStats } from '../../store'
 import { ChartsSkeleton } from '../skeleton'
 import CreateTrend from './create-trend'
 import ResumeStorage from './resume-storage'
 import ResumeType from './resume-type'
 
-interface Props {
-  stats: ResumeStats
-  resumes: Resume[]
-  loading?: boolean
-}
+function Charts() {
+  const resumes = useIndexStore(s => s.resumes)
+  const loading = useIndexStore(s => s.loading)
+  const stats = useIndexStore(useShallow(selectStats))
 
-function Charts({ stats, resumes, loading }: Props) {
   if (loading) {
     return <ChartsSkeleton />
   }

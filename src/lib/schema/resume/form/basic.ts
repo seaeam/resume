@@ -34,6 +34,7 @@ export const basicsSchema = z.object({
 })
 
 export type BasicFormType = z.infer<typeof basicsSchema>
+export type BasicFormInput = z.input<typeof basicsSchema>
 
 export const DEFAULT_BASICS: BasicFormType = {
   name: 'Granular Resume',

@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { motion } from 'motion/react'
 import type { Dispatch, PropsWithChildren, RefObject, SetStateAction } from 'react'
-import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, use, useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
 
 interface Props {
   defaultId: string
@@ -26,6 +26,45 @@ interface BoxState {
   w: number
   h: number
   totalHeight: number
+}
+
+interface SideTabsState {
+  active: string
+  box: BoxState
+  outlineD: string
+}
+
+type SideTabsAction
+  = | { type: 'set-active', value: string | ((prev: string) => string) }
+    | { type: 'set-box', value: BoxState }
+    | { type: 'set-outline', value: string }
+
+function reducer(state: SideTabsState, action: SideTabsAction): SideTabsState {
+  switch (action.type) {
+    case 'set-active': {
+      const next = typeof action.value === 'function' ? action.value(state.active) : action.value
+      return next === state.active ? state : { ...state, active: next }
+    }
+    case 'set-box': {
+      const prev = state.box
+      const next = action.value
+      if (
+        prev.x === next.x
+        && prev.y === next.y
+        && prev.w === next.w
+        && prev.h === next.h
+        && prev.totalHeight === next.totalHeight
+      ) {
+        return state
+      }
+      return { ...state, box: next }
+    }
+    case 'set-outline': {
+      return state.outlineD === action.value ? state : { ...state, outlineD: action.value }
+    }
+    default:
+      return state
+  }
 }
 
 export interface SideTabsContextValue {
@@ -66,29 +105,26 @@ export function SideTabsProvider({
   children,
   ...props
 }: PropsWithChildren<Props>) {
-  const [active, setActive] = useState<string>(defaultId)
+  const [state, dispatch] = useReducer(reducer, undefined, () => ({
+    active: defaultId,
+    box: { x: 0, y: 0, w: 0, h: minHeight, totalHeight: minHeight },
+    outlineD: '',
+  }))
+  const { active, box, outlineD } = state
+
+  const setActive = useCallback<Dispatch<SetStateAction<string>>>((value) => {
+    dispatch({ type: 'set-active', value: value as string | ((prev: string) => string) })
+  }, [])
 
   // 当外部 defaultId 变化时同步内部 active 状态（用于协作 tab 同步等场景）
   useEffect(() => {
     setActive(prev => prev !== defaultId ? defaultId : prev)
-  }, [defaultId])
+  }, [defaultId, setActive])
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const tabsRef = useRef<HTMLDivElement | null>(null)
   const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const contentRef = useRef<HTMLDivElement | null>(null)
-
-  // 容器几何（容器坐标）
-  const [box, setBox] = useState<BoxState>({
-    x: 0,
-    y: 0,
-    w: 0,
-    h: minHeight,
-    totalHeight: minHeight,
-  })
-
-  // 闭合路径 d
-  const [outlineD, setOutlineD] = useState('')
 
   /** 计算容器尺寸（随内容变化） */
   const computeBox = useCallback(() => {
@@ -108,16 +144,7 @@ export function SideTabsProvider({
       const rawW = cRect.right - (tRect.right + gapPx) - cRect.left
       const w = Math.max(0, rawW)
       const totalHeight = Math.max(h, tRect.height)
-      const next = { x, y: 0, w, h, totalHeight }
-      setBox(prev =>
-        prev.x !== next.x
-        || prev.y !== next.y
-        || prev.w !== next.w
-        || prev.h !== next.h
-        || prev.totalHeight !== next.totalHeight
-          ? next
-          : prev,
-      )
+      dispatch({ type: 'set-box', value: { x, y: 0, w, h, totalHeight } })
       return
     }
 
@@ -125,16 +152,7 @@ export function SideTabsProvider({
     const w = Math.max(0, cRect.width)
     const x = 0
     const totalHeight = y + h
-    const next = { x, y, w, h, totalHeight }
-    setBox(prev =>
-      prev.x !== next.x
-      || prev.y !== next.y
-      || prev.w !== next.w
-      || prev.h !== next.h
-      || prev.totalHeight !== next.totalHeight
-        ? next
-        : prev,
-    )
+    dispatch({ type: 'set-box', value: { x, y, w, h, totalHeight } })
   }, [gapPx, minHeight, orientation, padding])
 
   /** 计算单条闭合 outline 路径 */
@@ -184,7 +202,7 @@ export function SideTabsProvider({
           + `L ${xIn},${yb} `
           + `C ${c2xBot},${yb} ${c1x},${sy} ${sx},${sy} Z`
 
-      setOutlineD(d)
+      dispatch({ type: 'set-outline', value: d })
       return
     }
 
@@ -200,14 +218,14 @@ export function SideTabsProvider({
     const yBottom = box.y + box.h - padding
 
     if (xr <= xl || yBottom <= yTop) {
-      setOutlineD('')
+      dispatch({ type: 'set-outline', value: '' })
       return
     }
 
     const availableWidth = xr - xl
     const tailWidth = Math.max(Math.min(availableWidth * 0.6, 160), Math.min(availableWidth, 48))
     if (tailWidth <= 0) {
-      setOutlineD('')
+      dispatch({ type: 'set-outline', value: '' })
       return
     }
     const halfTail = tailWidth / 2
@@ -239,7 +257,7 @@ export function SideTabsProvider({
         + `C ${leftCtrlX},${yTop} ${sx},${curveMidY} ${sx},${sy} `
         + `Z`
 
-    setOutlineD(d)
+    dispatch({ type: 'set-outline', value: d })
   }, [active, box, offsetX, orientation, padding, radius, controlDown])
 
   /** 统一调度几何与路径的重新计算 */

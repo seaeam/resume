@@ -1,12 +1,16 @@
 import type { ReactNode } from 'react'
-import type { ResumeStats } from '../../types'
 import { Cloud, CloudOff, FileUser, TrendingUp } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { Card, CardContent } from '@/components/ui/card'
 import { NumberTicker } from '@/components/ui/number-ticker'
 import { cn } from '@/lib/utils'
+import useIndexStore, { selectStats } from '../../store'
 import { StatsSkeleton } from '../skeleton'
 
-function StatisticalCard({ stats, loading }: { stats: ResumeStats, loading?: boolean }) {
+function StatisticalCard() {
+  const loading = useIndexStore(s => s.loading)
+  const stats = useIndexStore(useShallow(selectStats))
+
   if (loading) {
     return <StatsSkeleton />
   }

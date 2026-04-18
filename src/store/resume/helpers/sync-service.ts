@@ -5,10 +5,10 @@ import type { AutomergeResumeDocument } from '@/lib/automerge'
 import type { PersistedResumeSnapshot, ResumeAppearancePatch } from '@/lib/schema'
 import { isOfflineResumeId } from '@/lib/offline-resume-manager'
 import { getResumeById } from '@/lib/supabase/resume/form'
+import { getFormPayload, hasPersistedAppearance, mapSourceToPersistedSnapshot, mergeSnapshotAppearance } from '.'
 import useResumeConfigStore from '../config'
 import { ONLINE_SYNC_DELAY, SYNC_DELAY } from '../const'
 import useCurrentResumeStore from '../current'
-import { getFormPayload, hasPersistedAppearance, mapSourceToPersistedSnapshot, mergeSnapshotAppearance } from '.'
 
 export type EditorMode = 'online' | 'offline' | null
 

@@ -1,9 +1,15 @@
-import type { AnalysisState, AtsEvaluationResult } from './types'
+import type { AdvancedToolKey, ResumeToolContext } from './components/advanced-tools/shared/types'
+import type { AnalysisState, AtsCreatePayload, AtsEvaluationResult, AtsLlmDraft } from './types'
 import { toast } from 'sonner'
 import { create } from 'zustand'
-import { getAtsFromUserId, updateFixChecklist } from '@/lib/supabase/resume'
+import { parseLlmJsonObject, runAtsStructured } from '@/lib/llm'
+import { getOfflineResumeById } from '@/lib/offline-resume-manager'
+import { createAtsConfig, getAtsFromUserId, updateAtsConfig, updateFixChecklist } from '@/lib/supabase/resume'
+import { uploadOfflineResumeToCloud } from '@/lib/supabase/resume/form'
+import { buildAtsCreatePayload } from '@/lib/supabase/resume/utils'
 import { getErrorMessage } from '@/utils'
 import { ANALYSIS_INITIAL_STATE } from './const'
+import { fetchResumeDataForAnalysis } from './utils'
 
 interface AtsStore {
   atsConfigs: AtsEvaluationResult[] | null
@@ -23,6 +29,17 @@ interface AtsStore {
   revertFixChecklist: (id: string) => Promise<void>
   update: <K extends keyof AtsEvaluationResult>(key: K, value: AtsEvaluationResult[K]) => void
   init: () => Promise<void>
+  startAnalysis: (options?: { onComplete?: () => void }) => Promise<void>
+
+  // Advanced tools (P6.2)
+  advancedToolActiveTool: AdvancedToolKey | null
+  advancedToolOpen: boolean
+  advancedToolLoadingContext: boolean
+  advancedToolResumeContext: ResumeToolContext | null
+  setAdvancedToolActiveTool: (tool: AdvancedToolKey | null) => void
+  setAdvancedToolOpen: (open: boolean) => void
+  setAdvancedToolLoadingContext: (loading: boolean) => void
+  setAdvancedToolResumeContext: (context: ResumeToolContext | null) => void
 }
 
 const useAtsStore = create<AtsStore>()(
@@ -134,6 +151,107 @@ const useAtsStore = create<AtsStore>()(
       }
     }
 
+    const startAnalysis = async (options?: { onComplete?: () => void }) => {
+      const { selectedResumeId, selectedResumeType, atsConfigs } = get()
+
+      if (!selectedResumeId) {
+        toast.error('请先选择一份简历')
+        return
+      }
+
+      resetAnalysisState()
+      toast.info('分析开始，可能需要一些时间，在此期间你可以随意切换页面，但请不要刷新或关闭浏览器')
+
+      try {
+        let currentResumeId = selectedResumeId
+        const currentResumeType = selectedResumeType
+
+        if (currentResumeType === 'offline') {
+          setAnalysisState({ status: 'uploading' })
+          updateLog('upload', '检测到本地简历，上传至云端...')
+
+          const offlineResume = await getOfflineResumeById(selectedResumeId)
+          if (!offlineResume) {
+            throw new Error('本地简历不存在')
+          }
+
+          const onlineResume = await uploadOfflineResumeToCloud(
+            offlineResume.data,
+            {
+              display_name: offlineResume.display_name,
+              description: '从本地上传的简历',
+            },
+          )
+
+          if (!onlineResume) {
+            throw new Error('上传简历失败')
+          }
+
+          updateLog('upload', '上传成功', true)
+          currentResumeId = onlineResume.resume_id
+          setSelectedResume(currentResumeId, 'online')
+        }
+
+        setAnalysisState({ status: 'fetching' })
+        updateLog('fetch', '正在获取简历...')
+        const resumeData = await fetchResumeDataForAnalysis(currentResumeId, false)
+        updateLog('fetch', '准备上传至LLM', true)
+
+        setAnalysisState({ status: 'sending' })
+        updateLog('send', '正在上传...')
+
+        let finalContent = ''
+
+        await runAtsStructured(resumeData, ({ content: streamContent, reasoning: streamReasoning }) => {
+          if (streamReasoning) {
+            setAnalysisState({ status: 'thinking', reasoning: streamReasoning })
+            updateLog('send', '已上传，开始思考...')
+          }
+          if (streamContent) {
+            setAnalysisState({ status: 'generating', content: streamContent })
+            finalContent = streamContent
+          }
+        })
+
+        if (!finalContent) {
+          throw new Error('未生成有效内容')
+        }
+
+        setAnalysisState({ status: 'received' })
+        updateLog('result', '已收到结果')
+
+        const result = parseLlmJsonObject<AtsLlmDraft>(finalContent)
+
+        setAnalysisState({ status: 'saving' })
+        updateLog('save', '正在保存分析报告...')
+
+        const payload: AtsCreatePayload = buildAtsCreatePayload(result, currentResumeId)
+        const existingAts = atsConfigs?.find(a => a.resume_id === currentResumeId)
+
+        if (existingAts) {
+          await updateAtsConfig(existingAts.id, payload)
+          updateLog('save', '报告已更新', true)
+          toast.success('ATS 分析报告已更新')
+        }
+        else {
+          await createAtsConfig(payload)
+          updateLog('save', '报告已生成', true)
+          toast.success('ATS 分析报告已生成')
+        }
+
+        await init()
+
+        setAnalysisState({ status: 'complete' })
+        updateLog('display', '已展示分析结果')
+        options?.onComplete?.()
+      }
+      catch (error: unknown) {
+        console.error(error)
+        toast.error(getErrorMessage(error, '分析过程中发生错误'))
+        setAnalysisState({ status: 'idle' })
+      }
+    }
+
     return {
       loading: false,
       currentAtsConfig: null,
@@ -150,6 +268,16 @@ const useAtsStore = create<AtsStore>()(
       setSelectedResume,
       revertFixChecklist,
       update,
+      startAnalysis,
+
+      advancedToolActiveTool: null,
+      advancedToolOpen: false,
+      advancedToolLoadingContext: false,
+      advancedToolResumeContext: null,
+      setAdvancedToolActiveTool: tool => set({ advancedToolActiveTool: tool }),
+      setAdvancedToolOpen: open => set({ advancedToolOpen: open }),
+      setAdvancedToolLoadingContext: loading => set({ advancedToolLoadingContext: loading }),
+      setAdvancedToolResumeContext: context => set({ advancedToolResumeContext: context }),
     }
   },
 )

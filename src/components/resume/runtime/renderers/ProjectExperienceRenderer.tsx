@@ -1,4 +1,4 @@
-import { useTemplateResumeData } from '@/pages/template/context/resume-data-context'
+import { useTemplateResumeData } from '@/components/resume/runtime/context/resume-data-context'
 import { RuntimeEntry, RuntimeSection } from './shared'
 import { formatRange } from './utils'
 

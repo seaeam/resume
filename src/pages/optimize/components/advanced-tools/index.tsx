@@ -1,6 +1,6 @@
-import type { AdvancedToolKey, ResumeToolContext } from './shared/types'
+import type { AdvancedToolKey } from './shared/types'
 import { DialogClose } from '@radix-ui/react-dialog'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,10 +23,14 @@ function AdvancedTools() {
   const { currentAtsConfig, selectedResumeId, selectedResumeType } = useAtsStore()
   const isMobile = useIsMobile()
 
-  const [activeTool, setActiveTool] = useState<AdvancedToolKey | null>(null)
-  const [loadingContext, setLoadingContext] = useState(false)
-  const [open, setOpen] = useState(false)
-  const [resumeContext, setResumeContext] = useState<ResumeToolContext | null>(null)
+  const activeTool = useAtsStore(s => s.advancedToolActiveTool)
+  const open = useAtsStore(s => s.advancedToolOpen)
+  const loadingContext = useAtsStore(s => s.advancedToolLoadingContext)
+  const resumeContext = useAtsStore(s => s.advancedToolResumeContext)
+  const setActiveTool = useAtsStore(s => s.setAdvancedToolActiveTool)
+  const setOpen = useAtsStore(s => s.setAdvancedToolOpen)
+  const setLoadingContext = useAtsStore(s => s.setAdvancedToolLoadingContext)
+  const setResumeContext = useAtsStore(s => s.setAdvancedToolResumeContext)
   const requestIdRef = useRef(0)
 
   const hasSelectedResume = Boolean(selectedResumeId && selectedResumeType)

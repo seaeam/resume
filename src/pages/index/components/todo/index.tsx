@@ -1,5 +1,5 @@
-import type { Resume } from '../../types'
 import { Card, CardContent } from '@/components/ui/card'
+import useIndexStore from '../../store'
 import CompletenessModule from './content-complete'
 import { ExportModule } from './export-module'
 import { FollowUpModule } from './follow-up'
@@ -7,12 +7,9 @@ import { TodoHeader } from './todo-header'
 import { useResumeSpotlights } from './use-resume-spotlights'
 import { useSpotlightRotation } from './use-spotlight-rotation'
 
-interface TodoCardProps {
-  resumes: Resume[]
-  loading?: boolean
-}
-
-export function TodoCard({ resumes, loading = false }: TodoCardProps) {
+export function TodoCard() {
+  const resumes = useIndexStore(s => s.resumes)
+  const loading = useIndexStore(s => s.loading)
   const { items, loading: spotlightLoading } = useResumeSpotlights(resumes, loading)
   const { activeIndex, setActiveIndex } = useSpotlightRotation(items.length)
 

@@ -1,4 +1,4 @@
-import type { VisibilityItemsType } from '@/lib/schema'
+import type { ORDERType, VisibilityItemsType } from '@/lib/schema'
 import { DraggableList } from '@/components/DraggableList'
 import { SideTabs, SideTabsWrapper, Tab, ViewPort } from '@/components/ui/side-tabs'
 import { Switch } from '@/components/ui/switch'
@@ -7,14 +7,14 @@ import { ITEMS } from '../../const'
 import { DraggableItem } from './draggable-item'
 
 interface SidebarEditorProps {
-  activeTabId: string
-  order: string[]
+  activeTabId: ORDERType
+  order: ORDERType[]
   visibilityState: Record<string, boolean>
   fill: string
   stroke: string
   isMobile: boolean
-  onUpdateActiveTabId: (id: string) => void
-  onUpdateOrder: (order: string[]) => void
+  onUpdateActiveTabId: (id: ORDERType) => void
+  onUpdateOrder: (order: ORDERType[]) => void
   onToggleVisibility: (id: VisibilityItemsType) => void
 }
 

@@ -1,46 +1,59 @@
 import type { HistoryResumeOption } from '../types'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { create } from 'zustand'
 import { listResumeHistoryOptions } from '@/lib/supabase/resume'
 import { buildHistoryResumeOption } from '../utils'
 
-interface UseHistoryResumeOptionsResult {
+interface HistoryResumeOptionsStore {
   resumeOptions: HistoryResumeOption[]
   loading: boolean
   error: string | null
+  hydrated: boolean
   reload: () => Promise<void>
 }
 
-export function useHistoryResumeOptions(): UseHistoryResumeOptionsResult {
-  const [resumeOptions, setResumeOptions] = useState<HistoryResumeOption[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadResumeOptions = useCallback(async () => {
-    setLoading(true)
-
+const useHistoryResumeOptionsStore = create<HistoryResumeOptionsStore>()(set => ({
+  resumeOptions: [],
+  loading: false,
+  error: null,
+  hydrated: false,
+  reload: async () => {
+    set({ loading: true })
     try {
       const options = await listResumeHistoryOptions()
-      setResumeOptions(options.map(buildHistoryResumeOption))
-      setError(null)
+      set({
+        resumeOptions: options.map(buildHistoryResumeOption),
+        error: null,
+        hydrated: true,
+      })
     }
     catch (loadError) {
       const message = loadError instanceof Error ? loadError.message : '简历列表加载失败'
-      setResumeOptions([])
-      setError(message)
+      set({ resumeOptions: [], error: message, hydrated: true })
     }
     finally {
-      setLoading(false)
+      set({ loading: false })
     }
-  }, [])
+  },
+}))
+
+export function useHistoryResumeOptions() {
+  const resumeOptions = useHistoryResumeOptionsStore(s => s.resumeOptions)
+  const loading = useHistoryResumeOptionsStore(s => s.loading)
+  const error = useHistoryResumeOptionsStore(s => s.error)
+  const hydrated = useHistoryResumeOptionsStore(s => s.hydrated)
+  const reload = useHistoryResumeOptionsStore(s => s.reload)
 
   useEffect(() => {
-    loadResumeOptions()
-  }, [loadResumeOptions])
+    if (!hydrated && !loading) {
+      reload()
+    }
+  }, [hydrated, loading, reload])
 
   return {
     resumeOptions,
     loading,
     error,
-    reload: loadResumeOptions,
+    reload,
   }
 }

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import type { Resume } from '../../types'
 import { ArrowRight, BarChart3, Clock, Cloud, CloudOff, FileUser, Plus, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -8,17 +7,15 @@ import { cn } from '@/lib/utils'
 import useCurrentResumeStore from '@/store/resume/current'
 import { diffDates, formatRelativeTime } from '@/utils/date'
 import { TYPE_LABELS } from '../../const'
+import useIndexStore from '../../store'
 import { EntrySkeleton } from '../skeleton'
 
-interface Props {
-  isOnline: boolean
-  resumes: Resume[]
-  loading?: boolean
-}
-
-function Entry({ isOnline, resumes, loading }: Props) {
+function Entry() {
   const navigate = useNavigate()
   const { setCurrentResume } = useCurrentResumeStore()
+  const isOnline = useIndexStore(s => s.isOnline)
+  const resumes = useIndexStore(s => s.resumes)
+  const loading = useIndexStore(s => s.loading)
 
   if (loading) {
     return <EntrySkeleton />

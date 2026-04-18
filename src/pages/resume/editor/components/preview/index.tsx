@@ -1,9 +1,9 @@
 import type { RefObject } from 'react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { buildTemplateResumeData } from '@/components/resume/runtime/context/resume-data-context'
 import { ResumeTemplateRuntime } from '@/components/resume/runtime/ResumeTemplateRuntime'
 import { getBuiltInTemplateManifest } from '@/lib/resume-template/runtime/get-built-in-manifest'
 import { getManifestFromTemplateBinding } from '@/lib/resume-template/runtime/get-manifest-from-binding'
-import { buildTemplateResumeData } from '@/pages/template/context/resume-data-context'
 import useResumeStore from '@/store/resume/form'
 import ResumeWrapper from './resume-wrapper'
 

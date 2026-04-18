@@ -1,50 +1,17 @@
 import { History as HistoryIcon } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { isOfflineResumeId } from '@/lib/offline-resume-manager'
-import useCurrentResumeStore from '@/store/resume/current'
 import HistoryHeader from './components/header'
 import HistoryWorkspace from './components/workspace'
+import { useActiveHistoryResumeId } from './hooks/use-active-resume-id'
 import { useHistoryResumeOptions } from './hooks/use-history-options'
 
 function History() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const currentResumeId = useCurrentResumeStore(state => state.resumeId)
-
-  const queryResumeId = searchParams.get('resumeId')
-  const defaultResumeId = currentResumeId && !isOfflineResumeId(currentResumeId) ? currentResumeId : null
-
-  const {
-    resumeOptions,
-    loading: resumeOptionsLoading,
-    error: resumeOptionsError,
-    reload: reloadResumeOptions,
-  } = useHistoryResumeOptions()
-
-  const validResumeIds = new Set(resumeOptions.map(option => option.resumeId))
-  const activeResumeId = queryResumeId && (resumeOptionsLoading || validResumeIds.has(queryResumeId))
-    ? queryResumeId
-    : !queryResumeId && defaultResumeId && (resumeOptionsLoading || validResumeIds.has(defaultResumeId))
-        ? defaultResumeId
-        : null
-
-  const handleResumeChange = (resumeId: string) => {
-    setSearchParams((previous) => {
-      const next = new URLSearchParams(previous)
-      next.set('resumeId', resumeId)
-      return next
-    })
-  }
+  const { activeResumeId, resumeOptions } = useActiveHistoryResumeId()
+  const { reload: reloadResumeOptions } = useHistoryResumeOptions()
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 md:p-8">
-      <HistoryHeader
-        activeResumeId={activeResumeId}
-        resumeOptions={resumeOptions}
-        resumeOptionsLoading={resumeOptionsLoading}
-        resumeOptionsError={resumeOptionsError}
-        onResumeChange={handleResumeChange}
-      />
+      <HistoryHeader />
 
       {!activeResumeId
         ? (

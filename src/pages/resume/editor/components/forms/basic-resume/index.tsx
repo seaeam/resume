@@ -1,35 +1,23 @@
-import type { BasicFormType, Gender, MaritalStatus, PoliticalStatus, WorkYears } from '@/lib/schema'
+import type { BasicFormType } from '@/lib/schema'
 import type { ShallowPartial } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import dayjs from 'dayjs'
-import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import { Cake, Delete, Plus } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
-import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { Form } from '@/components/ui/form'
 import { Separator } from '@/components/ui/separator'
 import { useFormRemoteSync } from '@/hooks/use-form-remote-sync'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { resumeSchema } from '@/lib/schema'
 import { cn } from '@/lib/utils'
 import useResumeStore from '@/store/resume/form'
-
-const genderOptions: Gender[] = ['不填', '男', '女', '其他']
-const workYearsOptions: WorkYears[] = ['不填', '应届', '1年', '2年', '3-5年', '5-10年', '10年以上']
-const maritalStatusOptions: MaritalStatus[] = ['不填', '未婚', '已婚', '离异', '已婚已育']
-const politicalStatusOptions: PoliticalStatus[] = ['不填', '中共党员', '中共预备党员', '共青团员', '群众', '其他']
+import { ContactFields } from './basic-fields/contact-fields'
+import { CustomFields } from './basic-fields/custom-fields'
+import { DemographicFields } from './basic-fields/demographic-fields'
+import { PersonalFields } from './basic-fields/personal-fields'
 
 function BasicResumeForm({ className }: { className?: string }) {
   const basics = useResumeStore(state => state.basics)
   const updateForm = useResumeStore(state => state.updateForm)
-  const isMobile = useIsMobile()
 
   const form = useForm({
     resolver: zodResolver(resumeSchema.shape.basics),
@@ -38,16 +26,6 @@ function BasicResumeForm({ className }: { className?: string }) {
     reValidateMode: 'onChange',
   })
 
-  const { fields, remove, append } = useFieldArray({
-    control: form.control,
-    name: 'customFields',
-  })
-  function onAddField() {
-    append({ label: '', value: '' })
-  }
-  const [open, setOpen] = useState(false)
-
-  // 远程协作同步：当 Automerge 远程变更更新 store 时，自动 reset form
   const isResettingRef = useFormRemoteSync(form, basics)
 
   useEffect(() => {
@@ -63,300 +41,12 @@ function BasicResumeForm({ className }: { className?: string }) {
     <Form {...form}>
       <form id="basic-resume-form" className={cn(className)}>
         <motion.div layout className="grid gap-4 justify-items-start sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>您的姓名</FormLabel>
-                <FormControl>
-                  <Input placeholder="输入您的姓名" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>性别</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="请选择性别" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {genderOptions.map(o => (
-                        <SelectItem key={o} value={o}>
-                          {o}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="birthMonth"
-            render={({ field }) => {
-              const birthday = dayjs(field.value).isValid() ? dayjs(field.value) : dayjs('2002-01-01')
-
-              return (
-                <FormItem>
-                  <FormLabel>出生年月</FormLabel>
-                  <FormControl>
-                    <Popover open={open} onOpenChange={setOpen}>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" id="date">
-                          {field.value ? field.value : '选择日期'}
-                          <Cake />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          defaultMonth={birthday.toDate()}
-                          selected={birthday.toDate()}
-                          captionLayout="dropdown"
-                          onSelect={(date) => {
-                            field.onChange(date && dayjs(date).format('YYYY-MM-DD'))
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </FormControl>
-                </FormItem>
-              )
-            }}
-          />
-
-          <FormField
-            control={form.control}
-            name="workYears"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>工作年限</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="不填" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {workYearsOptions.map(o => (
-                        <SelectItem key={o} value={o}>
-                          {o}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>联系方式</FormLabel>
-                <FormControl>
-                  <Input placeholder="手机号" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>联系邮箱</FormLabel>
-                <FormControl>
-                  <Input placeholder="you@example.com" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="maritalStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>婚姻状况</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="不填" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {maritalStatusOptions.map(o => (
-                        <SelectItem key={o} value={o}>
-                          {o}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="heightCm"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>身高(cm)</FormLabel>
-                <FormControl>
-                  <InputOTP
-                    pattern={REGEXP_ONLY_DIGITS}
-                    value={field.value ? String(field.value) : ''}
-                    onChange={(v) => {
-                      field.onChange(Number(v))
-                    }}
-                    maxLength={3}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="weightKg"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>体重(kg)</FormLabel>
-                <FormControl>
-                  <FormControl>
-                    <InputOTP
-                      pattern={REGEXP_ONLY_DIGITS}
-                      value={field.value ? String(field.value) : ''}
-                      onChange={(v) => {
-                        field.onChange(Number(v))
-                      }}
-                      maxLength={3}
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </FormControl>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="nation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>民族</FormLabel>
-                <FormControl>
-                  <Input placeholder="请输入民族" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="nativePlace"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>籍贯</FormLabel>
-                <FormControl>
-                  <Input placeholder="四川 / 江苏南京" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="politicalStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>政治面貌</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="共青团员" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {politicalStatusOptions.map(o => (
-                        <SelectItem key={o} value={o}>
-                          {o}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
+          <PersonalFields form={form} />
+          <ContactFields form={form} />
+          <DemographicFields form={form} />
         </motion.div>
         <Separator className="mt-6" />
-        <Button type="button" variant="outline" size={isMobile ? 'icon' : 'sm'} onClick={onAddField} className="mt-6">
-          <Plus />
-          {!isMobile && '添加自定义字段'}
-        </Button>
-        <div className="mt-6 grid gap-4 justify-items-start sm:grid-cols-2 md:grid-cols-3">
-          {fields.map((item, index) => (
-            <motion.div key={item.id} transition={{ duration: 0.2 }} className="flex gap-2 items-end" layout>
-              <FormField
-                control={form.control}
-                name={`customFields.${index}.label`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>标签</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="标签" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`customFields.${index}.value`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>值</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="值" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <Button type="button" variant="destructive" size={isMobile ? 'icon' : 'sm'} onClick={() => remove(index)}>
-                <Delete />
-                {!isMobile && '删除'}
-              </Button>
-            </motion.div>
-          ))}
-        </div>
+        <CustomFields form={form} />
       </form>
     </Form>
   )

@@ -1,44 +1,40 @@
 import type { User } from '@supabase/supabase-js'
-import { Calendar as CalendarIcon, Mail, Shield, User as UserIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, Mail, Shield } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useCurrentUserName } from '@/hooks/use-current-user'
-import { useDebounce } from '@/hooks/use-debounce'
 import supabase from '@/lib/supabase/client'
-import { updateProfile } from '@/lib/supabase/user'
-import { EditableField } from '../editable-field'
 import { ProfileAvatar } from '../profile-avatar'
 import { ReadonlyField } from '../readonly-field'
+import { EmailRow } from './email-row'
+import { NameRow } from './name-row'
 
 interface ProfileInfoCardProps {
   user: User
+}
+
+function formatRegistrationDate(dateString?: string) {
+  if (!dateString)
+    return '未知'
+  return new Date(dateString).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 export function ProfileInfoCard({ user: initialUser }: ProfileInfoCardProps) {
   const currentName = useCurrentUserName()
   const [user, setUser] = useState(initialUser)
 
-  // 编辑状态
-  const [editingName, setEditingName] = useState(false)
-  const [editingEmail, setEditingEmail] = useState(false)
-  const [fullName, setFullName] = useState(user.user_metadata.full_name || '')
-  const [email, setEmail] = useState(user.email || '')
-  const [savingName, setSavingName] = useState(false)
-  const [savingEmail, setSavingEmail] = useState(false)
-
-  // 订阅用户认证状态变化,自动刷新用户信息
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // 当用户信息更新时刷新
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'USER_UPDATED' && session?.user) {
         setUser(session.user)
-        setFullName(session.user.user_metadata.full_name || '')
-        setEmail(session.user.email || '')
       }
     })
 
@@ -47,92 +43,8 @@ export function ProfileInfoCard({ user: initialUser }: ProfileInfoCardProps) {
     }
   }, [])
 
-  // 更新用户名
-  const updateFullName = async () => {
-    if (!fullName.trim()) {
-      toast.error('用户名不能为空')
-      return
-    }
-
-    if (fullName === currentName) {
-      setEditingName(false)
-      return
-    }
-
-    setSavingName(true)
-    try {
-      await updateProfile({ data: { full_name: fullName } })
-
-      toast.success('用户名更新成功')
-      setEditingName(false)
-    }
-    catch {
-      toast.error('用户名更新失败，请稍后重试')
-    }
-    finally {
-      setSavingName(false)
-    }
-  }
-
-  // 防抖更新用户名
-  const debouncedUpdateName = useDebounce(updateFullName, 500)
-
-  // 更新邮箱
-  const updateEmail = async () => {
-    if (!email.trim()) {
-      toast.error('邮箱地址不能为空')
-      return
-    }
-
-    if (!/^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(email)) {
-      toast.error('请输入有效的邮箱地址')
-      return
-    }
-
-    if (email === user?.email) {
-      setEditingEmail(false)
-      return
-    }
-
-    setSavingEmail(true)
-    try {
-      await updateProfile({ email })
-
-      toast.success('邮箱更新请求已发送，请查收验证邮件')
-      setEditingEmail(false)
-    }
-    catch {
-      toast.error('邮箱更新失败，请稍后重试')
-    }
-    finally {
-      setSavingEmail(false)
-    }
-  }
-
-  // 防抖更新邮箱
-  const debouncedUpdateEmail = useDebounce(updateEmail, 500)
-
-  const formatRegistrationDate = (dateString?: string) => {
-    if (!dateString)
-      return '未知'
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
-  const handleEditName = () => setEditingName(true)
-  const handleCancelName = () => {
-    setFullName(user?.user_metadata.full_name || '')
-    setEditingName(false)
-  }
-
-  const handleEditEmail = () => setEditingEmail(true)
-  const handleCancelEmail = () => {
-    setEmail(user?.email || '')
-    setEditingEmail(false)
-  }
+  const fullName = user.user_metadata.full_name || ''
+  const email = user.email || ''
 
   return (
     <Card>
@@ -159,32 +71,8 @@ export function ProfileInfoCard({ user: initialUser }: ProfileInfoCardProps) {
         <Separator />
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <EditableField
-            id="name"
-            label="用户名"
-            icon={<UserIcon className="h-4 w-4" />}
-            value={fullName}
-            isEditing={editingName}
-            isSaving={savingName}
-            onValueChange={setFullName}
-            onEdit={handleEditName}
-            onSave={debouncedUpdateName}
-            onCancel={handleCancelName}
-          />
-
-          <EditableField
-            id="email"
-            label="邮箱地址"
-            icon={<Mail className="h-4 w-4" />}
-            type="email"
-            value={email}
-            isEditing={editingEmail}
-            isSaving={savingEmail}
-            onValueChange={setEmail}
-            onEdit={handleEditEmail}
-            onSave={debouncedUpdateEmail}
-            onCancel={handleCancelEmail}
-          />
+          <NameRow initialFullName={fullName} />
+          <EmailRow initialEmail={email} />
 
           <ReadonlyField
             id="created"

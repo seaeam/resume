@@ -1,9 +1,9 @@
 import type { TemplateManifest } from '@/lib/resume-template/schema'
 import PagedResumeShell from '@/components/resume/paged-resume-shell'
+import { buildTemplateResumeData } from '@/components/resume/runtime/context/resume-data-context'
 import { ResumeTemplateRuntime } from '@/components/resume/runtime/ResumeTemplateRuntime'
 import { normalizeResumeAppearance } from '@/lib/schema'
-import { buildTemplateResumeData } from '@/pages/template/context/resume-data-context'
-import { demoResumeData } from '../../data/demo-resume'
+import { demoResumeData } from '@/lib/template/fixtures/demo-resume'
 import { getAppearanceOverrideFromTemplateManifest } from '../../utils'
 
 const thumbnailPreviewData = buildTemplateResumeData(demoResumeData)

@@ -1,7 +1,7 @@
 import type { ResumeAppearanceConfig } from '@/lib/schema'
+import { useTemplateResumeData } from '@/components/resume/runtime/context/resume-data-context'
 import { ResumeTemplateRuntime } from '@/components/resume/runtime/ResumeTemplateRuntime'
 import { getBuiltInTemplateManifest } from '@/lib/resume-template/runtime'
-import { useTemplateResumeData } from '@/pages/template/context/resume-data-context'
 
 interface ModernResumeProps {
   appearance?: Partial<ResumeAppearanceConfig> | null
