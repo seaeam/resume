@@ -10,6 +10,7 @@ import { getCurrentUser } from '@/lib/supabase/user'
 import useResumeConfigStore from '@/store/resume/config'
 import useCurrentResumeStore from '@/store/resume/current'
 import useResumeStore from '@/store/resume/form'
+import { getErrorMessage } from '@/utils'
 
 export function useResumeLoader() {
   const [loading, setLoading] = useState(true)
@@ -89,10 +90,10 @@ export function useResumeLoader() {
         configStore.replaceConfig(fallbackAppearance)
         resumeStore.updateAppearanceConfig(fallbackAppearance)
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         if (cancelled)
           return
-        toast.error(`加载简历失败, ${error.message || '未知错误'}`)
+        toast.error(`加载简历失败, ${getErrorMessage(error, '未知错误')}`)
         navigate('/resume')
       })
       .finally(() => {
@@ -136,8 +137,8 @@ export function useResumeLoader() {
           navigate('/resume')
         })
       }
-      catch (error: any) {
-        toast.error(`监听简历更新失败, ${error.message || '未知错误'}`)
+      catch (error: unknown) {
+        toast.error(`监听简历更新失败, ${getErrorMessage(error, '未知错误')}`)
       }
     }
 

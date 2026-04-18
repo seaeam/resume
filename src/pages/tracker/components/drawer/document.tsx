@@ -1,11 +1,12 @@
 import type { ResumeOption, ResumePreviewData } from './types'
 import { FileText, Loader2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import ScaledReadonlyPreview from '@/components/resume/scaled-readonly-preview'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useFetchData } from '@/hooks/use-fetch-data'
 import { getAllResumesFromUser, getResumeById, updateCompany } from '@/lib/supabase/resume'
 import { buildTemplateResumeData } from '@/pages/template/context/resume-data-context'
 import useTrackerStore from '../../store'
@@ -27,46 +28,38 @@ function SharedResumePreview({ data }: { data: ResumePreviewData }) {
 export default function DrawerDocument() {
   const { selectedJob: job, syncJob, restoreJobsSnapshot } = useTrackerStore()
   const navigate = useNavigate()
-  const [resumes, setResumes] = useState<ResumeOption[]>([])
-  const [loading, setLoading] = useState(false)
-  const [previewData, setPreviewData] = useState<ResumePreviewData | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
 
-  // 加载用户简历列表
+  const {
+    data: resumes,
+    loading,
+    error: resumesError,
+  } = useFetchData<ResumeOption[]>(
+    async () => (await getAllResumesFromUser()) as ResumeOption[],
+    [],
+  )
+
+  const {
+    data: previewData,
+    loading: previewLoading,
+    error: previewError,
+  } = useFetchData<ResumePreviewData | null>(
+    async () => {
+      if (!job?.resume_id)
+        return null
+      return (await getResumeById(job.resume_id, '*')) as ResumePreviewData
+    },
+    [job?.resume_id],
+  )
+
   useEffect(() => {
-    setLoading(true)
-    getAllResumesFromUser()
-      .then((data) => {
-        setResumes(data as ResumeOption[])
-      })
-      .catch((error) => {
-        console.error('Failed to load resumes:', error)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [])
+    if (resumesError)
+      toast.error('加载简历列表失败', { description: getTrackerErrorMessage(resumesError) })
+  }, [resumesError])
 
-  // 加载选中简历的完整数据用于预览
   useEffect(() => {
-    if (!job?.resume_id) {
-      setPreviewData(null)
-      return
-    }
-
-    setPreviewLoading(true)
-    getResumeById(job.resume_id, '*')
-      .then((data) => {
-        setPreviewData(data as ResumePreviewData)
-      })
-      .catch((error) => {
-        console.error('Failed to load resume preview:', error)
-        setPreviewData(null)
-      })
-      .finally(() => {
-        setPreviewLoading(false)
-      })
-  }, [job?.resume_id])
+    if (previewError)
+      toast.error('加载简历预览失败', { description: getTrackerErrorMessage(previewError) })
+  }, [previewError])
 
   const handleResumeChange = (resumeId: string) => {
     if (!job)
@@ -97,8 +90,10 @@ export default function DrawerDocument() {
   if (!job)
     return null
 
+  const resumeList = resumes ?? []
+
   // 没有简历的空状态
-  if (!loading && resumes.length === 0) {
+  if (!loading && resumeList.length === 0) {
     return (
       <div className="flex flex-col gap-4">
         <div className="space-y-1">
@@ -147,7 +142,7 @@ export default function DrawerDocument() {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {resumes.map(resume => (
+                {resumeList.map(resume => (
                   <SelectItem key={resume.resume_id} value={resume.resume_id}>
                     {resume.display_name}
                     {resume.type === 'default' && ' (默认)'}

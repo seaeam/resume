@@ -6,6 +6,7 @@ import { syncOfflineResumesToCloud } from '@/lib/resume-sync-service'
 import { subscribeToResumeConfigUpdates } from '@/lib/supabase/resume'
 import { deleteResume as deleteResumeApi, getAllResumesFromUser } from '@/lib/supabase/resume/form'
 import { getCurrentUser } from '@/lib/supabase/user'
+import { getErrorMessage } from '@/utils'
 
 interface ResumeListState {
   resumes: ResumeItem[]
@@ -50,8 +51,8 @@ const useResumeListStore = create<ResumeListState>()((set, get) => ({
           const onlineResumes = await getAllResumesFromUser()
           allResumes = onlineResumes.map(r => ({ ...r, isOffline: false }))
         }
-        catch (error: any) {
-          if (error.message !== '用户未登陆') {
+        catch (error: unknown) {
+          if (getErrorMessage(error) !== '用户未登陆') {
             toast.error('加载在线简历失败')
           }
         }

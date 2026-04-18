@@ -93,7 +93,9 @@ function GithubStars({
             setStars(data.stargazers_count)
           }
         })
-        .catch(console.error)
+        .catch(() => {
+          // GitHub stars 加载失败是非关键路径，静默降级避免打扰用户
+        })
         .finally(() => setIsLoading(false))
     }, delay)
 

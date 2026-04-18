@@ -14,6 +14,7 @@ import { createOfflineResume } from '@/lib/offline-resume-manager'
 import { createNewResume } from '@/lib/supabase/resume/form'
 import useResumeListStore from '@/pages/resume/store'
 import useCurrentResumeStore from '@/store/resume/current'
+import { getErrorMessage } from '@/utils'
 
 export default function CreateResumeCard() {
   const { isOnline, addResume } = useResumeListStore()
@@ -83,9 +84,9 @@ export default function CreateResumeCard() {
         handleCancel()
       }
     }
-    catch (error: any) {
+    catch (error: unknown) {
       setLoading(false)
-      toast.error(`创建失败: ${error.message}`)
+      toast.error(`创建失败: ${getErrorMessage(error)}`)
     }
   }
 

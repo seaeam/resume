@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getCurrentUser } from '@/lib/supabase/user'
+import { getErrorMessage } from '@/utils'
 import { AccountSettingsCard } from './components/account-settings-card'
 import { PreferencesCard } from './components/preferences-card'
 import { ProfileInfoCard } from './components/profile-info-card'
@@ -25,8 +26,8 @@ export default function ProfilePage() {
         }
         setUser(currentUser)
       }
-      catch (error: any) {
-        toast.error(`用户信息加载失败：${error instanceof Error ? error.message : String(error)}`)
+      catch (error: unknown) {
+        toast.error(`用户信息加载失败：${getErrorMessage(error)}`)
         navigate('/login')
       }
       finally {

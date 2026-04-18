@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { getStoredSessionRole, useCollaborationStore } from '@/lib/collaboration'
 import useResumeStore from '@/store/resume/form'
+import { getErrorMessage } from '@/utils'
 
 interface UseCollaborationPanelValueParams {
   currentUser: SupabaseUser
@@ -65,8 +66,9 @@ export function useCollaborationPanelValue({
         setLastStoppedSessionId(null)
       }
     }
-    catch (error: any) {
-      toast.error(`开启实时协作失败，请稍后重试${error?.message ? `: ${error.message}` : ''}`)
+    catch (error: unknown) {
+      const msg = getErrorMessage(error, '')
+      toast.error(`开启实时协作失败，请稍后重试${msg ? `: ${msg}` : ''}`)
     }
   }, [activeResumeId, currentUser, setSearchParams, startSharing, userDisplayName])
 

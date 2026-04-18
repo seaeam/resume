@@ -54,7 +54,7 @@ function Tracker() {
 
   return (
     <>
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 py-4 md:px-6 md:py-5 lg:px-10 lg:py-6">
+      <div className="mx-auto flex w-full max-w-360 flex-col gap-4 px-4 py-4 md:px-6 md:py-5 lg:px-10 lg:py-6">
         <TrackerHeader />
         <StatusFilter />
         <main className="w-full min-w-0">

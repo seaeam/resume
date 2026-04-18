@@ -13,6 +13,7 @@ import { getOfflineResumeById } from '@/lib/offline-resume-manager'
 import { createAtsConfig, updateAtsConfig } from '@/lib/supabase/resume'
 import { uploadOfflineResumeToCloud } from '@/lib/supabase/resume/form'
 import { buildAtsCreatePayload } from '@/lib/supabase/resume/utils'
+import { getErrorMessage } from '@/utils'
 import { ANALYSIS_STEPS_CONFIG } from '../../const'
 import useAtsStore from '../../store'
 import { fetchResumeDataForAnalysis, getStepContent, getStepStatus } from '../../utils'
@@ -122,9 +123,9 @@ function Header() {
       updateLog('display', '已展示分析结果')
       congradulation()
     }
-    catch (error: any) {
+    catch (error: unknown) {
       console.error(error)
-      toast.error(error.message || '分析过程中发生错误')
+      toast.error(getErrorMessage(error, '分析过程中发生错误'))
       setAnalysisState({ status: 'idle' })
     }
   }, [

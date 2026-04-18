@@ -1,6 +1,7 @@
 import type { ApplicationStatus, StageStatus } from '../../types'
 import dayjs from 'dayjs'
 import { CalendarIcon, CheckCircle2 } from 'lucide-react'
+import { FormFooter } from '@/components/forms/form-footer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -128,12 +129,13 @@ export default function DrawerStageDetail({
         </p>
       )}
 
-      {!isViewingHistory && (
-        <div className="flex justify-end gap-2 border-t pt-3">
-          <Button variant="ghost" size="sm" onClick={handleCancel} disabled={saving || !isDirty}>取消</Button>
-          <Button size="sm" onClick={handleSave} disabled={saving || !isDirty}>保存修改</Button>
-        </div>
-      )}
+      <FormFooter
+        hidden={isViewingHistory}
+        isDirty={isDirty}
+        saving={saving}
+        onSave={handleSave}
+        onCancel={handleCancel}
+      />
     </section>
   )
 }

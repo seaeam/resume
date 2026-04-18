@@ -13,8 +13,8 @@ interface SidebarEditorProps {
   fill: string
   stroke: string
   isMobile: boolean
-  onUpdateActiveTabId: (id: any) => void
-  onUpdateOrder: (order: any[]) => void
+  onUpdateActiveTabId: (id: string) => void
+  onUpdateOrder: (order: string[]) => void
   onToggleVisibility: (id: VisibilityItemsType) => void
 }
 

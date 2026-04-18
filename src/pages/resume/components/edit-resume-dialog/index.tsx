@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { isOfflineResumeId, updateOfflineResumeMeta } from '@/lib/offline-resume-manager'
 import { updateResumeConfig } from '@/lib/supabase/resume'
+import { getErrorMessage } from '@/utils'
 
 interface EditResumeDialogProps {
   resume: Pick<ResumeListItem, 'resume_id' | 'display_name' | 'description' | 'isOffline'>
@@ -61,8 +62,8 @@ export default function EditResumeDialog({ resume, open, onOpenChange, onSuccess
         })
       }
     }
-    catch (error: any) {
-      toast.error(`更新失败: ${error.message || '请重试'}`)
+    catch (error: unknown) {
+      toast.error(`更新失败: ${getErrorMessage(error, '请重试')}`)
     }
     finally {
       setLoading(false)

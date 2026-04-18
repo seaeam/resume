@@ -2,6 +2,7 @@ import type { AnalysisState, AtsEvaluationResult } from './types'
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { getAtsFromUserId, updateFixChecklist } from '@/lib/supabase/resume'
+import { getErrorMessage } from '@/utils'
 import { ANALYSIS_INITIAL_STATE } from './const'
 
 interface AtsStore {
@@ -44,8 +45,8 @@ const useAtsStore = create<AtsStore>()(
           }
         }
       }
-      catch (error: any) {
-        toast.error(error instanceof Error ? error.message : '加载失败')
+      catch (error: unknown) {
+        toast.error(getErrorMessage(error, '加载失败'))
         set({ atsConfigs: null })
         set({ currentAtsConfig: null })
       }
@@ -127,8 +128,8 @@ const useAtsStore = create<AtsStore>()(
         set(() => ({ currentAtsConfig: { ...currentAtsConfig, fixChecklist: updatedFixCheckList } }))
         await updateFixChecklist(updatedFixCheckList, currentAtsConfig.id)
       }
-      catch (error: any) {
-        toast.error(error instanceof Error ? error.message : '操作失败')
+      catch (error: unknown) {
+        toast.error(getErrorMessage(error, '操作失败'))
         set(() => ({ currentAtsConfig }))
       }
     }
