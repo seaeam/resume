@@ -2,17 +2,15 @@ import type { DropResult } from '@hello-pangea/dnd'
 import type { ORDERType } from '@/lib/schema'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { Button } from '@/components/ui/button'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { ITEMS } from '../../const'
 
 interface MobileSortDialogProps {
@@ -49,19 +47,20 @@ export function MobileSortDialog({ open, order, onOpenChange, onConfirm }: Mobil
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent
-        className="z-[60] max-h-[80vh] overflow-hidden flex flex-col"
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="z-[60] max-h-[80vh] gap-0 rounded-t-lg rounded-b-none border-x-0 px-0 pb-0"
         onOpenAutoFocus={e => e.preventDefault()}
       >
-        <AlertDialogHeader>
-          <AlertDialogTitle>调整模块顺序</AlertDialogTitle>
-          <AlertDialogDescription>
+        <SheetHeader className="px-6 pt-6 pb-4">
+          <SheetTitle>调整模块顺序</SheetTitle>
+          <SheetDescription>
             长按并拖动模块进行排序，确认后应用。
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto -mx-2 px-2">
+        <div className="flex-1 overflow-y-auto px-4">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId={DROPPABLE_ID}>
               {droppable => (
@@ -76,26 +75,21 @@ export function MobileSortDialog({ open, order, onOpenChange, onConfirm }: Mobil
                       return null
                     return (
                       <Draggable key={id} draggableId={id} index={index}>
-                        {(draggable, snapshot) => {
-                          const row = (
-                            <li
-                              ref={draggable.innerRef}
-                              {...draggable.draggableProps}
-                              {...draggable.dragHandleProps}
-                              style={draggable.draggableProps.style}
-                              className={`touch-none flex items-center gap-3 rounded-md border bg-background px-3 py-2 select-none cursor-grab active:cursor-grabbing ${
-                                snapshot.isDragging ? 'shadow-lg ring-2 ring-primary/40' : ''
-                              }`}
-                              aria-label={`拖动 ${item.label}`}
-                            >
-                              <span className="text-foreground/80">{item.icon}</span>
-                              <span className="text-sm">{item.label}</span>
-                            </li>
-                          )
-                          if (snapshot.isDragging && typeof document !== 'undefined')
-                            return createPortal(row, document.body)
-                          return row
-                        }}
+                        {(draggable, snapshot) => (
+                          <li
+                            ref={draggable.innerRef}
+                            {...draggable.draggableProps}
+                            {...draggable.dragHandleProps}
+                            style={draggable.draggableProps.style}
+                            className={`flex items-center gap-3 rounded-md border bg-background px-3 py-2 select-none cursor-grab active:cursor-grabbing ${
+                              snapshot.isDragging ? 'shadow-lg ring-2 ring-primary/40' : ''
+                            }`}
+                            aria-label={`拖动 ${item.label}`}
+                          >
+                            <span className="text-foreground/80">{item.icon}</span>
+                            <span className="text-sm">{item.label}</span>
+                          </li>
+                        )}
                       </Draggable>
                     )
                   })}
@@ -106,11 +100,15 @@ export function MobileSortDialog({ open, order, onOpenChange, onConfirm }: Mobil
           </DragDropContext>
         </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel>取消</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm}>确认</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        <SheetFooter className="mt-0 flex-row gap-3 px-6 pt-4 pb-[max(env(safe-area-inset-bottom),1.5rem)] sm:flex-row">
+          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button className="flex-1" onClick={handleConfirm}>
+            确认
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   )
 }

@@ -1,5 +1,5 @@
 import { Edit } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import { RealtimeCursors } from '@/components/realtime-cursors'
 import { useTheme } from '@/components/theme-provider'
@@ -66,6 +66,12 @@ function Editor() {
   const stroke = theme === 'dark' ? '#3d3b3b' : '#e7e5e4'
   const userDisplayName = useCurrentUserName()
 
+  const handleOpenSortDialog = useCallback(() => {
+    requestAnimationFrame(() => {
+      setSortDialogOpen(true)
+    })
+  }, [])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -109,7 +115,7 @@ function Editor() {
           </Button>
         </DrawerTrigger>
         <DrawerContent className="h-160">
-          <CollaborationControls onOpenSortDialog={isMobile ? () => setSortDialogOpen(true) : undefined} />
+          <CollaborationControls onOpenSortDialog={isMobile ? handleOpenSortDialog : undefined} />
           <div className="p-4 overflow-y-auto overflow-x-hidden">
             <SidebarEditor
               activeTabId={activeTabId}
