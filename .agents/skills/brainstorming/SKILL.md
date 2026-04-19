@@ -112,7 +112,7 @@ digraph brainstorming {
 **Documentation:**
 
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  - (User preferences for spec location override this default)
+  - **Repository rule (506-FETL/resume): this path is mandatory. Do not write specs anywhere else.**
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 

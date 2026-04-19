@@ -37,7 +37,22 @@ export function ResumeTemplateRuntime({
   const sidebarSections: ReactNode[] = []
   let header: ReactNode = null
 
-  for (const section of resolvedManifest.sections) {
+  const orderedSections = [...resolvedManifest.sections].sort((left, right) => {
+    const leftKey = sectionRendererOrderKeyMap[left.renderer]
+    const rightKey = sectionRendererOrderKeyMap[right.renderer]
+    const leftIndex = leftKey ? data.order.indexOf(leftKey) : -1
+    const rightIndex = rightKey ? data.order.indexOf(rightKey) : -1
+
+    if (leftIndex !== -1 && rightIndex !== -1)
+      return leftIndex - rightIndex
+    if (leftIndex !== -1)
+      return -1
+    if (rightIndex !== -1)
+      return 1
+    return left.order - right.order
+  })
+
+  for (const section of orderedSections) {
     const node = renderSection(section, data)
     if (!node) {
       continue

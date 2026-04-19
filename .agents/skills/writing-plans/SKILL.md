@@ -18,7 +18,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+- **Repository rule (506-FETL/resume): this path is mandatory. Do not write plans anywhere else (e.g., not in `docs/plans/` or session workspace).**
 
 ## Scope Check
 

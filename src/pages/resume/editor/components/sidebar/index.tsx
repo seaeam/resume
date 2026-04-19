@@ -1,10 +1,12 @@
+import type { DropResult } from '@hello-pangea/dnd'
 import type { ORDERType, VisibilityItemsType } from '@/lib/schema'
-import { DraggableList } from '@/components/DraggableList'
-import { SideTabs, SideTabsWrapper, Tab, ViewPort } from '@/components/ui/side-tabs'
-import { Switch } from '@/components/ui/switch'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
+import { SideTabs, SideTabsWrapper, ViewPort } from '@/components/ui/side-tabs'
 import { ITEMS } from '../../const'
-import { DraggableItem } from './draggable-item'
+import { FixedTab } from './fixed-tab'
+import { MobileSortDialog } from './mobile-sort-dialog'
+import { SortableTab } from './sortable-tab'
+import { StaticTab } from './static-tab'
 
 interface SidebarEditorProps {
   activeTabId: ORDERType
@@ -13,10 +15,14 @@ interface SidebarEditorProps {
   fill: string
   stroke: string
   isMobile: boolean
+  sortDialogOpen: boolean
+  onSortDialogOpenChange: (open: boolean) => void
   onUpdateActiveTabId: (id: ORDERType) => void
   onUpdateOrder: (order: ORDERType[]) => void
   onToggleVisibility: (id: VisibilityItemsType) => void
 }
+
+const DROPPABLE_ID = 'resume-sidebar-tabs'
 
 export default function SidebarEditor({
   activeTabId,
@@ -25,59 +31,114 @@ export default function SidebarEditor({
   fill,
   stroke,
   isMobile,
+  sortDialogOpen,
+  onSortDialogOpenChange,
   onUpdateActiveTabId,
   onUpdateOrder,
   onToggleVisibility,
 }: SidebarEditorProps) {
   const orderDraggable = order.filter(id => id !== 'basics')
+  const basicsItem = ITEMS.find(item => item.id === 'basics')!
+
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination } = result
+    if (!destination || source.index === destination.index)
+      return
+    const next = [...orderDraggable]
+    const [moved] = next.splice(source.index, 1)
+    next.splice(destination.index, 0, moved)
+    onUpdateOrder(['basics', ...next])
+  }
+
+  const renderBasics = () => (
+    <FixedTab
+      id={'basics' as VisibilityItemsType}
+      label={basicsItem.label}
+      icon={basicsItem.icon}
+      visible={!visibilityState['basics' as VisibilityItemsType]}
+      active={activeTabId === 'basics'}
+      isMobile={isMobile}
+      onActivate={() => onUpdateActiveTabId('basics')}
+    />
+  )
 
   return (
-    <DraggableList items={orderDraggable} onOrderChange={order => onUpdateOrder(['basics', ...order])}>
-      <SideTabsWrapper defaultId={activeTabId}>
-        <SideTabs>
-          <div className="flex flex-col items-center justify-end gap-2">
-            <Tab
-              id="basics"
-              onClick={() => onUpdateActiveTabId('basics')}
-              disabled={visibilityState['basics' as VisibilityItemsType]}
-            >
-              {ITEMS.find(item => item.id === 'basics')?.icon}
-              {!isMobile && ITEMS.find(item => item.id === 'basics')?.label}
-            </Tab>
-          </div>
-          {orderDraggable.map((itm, index) => {
-            const item = ITEMS.find(it => it.id === itm)!
-            return (
-              <DraggableItem id={item.id} index={index} key={item.id} disabled={item.id === 'basics'}>
-                <div key={item.id} className="flex flex-col items-center justify-end gap-2">
-                  {item.id !== 'basics' && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <Switch
-                            checked={!visibilityState[item.id as VisibilityItemsType]}
-                            onCheckedChange={() => onToggleVisibility(item.id as VisibilityItemsType)}
-                          />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>点击可隐藏模块</TooltipContent>
-                    </Tooltip>
+    <SideTabsWrapper defaultId={activeTabId}>
+      {isMobile
+        ? (
+            <SideTabs>
+              {renderBasics()}
+              {orderDraggable.map((id) => {
+                const item = ITEMS.find(it => it.id === id)!
+                const visibilityKey = item.id as VisibilityItemsType
+                return (
+                  <StaticTab
+                    key={id}
+                    id={visibilityKey}
+                    label={item.label}
+                    icon={item.icon}
+                    visible={!visibilityState[visibilityKey]}
+                    active={activeTabId === item.id}
+                    isMobile={isMobile}
+                    onActivate={() => onUpdateActiveTabId(item.id)}
+                    onToggleVisibility={() => onToggleVisibility(visibilityKey)}
+                  />
+                )
+              })}
+            </SideTabs>
+          )
+        : (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <SideTabs>
+                {renderBasics()}
+                <Droppable droppableId={DROPPABLE_ID} direction="horizontal">
+                  {droppable => (
+                    <div
+                      ref={droppable.innerRef}
+                      {...droppable.droppableProps}
+                      className="flex flex-row gap-3"
+                    >
+                      {orderDraggable.map((id, index) => {
+                        const item = ITEMS.find(it => it.id === id)!
+                        const visibilityKey = item.id as VisibilityItemsType
+                        return (
+                          <Draggable key={id} draggableId={id} index={index}>
+                            {(draggable, snapshot) => (
+                              <SortableTab
+                                id={visibilityKey}
+                                label={item.label}
+                                icon={item.icon}
+                                visible={!visibilityState[visibilityKey]}
+                                active={activeTabId === item.id}
+                                isDragging={snapshot.isDragging}
+                                innerRef={draggable.innerRef}
+                                draggableProps={draggable.draggableProps}
+                                dragHandleProps={draggable.dragHandleProps}
+                                onActivate={() => onUpdateActiveTabId(item.id)}
+                                onToggleVisibility={() => onToggleVisibility(visibilityKey)}
+                              />
+                            )}
+                          </Draggable>
+                        )
+                      })}
+                      {droppable.placeholder}
+                    </div>
                   )}
-                  <Tab
-                    id={item.id}
-                    onClick={() => onUpdateActiveTabId(item.id)}
-                    disabled={visibilityState[item.id as VisibilityItemsType]}
-                  >
-                    {item.icon}
-                    {!isMobile && item.label}
-                  </Tab>
-                </div>
-              </DraggableItem>
-            )
-          })}
-        </SideTabs>
-        <ViewPort items={ITEMS} fill={fill} stroke={stroke} />
-      </SideTabsWrapper>
-    </DraggableList>
+                </Droppable>
+              </SideTabs>
+            </DragDropContext>
+          )}
+
+      <ViewPort items={ITEMS} fill={fill} stroke={stroke} />
+
+      {isMobile && (
+        <MobileSortDialog
+          open={sortDialogOpen}
+          order={order}
+          onOpenChange={onSortDialogOpenChange}
+          onConfirm={onUpdateOrder}
+        />
+      )}
+    </SideTabsWrapper>
   )
 }

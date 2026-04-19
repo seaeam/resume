@@ -1,4 +1,4 @@
-import { Clock, Loader2, Radio, Save, Share2 } from 'lucide-react'
+import { ArrowUpDown, Clock, Loader2, Radio, Save, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -6,7 +6,11 @@ import { cn } from '@/lib/utils'
 import { formatTime } from '@/utils/date'
 import { useCollaborationPanel } from '.'
 
-export function CollaborationControls() {
+interface CollaborationControlsProps {
+  onOpenSortDialog?: () => void
+}
+
+export function CollaborationControls({ onOpenSortDialog }: CollaborationControlsProps = {}) {
   const { isMobile, isSyncing, pendingChanges, lastSyncTime, onManualSync, openCollaborationDialog, isSharing, isCollabConnecting, collabDisabledReason, shareButtonTooltip, participantCount } = useCollaborationPanel()
 
   return (
@@ -63,6 +67,16 @@ export function CollaborationControls() {
                 协作人数
                 {participantCount}
               </span>
+            )}
+            {isMobile && onOpenSortDialog && (
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={onOpenSortDialog}
+                aria-label="调整模块顺序"
+              >
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
             )}
           </div>
         </div>

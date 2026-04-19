@@ -6,7 +6,6 @@ import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import { Spinner } from '@/components/ui/spinner'
-import { DragProvider } from '@/contexts/DragContext'
 import { useCurrentUserName } from '@/hooks/use-current-user'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useCollaborationStore } from '@/lib/collaboration'
@@ -23,6 +22,7 @@ import { useResumeLoader } from './hooks/use-resume-loader'
 function Editor() {
   const isMobile = useIsMobile()
   const [open, setOpen] = useState(false)
+  const [sortDialogOpen, setSortDialogOpen] = useState(false)
   const { theme } = useTheme()
   const { loading, currentUser } = useResumeLoader()
 
@@ -97,39 +97,39 @@ function Editor() {
         />
       )}
 
-      <DragProvider>
-        <Drawer open={open} onOpenChange={setOpen} handleOnly>
-          <DrawerTrigger asChild>
-            <Button
-              variant="outline"
-              className="fixed bottom-6 left-1/2 z-1 -transform -translate-x-1/2"
-              size={isMobile ? 'icon' : 'default'}
-            >
-              <Edit />
-              {!isMobile && '编辑简历'}
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent className="h-160">
-            <CollaborationControls />
-            <div className="p-4 overflow-y-scroll overflow-x-hidden">
-              <SidebarEditor
-                activeTabId={activeTabId}
-                order={order}
-                visibilityState={visibilityState}
-                fill={fill}
-                stroke={stroke}
-                isMobile={isMobile}
-                onUpdateActiveTabId={updateActiveTabId}
-                onUpdateOrder={updateOrder}
-                onToggleVisibility={toggleVisibility}
-              />
-            </div>
-          </DrawerContent>
-        </Drawer>
-        <div className="flex flex-col md:flex-row min-h-screen overflow-auto">
-          <ResumePreview resumeRef={resumeRef} scrollContainerRef={previewScrollRef} />
-        </div>
-      </DragProvider>
+      <Drawer open={open} onOpenChange={setOpen} handleOnly>
+        <DrawerTrigger asChild>
+          <Button
+            variant="outline"
+            className="fixed bottom-6 left-1/2 z-1 -transform -translate-x-1/2"
+            size={isMobile ? 'icon' : 'default'}
+          >
+            <Edit />
+            {!isMobile && '编辑简历'}
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent className="h-160">
+          <CollaborationControls onOpenSortDialog={isMobile ? () => setSortDialogOpen(true) : undefined} />
+          <div className="p-4 overflow-y-auto overflow-x-hidden">
+            <SidebarEditor
+              activeTabId={activeTabId}
+              order={order}
+              visibilityState={visibilityState}
+              fill={fill}
+              stroke={stroke}
+              isMobile={isMobile}
+              sortDialogOpen={sortDialogOpen}
+              onSortDialogOpenChange={setSortDialogOpen}
+              onUpdateActiveTabId={updateActiveTabId}
+              onUpdateOrder={updateOrder}
+              onToggleVisibility={toggleVisibility}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
+      <div className="flex flex-col md:flex-row min-h-screen overflow-auto">
+        <ResumePreview resumeRef={resumeRef} scrollContainerRef={previewScrollRef} />
+      </div>
       <CollaborationDialog />
     </CollaborationPanelProvider>
   )

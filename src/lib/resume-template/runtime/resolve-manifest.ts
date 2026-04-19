@@ -1,14 +1,5 @@
 import type { ResolvedTemplateManifest, TemplateManifest, TemplateSection, TemplateSkeleton } from '../schema'
-import {
-  cloneTemplateSection,
-  cloneTemplateSections,
-  DEFAULT_TEMPLATE_FAMILY_ID,
-  KNOWN_COLOR_PRESETS,
-  KNOWN_FONT_PRESETS,
-  KNOWN_RADIUS_PRESETS,
-  KNOWN_SPACING_PRESETS,
-  SUPPORTED_SECTION_RENDERERS,
-} from '../defaults'
+import { cloneTemplateSection, cloneTemplateSections, DEFAULT_TEMPLATE_FAMILY_ID, KNOWN_COLOR_PRESETS, KNOWN_FONT_PRESETS, KNOWN_RADIUS_PRESETS, KNOWN_SPACING_PRESETS, SUPPORTED_SECTION_RENDERERS } from '../defaults'
 import { templateFamilies } from '../registry/families'
 import { templateManifestSchema, templateSkeletonEnum } from '../schema'
 
