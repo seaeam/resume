@@ -25,6 +25,8 @@ export default function BasicsRenderer() {
   ].filter(Boolean)
   const jobIntentFields = [
     job_intent.jobIntent,
+    job_intent.intentionalCity,
+    job_intent.expectedSalary ? `${job_intent.expectedSalary}K` : '',
     job_intent.dateEntry !== '不填' ? job_intent.dateEntry : '',
   ].filter(Boolean)
   const mergedJobIntent = layout.skeleton === 'single-column' && getVisibility('job_intent')
