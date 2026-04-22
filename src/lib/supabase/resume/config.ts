@@ -27,7 +27,7 @@ export async function subscribeToResumeConfigUpdates(
     throw new Error('用户未登陆')
 
   const channel = supabase
-    .channel(`resume_config_changes`)
+    .channel(`resume_config_changes:${user.id}:${crypto.randomUUID()}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'resume_config', filter: `user_id=eq.${user.id}` },
