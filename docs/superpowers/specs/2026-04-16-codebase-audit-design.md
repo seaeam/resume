@@ -127,13 +127,12 @@ src/pages/template/store/
 
 ### 1.7 `src/pages/optimize/components/advanced-tools/shared/helpers.ts`（484行）— P1
 
-**方案：** 按工具类型拆分：
+**方案：** 按职责合并为三个领域文件：
 
-- `benchmark-helpers.ts`
-- `ats-helpers.ts`
-- `formatter-helpers.ts`
-- `job-desc-helpers.ts`
-- 最后通过 `index.ts` 统一导出各工具类型的 helpers
+- `text.ts`（文本/值/关键词原语）
+- `resume.ts`（简历领域 + tool context 加载）
+- `suggestions.ts`（建议定位 + 评分分类）
+- 不再保留 barrel `index.ts` / `helpers.ts`，消费者按职责直引
 
 ---
 

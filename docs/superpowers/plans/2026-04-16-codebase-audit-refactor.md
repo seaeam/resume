@@ -500,14 +500,14 @@ pnpm remove @tabler/icons-react @hugeicons/react @hugeicons/core-free-icons
 
 **文件：**
 
-- 修改：`src/pages/optimize/components/advanced-tools/shared/helpers.ts`
-- 新建：同目录下按工具类型拆分的文件
-- 新建：`src/pages/optimize/components/advanced-tools/shared/index.ts`
+- 删除：`src/pages/optimize/components/advanced-tools/shared/helpers.ts`
+- 新建：同目录下按职责合并的 `text.ts`、`resume.ts`、`suggestions.ts`
+- 不再保留 barrel `index.ts`
 
-- [ ] **步骤 1：阅读 helpers.ts，按工具领域分组函数**
-- [ ] **步骤 2：拆分为 `benchmark-helpers.ts`、`ats-helpers.ts`、`formatter-helpers.ts`、`job-desc-helpers.ts`**
-- [ ] **步骤 3：新建 `index.ts` 统一 re-export**
-- [ ] **步骤 4：更新消费者导入路径（如有直接导入 helpers.ts 的）**
+- [ ] **步骤 1：阅读 helpers.ts，按职责分组函数**
+- [ ] **步骤 2：合并为 `text.ts`、`resume.ts`、`suggestions.ts`**
+- [ ] **步骤 3：剔除无引用的死代码（`dedupeBy`、`cloneJson`、`stringifyResumeValue`）**
+- [ ] **步骤 4：更新消费者按职责直引（不走 barrel）**
 - [ ] **步骤 5：验证** — `pnpm build`
 
 ---

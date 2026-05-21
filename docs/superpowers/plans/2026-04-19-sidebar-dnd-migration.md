@@ -15,15 +15,18 @@
 ## 文件结构
 
 **新建：**
+
 - `src/pages/resume/editor/components/sidebar/sortable-tab.tsx`：可拖拽 Tab 卡片，桌面端渲染 `GripVertical` 手柄，移动端整块作为 dragHandle
 - `src/pages/resume/editor/components/sidebar/fixed-tab.tsx`：`basics` 专用的不可拖 Tab，与 `SortableTab` 视觉对齐
 - `src/pages/resume/editor/components/sidebar/drag-hint.tsx`：仅移动端展示的"长按模块可拖动调整顺序"提示
 
 **修改：**
+
 - `src/pages/resume/editor/components/sidebar/index.tsx`：完全重写，由 `DragDropContext` 包裹
 - `src/pages/resume/editor/index.tsx:9`、`:100`、`:132`：移除 `DragProvider` import 与包裹
 
 **删除：**
+
 - `src/contexts/DragContext.tsx`
 - `src/components/DraggableList.tsx`
 - `src/hooks/use-draggable-item.ts`
@@ -36,6 +39,7 @@
 ## 任务 1：新建 `sortable-tab.tsx`
 
 **文件：**
+
 - 新建：`src/pages/resume/editor/components/sidebar/sortable-tab.tsx`
 
 - [ ] **步骤 1：创建组件文件**
@@ -132,6 +136,7 @@ export function SortableTab({
 ```
 
 要点：
+
 - 桌面端 `gripHandleProps` 仅挂在 `GripVertical` 容器上 — Switch 与 Tab 区域不会触发拖拽
 - 移动端 `rootHandleProps` 挂在根容器上；Switch 用 `onPointerDownCapture` 阻断冒泡，避免与 dnd 触摸 sensor 冲突；Tab 内部 `<button>` 自身处理 click 不受影响
 - `isDragging` 时 `shadow-lg ring-2 ring-primary/40 scale-[1.02]`
@@ -158,6 +163,7 @@ git commit -m "feat(resume-editor): add SortableTab using @hello-pangea/dnd"
 ## 任务 2：新建 `fixed-tab.tsx`
 
 **文件：**
+
 - 新建：`src/pages/resume/editor/components/sidebar/fixed-tab.tsx`
 
 - [ ] **步骤 1：创建组件文件**
@@ -224,6 +230,7 @@ git commit -m "feat(resume-editor): add FixedTab for non-draggable basics slot"
 ## 任务 3：新建 `drag-hint.tsx`
 
 **文件：**
+
 - 新建：`src/pages/resume/editor/components/sidebar/drag-hint.tsx`
 
 - [ ] **步骤 1：创建组件文件**
@@ -260,6 +267,7 @@ git commit -m "feat(resume-editor): add mobile drag hint banner"
 ## 任务 4：重写 `sidebar/index.tsx` 接入 dnd
 
 **文件：**
+
 - 修改：`src/pages/resume/editor/components/sidebar/index.tsx`（完全替换内容）
 
 - [ ] **步骤 1：替换文件内容**
@@ -376,6 +384,7 @@ export default function SidebarEditor({
 ```
 
 注意：
+
 - 不再 import `DraggableList` / `DraggableItem`
 - `basics` 不在 Droppable 内，保证它始终首位且不可拖
 - `handleDragEnd` 的 source/destination 是 `orderDraggable` 的索引，重排后再加回 `'basics'`
@@ -403,6 +412,7 @@ git commit -m "refactor(resume-editor): rewrite sidebar with @hello-pangea/dnd"
 ## 任务 5：移除 DragProvider 与旧文件
 
 **文件：**
+
 - 修改：`src/pages/resume/editor/index.tsx`
 - 删除：`src/contexts/DragContext.tsx`
 - 删除：`src/components/DraggableList.tsx`
@@ -412,10 +422,12 @@ git commit -m "refactor(resume-editor): rewrite sidebar with @hello-pangea/dnd"
 - [ ] **步骤 1：从 `editor/index.tsx` 移除 DragProvider**
 
 修改 `src/pages/resume/editor/index.tsx`：
+
 1. 删除第 9 行：`import { DragProvider } from '@/contexts/DragContext'`
 2. 把第 100 行 `<DragProvider>` 与第 132 行 `</DragProvider>` 一并删除（保留中间内容，缩进同步对齐）
 
 最终在 `CollaborationPanelProvider` 内部、`CollaborationDialog` 之上的结构变为：
+
 ```tsx
 <>
   <Drawer ...>...</Drawer>
@@ -424,6 +436,7 @@ git commit -m "refactor(resume-editor): rewrite sidebar with @hello-pangea/dnd"
   </div>
 </>
 ```
+
 （包在 Fragment 内即可，因为 `CollaborationPanelProvider` 期望单个 children 时也接受 fragment。）
 
 - [ ] **步骤 2：删除四个旧文件**
@@ -445,9 +458,11 @@ rm src/pages/resume/editor/components/sidebar/draggable-item.tsx
 - [ ] **步骤 4：类型校验 + lint**
 
 运行：
+
 ```bash
 npx tsc --noEmit && pnpm exec eslint src/pages/resume/editor src/contexts src/components src/hooks
 ```
+
 预期：0 errors
 
 - [ ] **步骤 5：提交**
@@ -471,6 +486,7 @@ git commit -m "refactor(resume-editor): remove custom DragContext stack"
 启动 dev：`pnpm dev`，浏览器打开简历编辑器，等待加载完成。
 
 桌面浏览器（鼠标）核对：
+
 - [ ] 侧边栏 Tab 上能看到 `GripVertical` 手柄图标
 - [ ] 鼠标拖手柄可重排，松手后顺序持久化（刷新仍生效）
 - [ ] 拖到列表外或 Esc 取消，不更改顺序
@@ -482,6 +498,7 @@ git commit -m "refactor(resume-editor): remove custom DragContext stack"
 - [ ] **步骤 3：人工验证（键盘）**
 
 桌面浏览器键盘核对：
+
 - [ ] Tab 键能聚焦到手柄
 - [ ] 聚焦后 Space 抓取（屏读会播报）
 - [ ] ←/→ 方向键移动位置
@@ -491,6 +508,7 @@ git commit -m "refactor(resume-editor): remove custom DragContext stack"
 - [ ] **步骤 4：人工验证（移动端 / 触摸）**
 
 DevTools 切设备模拟（或真机）核对：
+
 - [ ] Drawer 顶部出现 `<Move /> 长按模块可拖动调整顺序`
 - [ ] 长按 Tab 卡片 ~150ms 后进入拖拽状态
 - [ ] 触摸滑动可重排，松手提交

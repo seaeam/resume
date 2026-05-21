@@ -1,6 +1,7 @@
 import type { BenchmarkMetric, BenchmarkMetricStatus, BenchmarkResult } from './types'
 import type { ResumeSchema } from '@/lib/schema'
-import { countFilledSections, countQuantifiedEntries, normalizeMultilineText } from '../shared/helpers'
+import { countFilledSections, countQuantifiedEntries } from '../shared/resume'
+import { normalizeMultilineText } from '../shared/text'
 import { BENCHMARK_PROFILES, GENERAL_BENCHMARK_PROFILE } from './const'
 
 function inferBenchmarkProfile(resume: ResumeSchema) {

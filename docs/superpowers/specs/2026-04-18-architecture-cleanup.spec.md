@@ -10,6 +10,7 @@
 ## 1. 背景
 
 `AGENTS.md` 定义了仓库约定：
+
 - 页面模块遵循 history-style 结构：`components/`, `hooks/`, `const.ts`, `index.tsx`, `store.ts`, `types.ts`, `utils.ts`。
 - 全部 kebab-case 命名；组件以"文件夹 + `index.tsx`"导出。
 - 避免多层 prop drilling，应将共享状态/动作上提到页面 store。
@@ -39,32 +40,39 @@
 ## 3. 需求
 
 ### REQ-1 页面模块结构合规
+
 - **REQ-1.1** `src/pages/<page>/components/` 下所有组件必须以 `<name>/index.tsx` 形式导出（kebab-case）。
 - **REQ-1.2** 表单类页面（`forgot-password`/`login`/`sign-up`）必须至少有 `types.ts` 定义表单 schema。
 - **REQ-1.3** 含逻辑/数据加载的页面必须有 `store.ts`（或 `store/` 切片目录 + `index.ts`）。
 - **REQ-1.4** 抽 hook 时必须放在 `hooks/`；未实际抽取时不得创建空目录。
 
 ### REQ-2 状态管理边界
+
 - **REQ-2.1** 跨页面/全局数据必须放 `src/store/`；页面内共享数据必须放 `src/pages/<page>/store(.ts|/)`。
 - **REQ-2.2** 任何 Context 不得承载跨页面的全局业务数据；仅承载子树 UI 状态。
 - **REQ-2.3** 组件局部 `useState` 不得管理"被多个兄弟/子孙组件读写"的数据；这类数据必须上提。
 - **REQ-2.4** 单文件 store ≤ 250 行；超出则按职责切片化。
 
 ### REQ-3 类型安全
+
 - **REQ-3.1** 业务代码不得出现 `: any` 与 `as any`（react-hook-form `useFieldArray` 等不可避免位置可保留并标 TODO 解释原因）。
 - **REQ-3.2** `catch (error: any)` 全部替换为 `catch (error: unknown)` + 复用 `getErrorMessage`/具体 type guard。
 - **REQ-3.3** Supabase Realtime / Cursor / Session 的 `payload: any` 必须用具体类型。
 
 ### REQ-4 错误反馈
+
 - **REQ-4.1** 任何用户主动触发的失败必须有 toast 提示；后台或非阻塞的失败可静默并保留 console + 注释说明。
 
 ### REQ-5 巨型组件拆分
+
 - **REQ-5.1** `src/pages` 与 `src/components` 下的 `.tsx` 单文件应 ≤ 300 行；超出按子职责拆分到 `<name>/<subpart>.tsx` 并保持外部 import 路径不变。
 
 ### REQ-6 通用组件复用
+
 - **REQ-6.1** 页面骨架、空态、表单 footer、`fetch + loading + error` 模式必须使用统一的基础组件 / hook 实现。
 
 ### REQ-7 验证
+
 - **REQ-7.1** 每个阶段结束执行 `pnpm run build` 与受影响目录的 `pnpm exec eslint`，全部通过。
 - **REQ-7.2** 所有 import 路径变更必须全量更新，无悬空引用。
 
@@ -74,12 +82,12 @@
 
 ## 5. 风险与缓解
 
-| 风险 | 缓解 |
-|------|------|
-| 大重构破坏隐式依赖 | 每阶段独立验证（build + lint），每次只动一个 store / 一个组件 |
-| 组件路径变更遗漏 import | 每次重命名/拆分后用 grep 全量验证；优先使用 barrel `index.ts` 让外部路径不变 |
-| `as any` 在 react-hook-form 处难以彻底消除 | 允许保留并附 TODO + 说明，记入 spec 例外 |
-| Context 改造影响协作模块行为 | collaboration 模块作为最后阶段处理，并要求手动冒烟 |
+| 风险                                       | 缓解                                                                         |
+| ------------------------------------------ | ---------------------------------------------------------------------------- |
+| 大重构破坏隐式依赖                         | 每阶段独立验证（build + lint），每次只动一个 store / 一个组件                |
+| 组件路径变更遗漏 import                    | 每次重命名/拆分后用 grep 全量验证；优先使用 barrel `index.ts` 让外部路径不变 |
+| `as any` 在 react-hook-form 处难以彻底消除 | 允许保留并附 TODO + 说明，记入 spec 例外                                     |
+| Context 改造影响协作模块行为               | collaboration 模块作为最后阶段处理，并要求手动冒烟                           |
 
 ## 6. 验收
 

@@ -4,8 +4,8 @@ import { Award, Blocks, Briefcase, FolderKanban, Gauge, MessageSquareText, Spark
 import { useMemo } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
-import { getMetricStatusClassName } from '../shared/helpers'
 import { ToolMetaBadge, ToolPanelBody, ToolPanelCard, ToolPanelHeader, ToolStatCard } from '../shared/primitives'
+import { getMetricStatusClassName } from '../shared/suggestions'
 import { buildBenchmarkReport } from './utils'
 
 interface BenchmarkToolProps {

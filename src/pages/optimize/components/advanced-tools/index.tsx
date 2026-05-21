@@ -14,9 +14,8 @@ import BenchmarkTool from './benchmark'
 import FormatterTool from './formatter'
 import JobDescriptionTool from './job-description'
 import { formatToolError, getToolDefinition, TOOL_DEFINITIONS } from './shared/config'
-import { getAdvancedToolResumeSummary } from './shared/helpers'
 import { AdvancedToolsModal } from './shared/modal'
-import { loadResumeToolContext } from './shared/resume-context'
+import { getAdvancedToolResumeSummary, loadResumeToolContext } from './shared/resume'
 import { ToolCard } from './shared/tool-card'
 
 function AdvancedTools() {

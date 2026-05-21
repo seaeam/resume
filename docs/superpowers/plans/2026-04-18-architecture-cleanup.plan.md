@@ -19,18 +19,18 @@
 
 ## 3. 修复阶段总览
 
-| 阶段 | 主题 | 风险 | 依赖 |
-|------|------|------|------|
-| P0 | 命名/结构合规化（小页面） | 低 | — |
-| P1 | 通用组件抽取（PageSkeleton / EmptyState / FormFooter / useFetchData） | 低 | — |
-| P2 | 类型安全收敛（消除 `: any` / `as any`） | 低 | — |
-| P3 | 错误反馈补全（缺失 toast） | 低 | — |
-| P4 | 巨型组件拆分（profile-info-card、optimize/header、basic-resume、add-job、collaboration-ui-sync 等） | 中 | P1 |
-| P5 | 页面 store 拆分（resume/store.ts、history/store.ts、template/store/workbench.ts） | 中 | — |
-| P6 | 上提 page state、消除 prop drilling（index 首页、optimize/advanced-tools） | 中 | P5 |
-| P7 | Context 职责澄清（template 的 ResumeContext / TemplateResumeDataContext） | 中 | P5 |
-| P8 | template 模块结构整理（context/、data/ 归位） | 中 | P5,P7 |
-| P9 | 通用基础组件拆分（sidebar.tsx、image-upload-node.tsx） | 高 | P1 |
+| 阶段 | 主题                                                                                                | 风险 | 依赖  |
+| ---- | --------------------------------------------------------------------------------------------------- | ---- | ----- |
+| P0   | 命名/结构合规化（小页面）                                                                           | 低   | —     |
+| P1   | 通用组件抽取（PageSkeleton / EmptyState / FormFooter / useFetchData）                               | 低   | —     |
+| P2   | 类型安全收敛（消除 `: any` / `as any`）                                                             | 低   | —     |
+| P3   | 错误反馈补全（缺失 toast）                                                                          | 低   | —     |
+| P4   | 巨型组件拆分（profile-info-card、optimize/header、basic-resume、add-job、collaboration-ui-sync 等） | 中   | P1    |
+| P5   | 页面 store 拆分（resume/store.ts、history/store.ts、template/store/workbench.ts）                   | 中   | —     |
+| P6   | 上提 page state、消除 prop drilling（index 首页、optimize/advanced-tools）                          | 中   | P5    |
+| P7   | Context 职责澄清（template 的 ResumeContext / TemplateResumeDataContext）                           | 中   | P5    |
+| P8   | template 模块结构整理（context/、data/ 归位）                                                       | 中   | P5,P7 |
+| P9   | 通用基础组件拆分（sidebar.tsx、image-upload-node.tsx）                                              | 高   | P1    |
 
 ---
 
@@ -43,6 +43,7 @@
 涉及页面：`forgot-password`, `login`, `sign-up`, `index`, `profile`, `optimize`(部分), `changelog`, `resume`, `tracker`(补 hooks)。
 
 任务：
+
 - `forgot-password/components/forgot-password-form.tsx` → `forgot-password-form/index.tsx`（同步更新 import）。
 - `login/components/login-form.tsx` → `login-form/index.tsx`。
 - `sign-up/components/sign-up-form.tsx` → `sign-up-form/index.tsx`。
@@ -61,6 +62,7 @@
 新建：`src/components/ui/page-skeleton.tsx`（通用页面骨架）、`src/components/ui/empty-state.tsx`（如已有 `empty.tsx` 则统一收口）、`src/components/forms/form-footer.tsx`（保存 / 取消按钮组，可控 dirty / loading）、`src/hooks/use-fetch-data.ts`（fetch + loading + error 通用 hook）。
 
 替换站点：
+
 - `src/pages/resume/index.tsx:89`（ResumePageSkeleton）。
 - `src/pages/profile/index.tsx:66`（ProfilePageSkeleton）。
 - `src/pages/template/index.tsx:66`（TemplateLibraryLoadingState）。

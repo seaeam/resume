@@ -3,7 +3,8 @@ import type { ResumeSchema } from '@/lib/schema'
 import type { AnalysisState } from '@/pages/optimize/types'
 import { isArray, isFinite, isNumber } from 'lodash'
 import { SECTION_LABEL_MAP } from '../shared/const'
-import { getResumeSections, isPlainObject, normalizeInlineText, normalizeMultilineText } from '../shared/helpers'
+import { getResumeSections } from '../shared/resume'
+import { isPlainObject, normalizeInlineText, normalizeMultilineText } from '../shared/text'
 
 const MAX_KEYWORD_COUNT = 24
 const MAX_INSIGHT_COUNT = 5

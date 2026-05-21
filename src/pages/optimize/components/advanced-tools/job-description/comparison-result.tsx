@@ -4,8 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
-import { getSectionScoreClassName } from '../shared/helpers'
 import { ToolMetaBadge, ToolPanelBody, ToolPanelCard, ToolPanelHeader, ToolStatCard } from '../shared/primitives'
+import { getSectionScoreClassName } from '../shared/suggestions'
 
 interface JobDescriptionComparisonResultViewProps {
   result: JobDescriptionComparisonResult

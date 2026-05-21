@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { DAYJS_FULL_DATE_FORMATS, DAYJS_YEAR_MONTH_FORMATS, NORMALIZED_PRESENT_TOKENS } from './const'
+import { DAYJS_FULL_DATE_FORMATS, DAYJS_YEAR_MONTH_FORMATS, JD_STOPWORDS, NORMALIZED_PRESENT_TOKENS } from './const'
 
 dayjs.extend(customParseFormat)
 
@@ -70,4 +70,57 @@ export function normalizeDateRange(value: string[] | null | undefined) {
   }
 
   return [normalizeDateToken(range[0]), normalizeDateToken(range[1])]
+}
+
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === '[object Object]'
+}
+
+export function isStructurallyEmpty(value: unknown): boolean {
+  if (value === null || value === undefined) {
+    return true
+  }
+
+  if (typeof value === 'string') {
+    return value.replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ').trim() === ''
+  }
+
+  if (typeof value === 'number') {
+    return value === 0
+  }
+
+  if (Array.isArray(value)) {
+    return value.length === 0 || value.every(item => isStructurallyEmpty(item))
+  }
+
+  if (isPlainObject(value)) {
+    return Object.values(value).every(item => isStructurallyEmpty(item))
+  }
+
+  return false
+}
+
+export function extractKeywords(input: string) {
+  const normalized = normalizeMultilineText(input).toLowerCase()
+  const englishTokens = normalized.match(/[a-z][a-z0-9.+#/-]+/g) ?? []
+  const chineseTokens = normalized.match(/[\u4E00-\u9FFF]{2,10}/g) ?? []
+  const phraseTokens = normalized.split(/[\s,，。；;、|/()（）:：]+/g)
+
+  const deduped = new Set<string>()
+  const keywords: string[] = []
+
+  ;[...phraseTokens, ...englishTokens, ...chineseTokens].forEach((token) => {
+    const keyword = normalizeInlineText(token)
+      .toLowerCase()
+      .replace(/^[^\u4E00-\u9FFF\w]+|[^\u4E00-\u9FFF\w.+#/-]+$/g, '')
+
+    if (!keyword || keyword.length < 2 || JD_STOPWORDS.has(keyword) || /^\d+$/.test(keyword) || deduped.has(keyword)) {
+      return
+    }
+
+    deduped.add(keyword)
+    keywords.push(keyword)
+  })
+
+  return keywords.slice(0, 24)
 }

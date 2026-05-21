@@ -1,7 +1,9 @@
+import type { ResumeToolContext } from './types'
 import type { ResumeSchema } from '@/lib/schema'
+import type { AtsEvaluationResult } from '@/pages/optimize/types'
+import { fetchResumeDataForAnalysis } from '@/pages/optimize/utils'
 import { SECTION_LABEL_MAP } from './const'
-import { normalizeDateRange, normalizeDateToken, normalizeInlineText, normalizeMultilineText } from './formatter-helpers'
-import { isStructurallyEmpty } from './object-helpers'
+import { isStructurallyEmpty, normalizeDateRange, normalizeDateToken, normalizeInlineText, normalizeMultilineText } from './text'
 
 interface ResumeSection {
   key: keyof ResumeSchema
@@ -198,5 +200,22 @@ export function getAdvancedToolResumeSummary(resume: ResumeSchema) {
     title: normalizeInlineText(resume.basics.name) || '未命名简历',
     jobIntent: normalizeInlineText(resume.job_intent.jobIntent) || '未填写求职意向',
     sectionCount: countFilledSections(resume),
+  }
+}
+
+interface LoadResumeContextOptions {
+  atsConfig: AtsEvaluationResult | null
+  resumeId: string
+  resumeType: 'online' | 'offline'
+}
+
+export async function loadResumeToolContext(options: LoadResumeContextOptions): Promise<ResumeToolContext> {
+  const resume = await fetchResumeDataForAnalysis(options.resumeId, options.resumeType === 'offline')
+
+  return {
+    resumeId: options.resumeId,
+    resumeType: options.resumeType,
+    resume,
+    atsConfig: options.atsConfig,
   }
 }
