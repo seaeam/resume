@@ -15,6 +15,7 @@ import { useResumeFieldForm } from '../hooks/use-resume-field-form'
 
 function HonorsCertificatesForm({ className }: { className?: string }) {
   const honorsCertificates = useResumeStore(state => state.honors_certificates)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
   const isMobile = useIsMobile()
   const [customCertificateInput, setCustomCertificateInput] = useState('')
 
@@ -84,6 +85,7 @@ function HonorsCertificatesForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'honors_certificates', fieldLabel: '荣誉证书描述', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
