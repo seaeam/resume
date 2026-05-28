@@ -16,6 +16,7 @@ import { ResumeFieldFormSection } from '../shared/resume-field-form-section'
 
 function CampusExperienceForm({ className }: { className?: string }) {
   const campusExperience = useResumeStore(state => state.campus_experience)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
   const [isUptoNow, setIsUptoNow] = useState(() => campusExperience.items?.some(item => item.duration?.[1] === '至今') || false)
 
   const storeFormData = useMemo(() => ({
@@ -158,6 +159,7 @@ function CampusExperienceForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'campus_experience', fieldLabel: '校园经历', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
