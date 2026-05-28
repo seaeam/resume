@@ -13,6 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { AiRewritePanel } from './ai-rewrite-panel'
 import { JD_MIN_CHARS, REWRITE_ACTION_LIST, REWRITE_ACTION_META, SELECTION_MIN_CHARS } from './const'
 import { useAiRewrite } from './use-ai-rewrite'
+import './ai-rewrite.scss'
 
 interface Props {
   editor: Editor
@@ -47,11 +48,14 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
   // 创建 bubble & panel 容器节点
   useEffect(() => {
     const bubble = document.createElement('div')
+    bubble.className = 'tiptap-toolbar ai-rewrite-bubble'
+    bubble.style.zIndex = '100000'
     document.body.appendChild(bubble)
     setBubbleEl(bubble)
     const panel = document.createElement('div')
+    panel.className = 'ai-rewrite-panel'
     panel.style.position = 'absolute'
-    panel.style.zIndex = '60'
+    panel.style.zIndex = '100000'
     document.body.appendChild(panel)
     setPanelEl(panel)
     return () => {
@@ -157,7 +161,7 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
   return (
     <>
       {bubbleEl && createPortal(
-        <div className="flex items-center gap-1 rounded-md border bg-popover p-1 shadow-md">
+        <div className="tiptap-toolbar" data-variant="floating">
           {REWRITE_ACTION_LIST.map((action) => {
             const meta = REWRITE_ACTION_META[action]
             return (
@@ -168,6 +172,7 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
                 variant="ghost"
                 title={meta.description}
                 onClick={() => handleAction(action)}
+                className="h-8 w-auto"
               >
                 <meta.icon className="size-4" />
                 <span className="ml-1 text-xs">{meta.label}</span>
