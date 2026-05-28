@@ -1,7 +1,8 @@
 'use client'
 
-import { Highlight } from '@tiptap/extension-highlight'
 import type { Editor } from '@tiptap/react'
+import type { RewriteFieldContext } from '@/components/ai-rewrite'
+import { Highlight } from '@tiptap/extension-highlight'
 
 import { Image } from '@tiptap/extension-image'
 import { TaskItem, TaskList } from '@tiptap/extension-list'
@@ -14,6 +15,7 @@ import { EditorContent, EditorContext, useEditor } from '@tiptap/react'
 // --- Tiptap Core Extensions ---
 import { StarterKit } from '@tiptap/starter-kit'
 import * as React from 'react'
+import { AiRewriteBubble } from '@/components/ai-rewrite'
 
 // --- Icons ---
 import { ArrowLeftIcon } from '@/components/tiptap-icons/arrow-left-icon'
@@ -188,10 +190,17 @@ function MobileToolbarContent({
 
 
 
+interface SimpleEditorProps {
+  content?: string
+  onChange?: (editor: Editor) => void
+  fieldContext?: RewriteFieldContext
+}
+
 export function SimpleEditor({
   content = '',
   onChange = () => {},
-}: { content?: string, onChange?: (editor: Editor) => void }) {
+  fieldContext,
+}: SimpleEditorProps) {
   const isMobile = useIsMobile()
   const [mobileView, setMobileView] = React.useState<
     'main' | 'highlighter' | 'link'
@@ -315,6 +324,9 @@ export function SimpleEditor({
           role="presentation"
           className="simple-editor-content"
         />
+        {editor && fieldContext && (
+          <AiRewriteBubble editor={editor} fieldContext={fieldContext} />
+        )}
       </EditorContext>
     </div>
   )
