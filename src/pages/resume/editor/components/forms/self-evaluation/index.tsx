@@ -13,6 +13,7 @@ import useResumeStore from '@/store/resume/form'
 function SelfEvaluationForm({ className }: { className?: string }) {
   const selfEvaluation = useResumeStore(state => state.self_evaluation)
   const updateForm = useResumeStore(state => state.updateForm)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
 
   const form = useForm({
     resolver: zodResolver(selfEvaluationFormSchema),
@@ -54,6 +55,7 @@ function SelfEvaluationForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'self_evaluation', fieldLabel: '自我评价', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
