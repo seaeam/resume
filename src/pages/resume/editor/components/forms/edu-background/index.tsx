@@ -20,6 +20,7 @@ const degreeOptions: Degree[] = ['不填', '初中', '高中', '中专', '大专
 
 function EduBackgroundForm({ className }: { className?: string }) {
   const eduBackground = useResumeStore(state => state.edu_background)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
   const [isUptoNow, setIsUptoNow] = useState(() => eduBackground.items?.some(item => item.duration?.[1] === '至今') || false)
 
   const storeFormData = useMemo(() => ({
@@ -187,6 +188,7 @@ function EduBackgroundForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'edu_background', fieldLabel: '教育经历描述', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
