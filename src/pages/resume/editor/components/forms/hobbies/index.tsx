@@ -15,6 +15,7 @@ import { useResumeFieldForm } from '../hooks/use-resume-field-form'
 
 function HobbiesForm({ className }: { className?: string }) {
   const hobbies = useResumeStore(state => state.hobbies)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
   const isMobile = useIsMobile()
   const [customHobbyInput, setCustomHobbyInput] = useState('')
 
@@ -84,6 +85,7 @@ function HobbiesForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'hobbies', fieldLabel: '兴趣爱好描述', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
