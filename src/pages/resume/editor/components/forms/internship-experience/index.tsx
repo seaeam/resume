@@ -16,6 +16,7 @@ import { ResumeFieldFormSection } from '../shared/resume-field-form-section'
 
 function InternshipExperienceForm({ className }: { className?: string }) {
   const internshipExperience = useResumeStore(state => state.internship_experience)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
   const [isUptoNow, setIsUptoNow] = useState(() => internshipExperience.items?.some(item => item.internshipDuration?.[1] === '至今') || false)
 
   const storeFormData = useMemo(() => ({
@@ -159,6 +160,7 @@ function InternshipExperienceForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'internship_experience', fieldLabel: '实习描述', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
