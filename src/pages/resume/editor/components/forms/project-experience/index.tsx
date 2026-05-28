@@ -16,6 +16,7 @@ import { ResumeFieldFormSection } from '../shared/resume-field-form-section'
 
 function ProjectExperienceForm({ className }: { className?: string }) {
   const projectExperience = useResumeStore(state => state.project_experience)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
   const [isUptoNow, setIsUptoNow] = useState(() => projectExperience.items?.some(item => item.projectDuration?.[1] === '至今') || false)
 
   const storeFormData = useMemo(() => ({
@@ -159,6 +160,7 @@ function ProjectExperienceForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'project_experience', fieldLabel: '项目描述', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
