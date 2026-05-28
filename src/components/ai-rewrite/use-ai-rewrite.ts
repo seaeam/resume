@@ -59,15 +59,18 @@ export function useAiRewrite({ fieldContext }: Args) {
 
   useEffect(() => () => cancel(), [cancel])
 
+  const action = session.state.action
+  const retry = useCallback((selection: RewriteSelection) => {
+    if (action) {
+      return run(action, selection)
+    }
+  }, [action, run])
+
   return {
     state: session.state,
     setJdDraft: session.setJdDraft,
     run,
-    retry: (selection: RewriteSelection) => {
-      if (session.state.action) {
-        return run(session.state.action, selection)
-      }
-    },
+    retry,
     cancel,
     reset: session.reset,
   }
