@@ -2,22 +2,24 @@
 
 import type { Editor } from '@tiptap/react'
 import type { RewriteAction, RewriteCandidate, RewriteFieldContext, RewriteSelection } from './types'
-import { BubbleMenu } from '@tiptap/extension-bubble-menu'
+import { BubbleMenuPlugin } from '@tiptap/extension-bubble-menu'
 import { DOMSerializer } from '@tiptap/pm/model'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { AiRewritePanel } from './ai-rewrite-panel'
-import { REWRITE_ACTION_LIST, REWRITE_ACTION_META, SELECTION_MIN_CHARS } from './const'
+import { JD_MIN_CHARS, REWRITE_ACTION_LIST, REWRITE_ACTION_META, SELECTION_MIN_CHARS } from './const'
 import { useAiRewrite } from './use-ai-rewrite'
 
 interface Props {
   editor: Editor
   fieldContext: RewriteFieldContext
 }
+
+const BUBBLE_MENU_PLUGIN_KEY = 'aiRewriteBubbleMenu'
 
 function getSelectionPayload(editor: Editor): RewriteSelection | null {
   const { from, to } = editor.state.selection
@@ -34,16 +36,13 @@ function getSelectionPayload(editor: Editor): RewriteSelection | null {
 }
 
 export function AiRewriteBubble({ editor, fieldContext }: Props) {
-  const { state, run, setJdDraft, reset, retry } = useAiRewrite({ fieldContext })
+  const { state, run, setJdDraft, reset, retry, cancel, openWaitingJd } = useAiRewrite({ fieldContext })
   const [bubbleEl, setBubbleEl] = useState<HTMLDivElement | null>(null)
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null)
   const [savedSelection, setSavedSelection] = useState<RewriteSelection | null>(null)
   const isMobile = useIsMobile()
-  const extensionRef = useRef<{ destroy: () => void } | null>(null)
 
-  const activeSelection = state.status === 'idle'
-    ? getSelectionPayload(editor)
-    : savedSelection
+  const activeSelection = state.status === 'idle' ? null : savedSelection
 
   // 创建 bubble & panel 容器节点
   useEffect(() => {
@@ -61,26 +60,24 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
     }
   }, [])
 
-  // 把 BubbleMenu 扩展挂到 editor 上
+  // 通过公共 API 注册 BubbleMenu 的 ProseMirror 插件
   useEffect(() => {
     if (!editor || !bubbleEl)
       return
-    const ext = BubbleMenu.configure({
+    const plugin = BubbleMenuPlugin({
+      editor,
       element: bubbleEl,
+      pluginKey: BUBBLE_MENU_PLUGIN_KEY,
       shouldShow: ({ editor: ed, from, to }) => {
         if (from === to)
           return false
         return ed.state.doc.textBetween(from, to).trim().length >= SELECTION_MIN_CHARS
       },
     })
-    editor.extensionManager.extensions = [...editor.extensionManager.extensions, ext]
-    editor.view.updateState(editor.state)
-    extensionRef.current = {
-      destroy: () => {
-        editor.extensionManager.extensions = editor.extensionManager.extensions.filter(e => e !== ext)
-      },
+    editor.registerPlugin(plugin)
+    return () => {
+      editor.unregisterPlugin(BUBBLE_MENU_PLUGIN_KEY)
     }
-    return () => extensionRef.current?.destroy()
   }, [editor, bubbleEl])
 
   // 面板定位（桌面端）
@@ -98,17 +95,22 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
   }, [state.status, panelEl, bubbleEl, isMobile])
 
   const handleClose = useCallback(() => {
+    cancel()
     reset()
     setSavedSelection(null)
-  }, [reset])
+  }, [cancel, reset])
 
-  // Esc 关闭
+  // Esc 关闭（在 textarea/input 中按 Esc 不应关闭面板）
   useEffect(() => {
     if (state.status === 'idle')
       return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape')
-        handleClose()
+      if (e.key !== 'Escape')
+        return
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT'))
+        return
+      handleClose()
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
@@ -119,8 +121,12 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
     if (!sel)
       return
     setSavedSelection(sel)
+    if (action === 'align_jd' && state.jdDraft.trim().length < JD_MIN_CHARS) {
+      openWaitingJd(action)
+      return
+    }
     run(action, sel)
-  }, [editor, run])
+  }, [editor, run, openWaitingJd, state.jdDraft])
 
   const handleApply = useCallback((candidate: RewriteCandidate) => {
     if (!savedSelection)

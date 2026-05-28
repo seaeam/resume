@@ -15,11 +15,7 @@ export function JdContextInput({ value, onChange }: Props) {
       <div className="flex items-center justify-between">
         <Label className="text-xs">岗位描述（JD）</Label>
         <span className={valid ? 'text-xs text-muted-foreground' : 'text-xs text-destructive'}>
-          {len}
-          {' '}
-          / 至少
-          {' '}
-          {JD_MIN_CHARS}
+          {`${len} / 至少 ${JD_MIN_CHARS}`}
         </span>
       </div>
       <Textarea

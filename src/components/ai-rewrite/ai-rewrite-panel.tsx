@@ -22,14 +22,14 @@ export function AiRewritePanel({ state, selection, onClose, onApply, onRetry, on
   const isAlignJd = state.action === 'align_jd'
   const jdValid = state.jdDraft.trim().length >= JD_MIN_CHARS
   const canRetry = !isAlignJd || jdValid
+  const isWaitingJd = isAlignJd && state.status === 'success' && state.candidates.length === 0
 
   return (
     <Card className="flex max-h-[480px] w-[540px] flex-col gap-3 overflow-auto p-3 shadow-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <meta.icon className="size-4" />
-          {meta.label}
-          候选
+          <span>{`${meta.label}候选`}</span>
         </div>
         <Button type="button" variant="ghost" size="sm" onClick={onClose} aria-label="关闭">
           <X className="size-4" />
@@ -45,6 +45,11 @@ export function AiRewritePanel({ state, selection, onClose, onApply, onRetry, on
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Sparkles className="size-4 animate-pulse" />
             AI 思考中...
+          </div>
+        )}
+        {isWaitingJd && (
+          <div className="text-sm text-muted-foreground">
+            请填写岗位描述（JD）后点击下方「重新生成」
           </div>
         )}
         {state.status === 'error' && (

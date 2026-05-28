@@ -38,5 +38,15 @@ export function useRewriteSession() {
     setState(prev => ({ ...prev, jdDraft }))
   }, [])
 
-  return { state, startStreaming, succeed, fail, reset, setJdDraft }
+  const openWaitingJd = useCallback((action: RewriteAction) => {
+    setState(prev => ({
+      ...prev,
+      status: 'success',
+      action,
+      candidates: [],
+      errorMessage: null,
+    }))
+  }, [])
+
+  return { state, startStreaming, succeed, fail, reset, setJdDraft, openWaitingJd }
 }
