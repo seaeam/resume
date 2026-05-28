@@ -1,9 +1,12 @@
 import type { ChatCompletionCreateParamsBase } from 'openai/resources/chat/completions'
 import type { ResumeSchema } from '../schema'
+import type { RewriteRequestArgs } from '@/components/ai-rewrite/types'
 import { throttle } from 'lodash'
+import { REWRITE_TEMPERATURE } from '@/components/ai-rewrite/const'
 import { callLLM } from './call'
 import { createJobDescriptionAnalysisPrompt } from './prompts/job-description'
 import { optimize_prompt } from './prompts/optimize'
+import { buildRewritePrompt } from './prompts/rewrite'
 
 interface StreamUpdate {
   content?: string
@@ -13,10 +16,10 @@ interface StreamUpdate {
 async function streamStructuredJson(
   req: ChatCompletionCreateParamsBase,
   onUpdate?: (data: StreamUpdate) => void,
-  options?: { throttleMs?: number },
+  options?: { throttleMs?: number, abortController?: AbortController },
 ) {
-  const { throttleMs = 100 } = options || {}
-  const stream = await callLLM(req)
+  const { throttleMs = 100, abortController } = options || {}
+  const stream = await callLLM(req, abortController)
 
   let fullContent = ''
   let fullReasoning = ''
@@ -96,6 +99,27 @@ export async function runAtsStructured(
     response_format: {
       type: 'json_object',
     },
+  } as ChatCompletionCreateParamsBase
+
+  return await streamStructuredJson(req, onUpdate, options)
+}
+
+export async function runBulletRewrite(
+  args: RewriteRequestArgs,
+  onUpdate?: (data: StreamUpdate) => void,
+  options?: { throttleMs?: number, abortController?: AbortController },
+) {
+  const promptText = buildRewritePrompt(args)
+  const req = {
+    messages: [
+      {
+        role: 'system',
+        content: '你是一个简历内容改写引擎。你只输出严格符合契约的 JSON，禁止输出任何额外文本。',
+      },
+      { role: 'user', content: promptText },
+    ],
+    response_format: { type: 'json_object' },
+    temperature: REWRITE_TEMPERATURE,
   } as ChatCompletionCreateParamsBase
 
   return await streamStructuredJson(req, onUpdate, options)
