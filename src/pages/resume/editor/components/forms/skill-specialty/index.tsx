@@ -24,6 +24,7 @@ const displayTypes: { value: DisplayType, label: string }[] = [
 
 function SkillSpecialtyForm({ className }: { className?: string }) {
   const skillSpecialty = useResumeStore(state => state.skill_specialty)
+  const jobIntentText = useResumeStore(state => state.job_intent.jobIntent)
   const isMobile = useIsMobile()
   const [customSkillInput, setCustomSkillInput] = useState('')
 
@@ -101,6 +102,7 @@ function SkillSpecialtyForm({ className }: { className?: string }) {
                     onChange={(editor) => {
                       field.onChange(editor.getHTML())
                     }}
+                    fieldContext={{ sectionKey: 'skill_specialty', fieldLabel: '技能特长描述', jobIntent: jobIntentText }}
                   />
                 </FormControl>
               </FormItem>
