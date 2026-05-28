@@ -35,7 +35,7 @@ export function parseRewriteResponse(raw: string, action: RewriteAction): Rewrit
       return
 
     let title = typeof c.title === 'string' && c.title.trim()
-      ? c.title.trim().slice(0, 20)
+      ? c.title.trim().slice(0, 10)
       : `${REWRITE_ACTION_META[action].label}候选 #${index + 1}`
     if (seenTitles.has(title)) {
       title = `${title} #${index + 1}`
@@ -49,6 +49,10 @@ export function parseRewriteResponse(raw: string, action: RewriteAction): Rewrit
 
   if (candidates.length === 0) {
     throw new Error('LLM 候选 html 全部为空')
+  }
+
+  if (candidates.length < 2) {
+    throw new Error('LLM 返回的有效候选少于 2 个')
   }
 
   return candidates.slice(0, 3)
