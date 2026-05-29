@@ -25,8 +25,8 @@ export function AiRewritePanel({ state, selection, onClose, onApply, onRetry, on
   const isWaitingJd = isAlignJd && state.status === 'success' && state.candidates.length === 0
 
   return (
-    <Card className="flex max-h-[480px] w-[540px] flex-col gap-3 overflow-auto p-3 shadow-lg">
-      <div className="flex items-center justify-between">
+    <Card className="flex h-full max-h-[calc(100vh-48px)] w-full flex-col gap-3 overflow-hidden border-0 p-4 shadow-none">
+      <div className="flex shrink-0 items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <meta.icon className="size-4" />
           <span>{`${meta.label}候选`}</span>
@@ -37,10 +37,12 @@ export function AiRewritePanel({ state, selection, onClose, onApply, onRetry, on
       </div>
 
       {isAlignJd && (
-        <JdContextInput value={state.jdDraft} onChange={onJdDraftChange} />
+        <div className="shrink-0">
+          <JdContextInput value={state.jdDraft} onChange={onJdDraftChange} />
+        </div>
       )}
 
-      <div aria-live="polite" className="flex flex-col gap-2">
+      <div aria-live="polite" className="ai-rewrite-candidates flex flex-1 flex-col gap-2">
         {state.status === 'streaming' && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Sparkles className="size-4 animate-pulse" />
@@ -70,7 +72,7 @@ export function AiRewritePanel({ state, selection, onClose, onApply, onRetry, on
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex shrink-0 items-center justify-end gap-2 border-t pt-3">
         <Button
           type="button"
           variant="outline"

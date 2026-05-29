@@ -54,8 +54,6 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
     setBubbleEl(bubble)
     const panel = document.createElement('div')
     panel.className = 'ai-rewrite-panel'
-    panel.style.position = 'absolute'
-    panel.style.zIndex = '100000'
     document.body.appendChild(panel)
     setPanelEl(panel)
     return () => {
@@ -84,19 +82,12 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
     }
   }, [editor, bubbleEl])
 
-  // 面板定位（桌面端）
+  // 面板显隐（桌面端：fixed 全屏遮罩 + 居中卡片；移动端：Sheet）
   useEffect(() => {
-    if (!panelEl || !bubbleEl || isMobile)
+    if (!panelEl || isMobile)
       return
-    if (state.status === 'idle') {
-      panelEl.style.display = 'none'
-      return
-    }
-    const rect = bubbleEl.getBoundingClientRect()
-    panelEl.style.display = 'block'
-    panelEl.style.top = `${window.scrollY + rect.bottom + 8}px`
-    panelEl.style.left = `${window.scrollX + rect.left}px`
-  }, [state.status, panelEl, bubbleEl, isMobile])
+    panelEl.style.display = state.status === 'idle' ? 'none' : 'flex'
+  }, [state.status, panelEl, isMobile])
 
   const handleClose = useCallback(() => {
     cancel()
@@ -146,8 +137,34 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
       retry(savedSelection)
   }, [retry, savedSelection])
 
-  const panelOpen = state.status !== 'idle'
-  const panelNode = (
+  // 渲染 desktop 面板与点击遮罩关闭逻辑（mousedown 阻断到编辑器）
+  useEffect(() => {
+    if (!panelEl)
+      return
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.target === panelEl)
+        handleClose()
+    }
+    panelEl.addEventListener('mousedown', onMouseDown)
+    return () => panelEl.removeEventListener('mousedown', onMouseDown)
+  }, [panelEl, handleClose])
+  const desktopPanelNode = (
+    <div
+      className="ai-rewrite-panel-content"
+      onClick={e => e.stopPropagation()}
+      onMouseDown={e => e.stopPropagation()}
+    >
+      <AiRewritePanel
+        state={state}
+        selection={activeSelection}
+        onClose={handleClose}
+        onApply={handleApply}
+        onRetry={handleRetry}
+        onJdDraftChange={setJdDraft}
+      />
+    </div>
+  )
+  const mobilePanelNode = (
     <AiRewritePanel
       state={state}
       selection={activeSelection}
@@ -184,13 +201,13 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
       )}
       {isMobile
         ? (
-            <Sheet open={panelOpen} onOpenChange={open => !open && handleClose()}>
+            <Sheet open={state.status !== 'idle'} onOpenChange={open => !open && handleClose()}>
               <SheetContent side="bottom" className="h-[80vh] overflow-auto">
-                {panelNode}
+                {mobilePanelNode}
               </SheetContent>
             </Sheet>
           )
-        : (panelEl && createPortal(panelNode, panelEl))}
+        : (panelEl && createPortal(desktopPanelNode, panelEl))}
     </>
   )
 }
