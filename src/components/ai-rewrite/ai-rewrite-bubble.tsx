@@ -147,7 +147,7 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
       )}
 
       <ResponsiveDialog open={dialogOpen} onOpenChange={open => !open && handleClose()}>
-        <ResponsiveDialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:h-[85vh] sm:max-h-[85vh] sm:max-w-4xl">
+        <ResponsiveDialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:h-[85vh] sm:max-h-[85vh] sm:max-w-2xl">
           <ResponsiveDialogHeader className="shrink-0 border-b px-6 pb-4 pt-6">
             <ResponsiveDialogTitle className="flex items-center gap-2 text-base">
               {HeaderIcon ? <HeaderIcon className="size-4" /> : null}

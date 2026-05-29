@@ -65,7 +65,7 @@ export function AiRewritePanel({
 
         {showCandidates && (
           <ScrollArea className="-mx-2 min-h-0 flex-1 px-2">
-            <div className="grid grid-cols-1 gap-4 pb-1 md:grid-cols-2">
+            <div className="flex flex-col gap-4 pb-1">
               {state.candidates.map(candidate => (
                 <CandidateCard key={candidate.id} candidate={candidate} onApply={onApply} />
               ))}
