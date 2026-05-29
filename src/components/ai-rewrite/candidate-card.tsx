@@ -11,7 +11,7 @@ interface Props {
 
 export function CandidateCard({ candidate, onApply }: Props) {
   return (
-    <Card className="flex h-full max-h-[440px] flex-col gap-0 overflow-hidden py-0 transition-shadow hover:shadow-md">
+    <Card className="flex flex-col gap-0 self-start overflow-hidden py-0 transition-shadow hover:shadow-md">
       <CardHeader className="shrink-0 border-b bg-muted/40 px-4 py-3">
         <CardTitle
           className="truncate text-sm font-medium text-foreground"
@@ -21,8 +21,8 @@ export function CandidateCard({ candidate, onApply }: Props) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="min-h-0 flex-1 overflow-hidden p-0">
-        <ScrollArea className="h-full">
+      <CardContent className="p-0">
+        <ScrollArea className="h-[260px]">
           <div className="space-y-3 px-4 py-4">
             <div
               className="prose prose-sm max-w-none break-words leading-relaxed text-foreground"
