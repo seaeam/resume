@@ -3,7 +3,6 @@ import { AlertCircle, Loader2, RotateCw, Sparkles } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { ResponsiveDialogFooter } from '@/components/ui/responsive-dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { CandidateCard } from './candidate-card'
 import { JD_MIN_CHARS } from './const'
 import { JdContextInput } from './jd-context-input'
@@ -28,7 +27,8 @@ export function AiRewritePanel({ state, selection, onApply, onRetry, onJdDraftCh
 
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 px-6 py-5">
+      {/* 唯一允许滚动的内容层；header/footer 在外层固定 */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
         {isAlignJd && (
           <JdContextInput value={state.jdDraft} onChange={onJdDraftChange} />
         )}
@@ -58,13 +58,11 @@ export function AiRewritePanel({ state, selection, onApply, onRetry, onJdDraftCh
         )}
 
         {showCandidates && (
-          <ScrollArea className="-mx-2 min-h-0 flex-1 px-2">
-            <div className="grid items-start gap-4 pb-1 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-              {state.candidates.map(candidate => (
-                <CandidateCard key={candidate.id} candidate={candidate} onApply={onApply} />
-              ))}
-            </div>
-          </ScrollArea>
+          <div className="grid items-start gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+            {state.candidates.map(candidate => (
+              <CandidateCard key={candidate.id} candidate={candidate} onApply={onApply} />
+            ))}
+          </div>
         )}
       </div>
 
