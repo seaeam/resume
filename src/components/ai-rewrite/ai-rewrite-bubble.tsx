@@ -84,9 +84,11 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
 
   // 面板显隐（桌面端：fixed 全屏遮罩 + 居中卡片；移动端：Sheet）
   useEffect(() => {
-    if (!panelEl || isMobile)
+    if (!panelEl || isMobile) {
+      panelEl?.classList.remove('is-open')
       return
-    panelEl.style.display = state.status === 'idle' ? 'none' : 'flex'
+    }
+    panelEl.classList.toggle('is-open', state.status !== 'idle')
   }, [state.status, panelEl, isMobile])
 
   const handleClose = useCallback(() => {

@@ -3,23 +3,23 @@
   z-index: 100000 !important;
 }
 
-/* AI 改写候选面板：fixed 居中 + 遮罩，避免被任何编辑器元素遮挡 */
+/* AI 改写候选面板：fixed 居中 + 遮罩，避免被任何编辑器元素遮挡
+ * 默认 display: none；由组件根据 state.status 切换为 flex */
 .ai-rewrite-panel {
-  position: fixed !important;
-  inset: 0 !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(2px);
-  z-index: 100001 !important;
+  z-index: 100001;
   padding: 24px;
-  overflow: auto;
   pointer-events: auto;
+}
+
+.ai-rewrite-panel.is-open {
+  display: flex;
 }
 
 .ai-rewrite-panel .ai-rewrite-panel-content {
