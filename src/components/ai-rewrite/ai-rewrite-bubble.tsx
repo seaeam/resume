@@ -8,7 +8,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent } from '@/components/ui/sheet'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { AiRewritePanel } from './ai-rewrite-panel'
 import { JD_MIN_CHARS, REWRITE_ACTION_LIST, REWRITE_ACTION_META, SELECTION_MIN_CHARS } from './const'
@@ -39,26 +40,21 @@ function getSelectionPayload(editor: Editor): RewriteSelection | null {
 export function AiRewriteBubble({ editor, fieldContext }: Props) {
   const { state, run, setJdDraft, reset, retry, cancel, openWaitingJd } = useAiRewrite({ fieldContext })
   const [bubbleEl, setBubbleEl] = useState<HTMLDivElement | null>(null)
-  const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null)
   const [savedSelection, setSavedSelection] = useState<RewriteSelection | null>(null)
   const isMobile = useIsMobile()
 
   const activeSelection = state.status === 'idle' ? null : savedSelection
+  const dialogOpen = state.status !== 'idle'
 
-  // 创建 bubble & panel 容器节点
+  // 创建 BubbleMenu 的原生 DOM 容器（Tiptap 的 BubbleMenuPlugin API
+  // 需要直接传入 element，无 shadcn 等价物，故保留此最小原生容器）
   useEffect(() => {
     const bubble = document.createElement('div')
     bubble.className = 'tiptap-toolbar ai-rewrite-bubble'
-    bubble.style.zIndex = '100000'
     document.body.appendChild(bubble)
     setBubbleEl(bubble)
-    const panel = document.createElement('div')
-    panel.className = 'ai-rewrite-panel'
-    document.body.appendChild(panel)
-    setPanelEl(panel)
     return () => {
       bubble.remove()
-      panel.remove()
     }
   }, [])
 
@@ -82,36 +78,11 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
     }
   }, [editor, bubbleEl])
 
-  // 面板显隐（桌面端：fixed 全屏遮罩 + 居中卡片；移动端：Sheet）
-  useEffect(() => {
-    if (!panelEl || isMobile) {
-      panelEl?.classList.remove('is-open')
-      return
-    }
-    panelEl.classList.toggle('is-open', state.status !== 'idle')
-  }, [state.status, panelEl, isMobile])
-
   const handleClose = useCallback(() => {
     cancel()
     reset()
     setSavedSelection(null)
   }, [cancel, reset])
-
-  // Esc 关闭（在 textarea/input 中按 Esc 不应关闭面板）
-  useEffect(() => {
-    if (state.status === 'idle')
-      return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape')
-        return
-      const target = e.target as HTMLElement | null
-      if (target && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT'))
-        return
-      handleClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [state.status, handleClose])
 
   const handleAction = useCallback((action: RewriteAction) => {
     const sel = getSelectionPayload(editor)
@@ -139,38 +110,10 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
       retry(savedSelection)
   }, [retry, savedSelection])
 
-  // 渲染 desktop 面板与点击遮罩关闭逻辑（mousedown 阻断到编辑器）
-  useEffect(() => {
-    if (!panelEl)
-      return
-    const onMouseDown = (e: MouseEvent) => {
-      if (e.target === panelEl)
-        handleClose()
-    }
-    panelEl.addEventListener('mousedown', onMouseDown)
-    return () => panelEl.removeEventListener('mousedown', onMouseDown)
-  }, [panelEl, handleClose])
-  const desktopPanelNode = (
-    <div
-      className="ai-rewrite-panel-content"
-      onClick={e => e.stopPropagation()}
-      onMouseDown={e => e.stopPropagation()}
-    >
-      <AiRewritePanel
-        state={state}
-        selection={activeSelection}
-        onClose={handleClose}
-        onApply={handleApply}
-        onRetry={handleRetry}
-        onJdDraftChange={setJdDraft}
-      />
-    </div>
-  )
-  const mobilePanelNode = (
+  const panelNode = (
     <AiRewritePanel
       state={state}
       selection={activeSelection}
-      onClose={handleClose}
       onApply={handleApply}
       onRetry={handleRetry}
       onJdDraftChange={setJdDraft}
@@ -183,6 +126,7 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
         <div className="tiptap-toolbar" data-variant="floating">
           {REWRITE_ACTION_LIST.map((action) => {
             const meta = REWRITE_ACTION_META[action]
+            const Icon = meta.icon
             return (
               <Button
                 key={action}
@@ -191,9 +135,9 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
                 variant="ghost"
                 title={meta.description}
                 onClick={() => handleAction(action)}
-                className="h-8 w-auto"
+                className="h-8"
               >
-                <meta.icon className="size-4" />
+                <Icon className="size-4" />
                 <span className="ml-1 text-xs">{meta.label}</span>
               </Button>
             )
@@ -201,15 +145,25 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
         </div>,
         bubbleEl,
       )}
+
       {isMobile
         ? (
-            <Sheet open={state.status !== 'idle'} onOpenChange={open => !open && handleClose()}>
-              <SheetContent side="bottom" className="h-[80vh] overflow-auto">
-                {mobilePanelNode}
+            <Sheet open={dialogOpen} onOpenChange={open => !open && handleClose()}>
+              <SheetContent side="bottom" className="flex h-[85vh] flex-col gap-0 p-0">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>AI 改写候选</SheetTitle>
+                </SheetHeader>
+                {panelNode}
               </SheetContent>
             </Sheet>
           )
-        : (panelEl && createPortal(desktopPanelNode, panelEl))}
+        : (
+            <Dialog open={dialogOpen} onOpenChange={open => !open && handleClose()}>
+              <DialogContent className="flex h-[min(85vh,720px)] max-w-3xl flex-col gap-0 p-0">
+                {panelNode}
+              </DialogContent>
+            </Dialog>
+          )}
     </>
   )
 }

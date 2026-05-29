@@ -1,45 +1,6 @@
-/* AI 改写气泡按钮组：保持 floating 工具栏样式，提升层级 */
+/* AI 改写气泡按钮组：仅保留 z-index 提升（Tiptap 的 BubbleMenuPlugin 需要原生 DOM
+ * element，无 shadcn 等价物，故此处不可避免地保留极少量原生样式。
+ * 候选面板已迁移至 shadcn Dialog/Sheet，无需自写样式。） */
 .ai-rewrite-bubble {
-  z-index: 100000 !important;
-}
-
-/* AI 改写候选面板：fixed 居中 + 遮罩，避免被任何编辑器元素遮挡
- * 默认 display: none；由组件根据 state.status 切换为 flex */
-.ai-rewrite-panel {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
-  z-index: 100001;
-  padding: 24px;
-  pointer-events: auto;
-}
-
-.ai-rewrite-panel.is-open {
-  display: flex;
-}
-
-.ai-rewrite-panel .ai-rewrite-panel-content {
-  width: min(720px, calc(100vw - 48px));
-  max-height: calc(100vh - 48px);
-  display: flex;
-  flex-direction: column;
-  background: var(--background, #fff);
-  border-radius: 12px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.ai-rewrite-panel .ai-rewrite-panel-content > * {
-  pointer-events: auto;
-}
-
-/* 候选卡片网格：响应式两列、滚动溢出 */
-.ai-rewrite-panel .ai-rewrite-candidates {
-  overflow: auto;
-  flex: 1 1 auto;
-  min-height: 0;
+  z-index: 60;
 }
