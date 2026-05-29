@@ -16,13 +16,7 @@ interface Props {
   onJdDraftChange: (value: string) => void
 }
 
-export function AiRewritePanel({
-  state,
-  selection,
-  onApply,
-  onRetry,
-  onJdDraftChange,
-}: Props) {
+export function AiRewritePanel({ state, selection, onApply, onRetry, onJdDraftChange }: Props) {
   if (state.status === 'idle' || !state.action || !selection)
     return null
 
@@ -65,7 +59,7 @@ export function AiRewritePanel({
 
         {showCandidates && (
           <ScrollArea className="-mx-2 min-h-0 flex-1 px-2">
-            <div className="grid items-start gap-4 pb-1 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
+            <div className="grid items-start gap-4 pb-1 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
               {state.candidates.map(candidate => (
                 <CandidateCard key={candidate.id} candidate={candidate} onApply={onApply} />
               ))}

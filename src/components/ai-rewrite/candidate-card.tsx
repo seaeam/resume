@@ -22,10 +22,10 @@ export function CandidateCard({ candidate, onApply }: Props) {
       </CardHeader>
 
       <CardContent className="p-0">
-        <ScrollArea className="h-[260px]">
+        <ScrollArea className="h-65">
           <div className="space-y-3 px-4 py-4">
             <div
-              className="prose prose-sm max-w-none break-words leading-relaxed text-foreground"
+              className="prose prose-sm max-w-none wrap-break-word leading-relaxed text-foreground"
               // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
               dangerouslySetInnerHTML={{ __html: candidate.html }}
             />

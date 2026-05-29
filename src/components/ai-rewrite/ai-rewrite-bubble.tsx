@@ -72,10 +72,6 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
       editor,
       element: bubbleEl,
       pluginKey: BUBBLE_MENU_PLUGIN_KEY,
-      options: {
-        placement: 'top',
-        offset: 12,
-      },
       shouldShow: ({ editor: ed, from, to }) => {
         if (from === to)
           return false
@@ -138,6 +134,9 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
                 size="sm"
                 variant="ghost"
                 title={m.description}
+                // 阻止按钮在点击时获得焦点：避免随后 Dialog/Drawer 打开后
+                // 焦点滞留在被 aria-hidden 的祖先按钮上，触发可访问性警告
+                onMouseDown={e => e.preventDefault()}
                 onClick={() => handleAction(act)}
                 className="h-8 gap-1"
               >
@@ -151,7 +150,7 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
       )}
 
       <ResponsiveDialog open={dialogOpen} onOpenChange={open => !open && handleClose()}>
-        <ResponsiveDialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:h-[85vh] sm:max-h-[85vh] sm:max-w-3xl">
+        <ResponsiveDialogContent className="flex flex-col gap-0 overflow-auto p-0">
           <ResponsiveDialogHeader className="shrink-0 border-b px-6 pb-4 pt-6">
             <ResponsiveDialogTitle className="flex items-center gap-2 text-base">
               {HeaderIcon ? <HeaderIcon className="size-4" /> : null}
