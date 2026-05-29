@@ -2,7 +2,6 @@ import type { RewriteCandidate } from './types'
 import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface Props {
   candidate: RewriteCandidate
@@ -21,21 +20,17 @@ export function CandidateCard({ candidate, onApply }: Props) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="p-0">
-        <ScrollArea className="h-65">
-          <div className="space-y-3 px-4 py-4">
-            <div
-              className="prose prose-sm max-w-none wrap-break-word leading-relaxed text-foreground"
-              // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
-              dangerouslySetInnerHTML={{ __html: candidate.html }}
-            />
-            {candidate.notes && (
-              <p className="border-t pt-3 text-xs leading-relaxed text-muted-foreground">
-                {candidate.notes}
-              </p>
-            )}
-          </div>
-        </ScrollArea>
+      <CardContent className="space-y-3 px-4 py-4">
+        <div
+          className="prose prose-sm max-w-none wrap-break-word leading-relaxed text-foreground"
+          // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml
+          dangerouslySetInnerHTML={{ __html: candidate.html }}
+        />
+        {candidate.notes && (
+          <p className="border-t pt-3 text-xs leading-relaxed text-muted-foreground">
+            {candidate.notes}
+          </p>
+        )}
       </CardContent>
 
       <CardFooter className="shrink-0 border-t bg-muted/30 px-4 py-2">
