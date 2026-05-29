@@ -8,9 +8,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { useIsMobile } from '@/hooks/use-mobile'
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from '@/components/ui/responsive-dialog'
 import { AiRewritePanel } from './ai-rewrite-panel'
 import { JD_MIN_CHARS, REWRITE_ACTION_LIST, REWRITE_ACTION_META, SELECTION_MIN_CHARS } from './const'
 import { useAiRewrite } from './use-ai-rewrite'
@@ -41,10 +45,12 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
   const { state, run, setJdDraft, reset, retry, cancel, openWaitingJd } = useAiRewrite({ fieldContext })
   const [bubbleEl, setBubbleEl] = useState<HTMLDivElement | null>(null)
   const [savedSelection, setSavedSelection] = useState<RewriteSelection | null>(null)
-  const isMobile = useIsMobile()
 
   const activeSelection = state.status === 'idle' ? null : savedSelection
   const dialogOpen = state.status !== 'idle'
+  const action = state.action
+  const meta = action ? REWRITE_ACTION_META[action] : null
+  const HeaderIcon = meta?.icon
 
   // 创建 BubbleMenu 的原生 DOM 容器（Tiptap 的 BubbleMenuPlugin API
   // 需要直接传入 element，无 shadcn 等价物，故保留此最小原生容器）
@@ -84,22 +90,26 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
     setSavedSelection(null)
   }, [cancel, reset])
 
-  const handleAction = useCallback((action: RewriteAction) => {
+  const handleAction = useCallback((nextAction: RewriteAction) => {
     const sel = getSelectionPayload(editor)
     if (!sel)
       return
     setSavedSelection(sel)
-    if (action === 'align_jd' && state.jdDraft.trim().length < JD_MIN_CHARS) {
-      openWaitingJd(action)
+    if (nextAction === 'align_jd' && state.jdDraft.trim().length < JD_MIN_CHARS) {
+      openWaitingJd(nextAction)
       return
     }
-    run(action, sel)
+    run(nextAction, sel)
   }, [editor, run, openWaitingJd, state.jdDraft])
 
   const handleApply = useCallback((candidate: RewriteCandidate) => {
     if (!savedSelection)
       return
-    editor.chain().focus().insertContentAt({ from: savedSelection.from, to: savedSelection.to }, candidate.html).run()
+    editor
+      .chain()
+      .focus()
+      .insertContentAt({ from: savedSelection.from, to: savedSelection.to }, candidate.html)
+      .run()
     toast.success('已应用 AI 改写')
     reset()
     setSavedSelection(null)
@@ -110,35 +120,25 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
       retry(savedSelection)
   }, [retry, savedSelection])
 
-  const panelNode = (
-    <AiRewritePanel
-      state={state}
-      selection={activeSelection}
-      onApply={handleApply}
-      onRetry={handleRetry}
-      onJdDraftChange={setJdDraft}
-    />
-  )
-
   return (
     <>
       {bubbleEl && createPortal(
         <div className="tiptap-toolbar" data-variant="floating">
-          {REWRITE_ACTION_LIST.map((action) => {
-            const meta = REWRITE_ACTION_META[action]
-            const Icon = meta.icon
+          {REWRITE_ACTION_LIST.map((act) => {
+            const m = REWRITE_ACTION_META[act]
+            const Icon = m.icon
             return (
               <Button
-                key={action}
+                key={act}
                 type="button"
                 size="sm"
                 variant="ghost"
-                title={meta.description}
-                onClick={() => handleAction(action)}
-                className="h-8"
+                title={m.description}
+                onClick={() => handleAction(act)}
+                className="h-8 gap-1"
               >
                 <Icon className="size-4" />
-                <span className="ml-1 text-xs">{meta.label}</span>
+                <span className="text-xs">{m.label}</span>
               </Button>
             )
           })}
@@ -146,24 +146,30 @@ export function AiRewriteBubble({ editor, fieldContext }: Props) {
         bubbleEl,
       )}
 
-      {isMobile
-        ? (
-            <Sheet open={dialogOpen} onOpenChange={open => !open && handleClose()}>
-              <SheetContent side="bottom" className="flex h-[85vh] flex-col gap-0 p-0">
-                <SheetHeader className="sr-only">
-                  <SheetTitle>AI 改写候选</SheetTitle>
-                </SheetHeader>
-                {panelNode}
-              </SheetContent>
-            </Sheet>
-          )
-        : (
-            <Dialog open={dialogOpen} onOpenChange={open => !open && handleClose()}>
-              <DialogContent className="flex h-[min(85vh,720px)] max-w-3xl flex-col gap-0 p-0">
-                {panelNode}
-              </DialogContent>
-            </Dialog>
-          )}
+      <ResponsiveDialog open={dialogOpen} onOpenChange={open => !open && handleClose()}>
+        <ResponsiveDialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:h-[85vh] sm:max-h-[85vh] sm:max-w-4xl">
+          <ResponsiveDialogHeader className="shrink-0 border-b px-6 pb-4 pt-6">
+            <ResponsiveDialogTitle className="flex items-center gap-2 text-base">
+              {HeaderIcon ? <HeaderIcon className="size-4" /> : null}
+              {meta ? `${meta.label}候选` : 'AI 改写候选'}
+            </ResponsiveDialogTitle>
+            {meta && (
+              <ResponsiveDialogDescription>
+                {meta.description}
+                ；选择满意的版本点击「应用」即可替换原文。
+              </ResponsiveDialogDescription>
+            )}
+          </ResponsiveDialogHeader>
+
+          <AiRewritePanel
+            state={state}
+            selection={activeSelection}
+            onApply={handleApply}
+            onRetry={handleRetry}
+            onJdDraftChange={setJdDraft}
+          />
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </>
   )
 }
